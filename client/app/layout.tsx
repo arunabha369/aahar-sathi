@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
+import { getSiteUrl } from '@/lib/siteUrl';
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -9,7 +10,7 @@ const jakarta = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aaharsathi.in';
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
