@@ -1,0 +1,212 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Warm neutrals — white cards should read as paper, not as holes */
+  --color-canvas: #f6f7f5;
+  --color-ink: #0e1a16;
+  --color-ink-soft: #35443e;
+  --color-muted: #5f6f69;
+  --color-line: #e3e8e5;
+  --color-line-strong: #cfd8d4;
+
+  /* Brand — deep, appetising green */
+  --color-brand-50: #ecfdf3;
+  --color-brand-100: #d1fadf;
+  --color-brand-200: #a6f4c5;
+  --color-brand-300: #6ce9a6;
+  --color-brand-400: #32d583;
+  --color-brand-500: #12b76a;
+  --color-brand-600: #039855;
+  --color-brand-700: #027a48;
+  --color-brand-800: #05603a;
+  --color-brand-900: #054f31;
+
+  /* Saffron — the warm side of the palette, for accents and fills */
+  --color-saffron-50: #fff8eb;
+  --color-saffron-100: #feefc7;
+  --color-saffron-200: #fedf89;
+  --color-saffron-300: #fec84b;
+  --color-saffron-400: #fdb022;
+  --color-saffron-500: #f79009;
+  --color-saffron-600: #dc6803;
+  --color-saffron-700: #b54708;
+  --color-saffron-800: #93370d;
+
+  /* Spice red + a cool tone for water */
+  --color-chilli-400: #f97066;
+  --color-chilli-500: #f04438;
+  --color-chilli-600: #d92d20;
+  --color-chilli-700: #b42318;
+  --color-water-400: #36bffa;
+  --color-water-500: #0ba5ec;
+  --color-water-600: #0086c9;
+  --color-water-700: #026aa2;
+
+  --radius-xs: 0.5rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+
+  /* Layered, tinted shadows — a grey drop shadow looks like a bug */
+  --shadow-xs: 0 1px 2px rgb(14 26 22 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(14 26 22 / 0.05), 0 2px 6px -2px rgb(14 26 22 / 0.06);
+  --shadow-md: 0 2px 4px -1px rgb(14 26 22 / 0.05), 0 12px 24px -8px rgb(14 26 22 / 0.1);
+  --shadow-lg: 0 4px 8px -2px rgb(14 26 22 / 0.06), 0 24px 48px -16px rgb(14 26 22 / 0.16);
+  --shadow-brand: 0 1px 2px rgb(2 122 72 / 0.2), 0 8px 20px -6px rgb(2 122 72 / 0.35);
+
+  --animate-rise: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade: fade 0.3s ease-out both;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes shimmer {
+  from { background-position: -640px 0; }
+  to { background-position: 640px 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.022em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-700);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-100);
+    color: var(--color-brand-900);
+  }
+
+  /* Number inputs: the spinners fight the custom unit suffix */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    appearance: textfield;
+  }
+}
+
+@layer components {
+  .surface {
+    background-color: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .surface-raised {
+    background-color: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Small caps label used above every panel and stat */
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      #eceeec 0%,
+      #f5f6f5 42%,
+      #eceeec 84%
+    );
+    background-size: 640px 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  /* Dotted paper texture for dark brand panels */
+  .dot-grid {
+    background-image: radial-gradient(circle at center, rgb(255 255 255 / 0.16) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .hairline-grid {
+    background-image:
+      linear-gradient(to right, rgb(14 26 22 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(14 26 22 / 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Printing a plan should give a clean handout: no chrome, no controls. */
+@media print {
+  @page {
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .no-print,
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  .surface,
+  .surface-raised,
+  [data-print="card"] {
+    box-shadow: none !important;
+    border: 1px solid #d7ddd9 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

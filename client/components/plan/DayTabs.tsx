@@ -1,0 +1,127 @@
+'use client';
+
+import { useOptimistic, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { Lightbulb } from 'lucide-react';
+import { MealList } from '@/components/plan/MealList';
+import { useToast } from '@/components/ui/Toast';
+import { ApiError, api } from '@/lib/api/client';
+import { WEEKDAY_LABELS } from '@/lib/constants';
+import { weekdayFromKey } from '@/lib/format';
+import { useLocalToday } from '@/lib/useLocalToday';
+import type { Diet, PlanDay, PlanResponse, PlanSlot, Targets } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+interface DayTabsProps {
+  planId: string;
+  days: PlanDay[];
+  targets: Targets;
+  diet: Diet;
+  serverToday: string;
+  readOnly?: boolean;
+}
+
+export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = false }: DayTabsProps) {
+  const router = useRouter();
+  const toast = useToast();
+  const today = weekdayFromKey(useLocalToday(serverToday));
+  const [activeDay, setActiveDay] = useState(() => {
+    const index = days.findIndex((day) => day.day === today);
+    return index >= 0 ? index : 0;
+  });
+  const [, startTransition] = useTransition();
+  const [swappingSlots, addSwappingSlot] = useOptimistic<PlanSlot[], PlanSlot>(
+    [],
+    (current, slot) => [...current, slot],
+  );
+
+  const swap = (slot: PlanSlot) => {
+    startTransition(async () => {
+      addSwappingSlot(slot);
+      try {
+        await api.post<PlanResponse>(`/plans/${planId}/swap`, { dayIndex: activeDay, slot });
+        router.refresh();
+        toast.success('Swapped for another dish');
+      } catch (error) {
+        toast.error(error instanceof ApiError ? error.message : 'We could not swap that meal.');
+      }
+    });
+  };
+
+  const day = days[activeDay];
+  if (!day) return null;
+
+  return (
+    <div>
+      <div
+        role="tablist"
+        aria-label="Days of the week"
+        data-print="hide"
+        className="no-print -my-1 flex gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {days.map((candidate, index) => {
+          const selected = index === activeDay;
+          const isToday = candidate.day === today;
+          return (
+            <button
+              key={candidate.day}
+              role="tab"
+              type="button"
+              id={`day-tab-${candidate.day}`}
+              aria-selected={selected}
+              aria-controls={`day-panel-${candidate.day}`}
+              onClick={() => setActiveDay(index)}
+              className={cn(
+                'group relative min-h-[3.25rem] shrink-0 rounded-xl px-4 text-center transition-all',
+                selected
+                  ? 'bg-brand-700 text-white shadow-[var(--shadow-brand)]'
+                  : 'bg-white text-ink-soft ring-1 ring-line hover:ring-line-strong',
+              )}
+            >
+              <span className="block text-[0.8125rem] font-bold">{candidate.day}</span>
+              <span
+                className={cn(
+                  'block text-[0.625rem] font-semibold tabular-nums',
+                  selected ? 'text-white/80' : 'text-muted',
+                )}
+              >
+                {isToday ? 'Today' : `${candidate.totals.kcal} kcal`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* On paper the whole week is printed below, so the single-day panel is hidden. */}
+      <div
+        role="tabpanel"
+        id={`day-panel-${day.day}`}
+        aria-labelledby={`day-tab-${day.day}`}
+        className="mt-5 print:hidden"
+      >
+        <h3 className="eyebrow mb-3">{WEEKDAY_LABELS[day.day] ?? day.day}</h3>
+        <MealList
+          day={day}
+          targets={targets}
+          diet={diet}
+          swappingSlots={swappingSlots}
+          {...(readOnly ? {} : { onSwap: swap })}
+        />
+      </div>
+
+      <p className="mt-4 flex items-start gap-2.5 rounded-2xl bg-brand-50 px-4 py-3 text-[0.8125rem] leading-relaxed text-brand-800 ring-1 ring-inset ring-brand-100 print:hidden">
+        <Lightbulb className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        Keep a 2.5–3 hour gap between meals for better digestion.
+      </p>
+
+      <div className="hidden print:block">
+        {days.map((printDay) => (
+          <section key={printDay.day} className="mt-6">
+            <h3 className="mb-3 text-base font-bold text-ink">{WEEKDAY_LABELS[printDay.day] ?? printDay.day}</h3>
+            <MealList day={printDay} targets={targets} diet={diet} />
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
