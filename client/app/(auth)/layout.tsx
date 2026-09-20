@@ -23,7 +23,7 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
 
           <div className="my-auto py-10">
             <div className="mx-auto w-full max-w-[22rem]">
-              <Thali idPrefix="auth-thali" className="drop-shadow-[0_24px_40px_rgba(0,0,0,0.35)]" />
+              <Thali priority className="drop-shadow-[0_24px_40px_rgba(0,0,0,0.35)]" />
             </div>
 
             <h2 className="mt-10 max-w-md text-[1.75rem] font-extrabold leading-tight tracking-tight">
@@ -47,7 +47,7 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
       </aside>
 
       {/* Form side */}
-      <main className="flex flex-col bg-canvas">
+      <main id="main-content" className="flex flex-col bg-canvas">
         <div className="flex items-center justify-between px-4 py-5 sm:px-8 lg:justify-end">
           <span className="lg:hidden">
             <Logo href="/" showTagline={false} />

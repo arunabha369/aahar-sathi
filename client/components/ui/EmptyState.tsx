@@ -21,8 +21,10 @@ export function EmptyState({
   const Art = ART[art];
 
   return (
-    <div className="surface flex flex-col items-center gap-4 px-6 py-12 text-center">
-      <Art />
+    <div className="surface flex flex-col items-center gap-5 px-6 py-10 text-center sm:py-12">
+      <div className="rounded-[1.25rem] bg-canvas p-2 ring-1 ring-line">
+        <Art className="h-auto w-36 sm:w-40" />
+      </div>
       <div>
         <h3 className="text-lg font-bold text-ink">{title}</h3>
         <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-muted">{description}</p>

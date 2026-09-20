@@ -41,7 +41,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
               className={cn(
                 'group relative flex items-start gap-3.5 px-4 py-4 transition-colors sm:px-5',
                 index > 0 && 'border-t border-line',
-                swapping ? 'opacity-60' : 'hover:bg-canvas/70',
+                swapping ? 'opacity-60' : 'hover:bg-canvas/70 focus-within:bg-canvas/70',
               )}
             >
               <div className="flex shrink-0 flex-col items-center gap-1.5 pt-0.5">
@@ -90,7 +90,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
         })}
       </ol>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-canvas px-4 py-3 ring-1 ring-line">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-canvas px-4 py-3 ring-1 ring-line" aria-live="polite">
         <p className="text-sm font-semibold text-ink">
           Day total <span className="tabular-nums">{day.totals.kcal.toLocaleString('en-IN')} kcal</span>
           <span className="ml-1.5 font-normal text-muted">

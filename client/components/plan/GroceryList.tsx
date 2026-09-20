@@ -38,15 +38,28 @@ export function GroceryList({ planId, groups, total, checked }: GroceryListProps
 
   const bought = optimisticChecked.length;
   const percent = total === 0 ? 0 : Math.round((bought / total) * 100);
+  const remaining = total - bought;
 
   return (
     <div>
       <div className="surface sticky top-16 z-20 mb-5 flex flex-wrap items-center gap-4 p-4 lg:top-4" data-print="hide">
-        <p className="text-sm font-semibold text-muted">
-          <span className="text-2xl font-extrabold leading-none text-ink tabular-nums">{bought}</span>
-          <span className="text-ink">/{total}</span> bought
-        </p>
-        <div className="h-2 min-w-32 flex-1 overflow-hidden rounded-full bg-canvas">
+        <div className="min-w-32">
+          <p className="text-sm font-semibold text-muted">
+            <span className="text-2xl font-extrabold leading-none text-ink tabular-nums">{bought}</span>
+            <span className="text-ink">/{total}</span> bought
+          </p>
+          <p className={cn('mt-1 text-xs font-bold', remaining === 0 ? 'text-brand-800' : 'text-muted')}>
+            {remaining === 0 ? 'Shopping complete' : `${remaining} ${remaining === 1 ? 'item' : 'items'} left`}
+          </p>
+        </div>
+        <div
+          className="h-2 min-w-32 flex-1 overflow-hidden rounded-full bg-canvas"
+          role="progressbar"
+          aria-label="Grocery items bought"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={bought}
+        >
           <div
             className="h-full rounded-full bg-brand-600 transition-[width] duration-300"
             style={{ width: `${percent}%` }}

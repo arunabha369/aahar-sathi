@@ -93,6 +93,7 @@ const SAMPLE_DAY = [
 export default function LandingPage() {
   return (
     <div className="min-h-dvh bg-canvas">
+      <main id="main-content">
       {/* ---------------- Hero ---------------- */}
       <div className="relative overflow-hidden bg-brand-900 text-white">
         <HeroGlow idPrefix="hero-glow" />
@@ -101,7 +102,19 @@ export default function LandingPage() {
         <div className="relative">
           <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
             <Logo href="/" tone="light" />
-            <nav className="flex items-center gap-1.5">
+            <nav className="flex items-center gap-1.5" aria-label="Marketing navigation">
+              <a
+                href="#how-it-works"
+                className="hidden min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white md:inline-flex"
+              >
+                How it works
+              </a>
+              <a
+                href="#sample-plan"
+                className="hidden min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-white lg:inline-flex"
+              >
+                Sample plan
+              </a>
               <Link
                 href="/login"
                 className="inline-flex min-h-11 items-center rounded-xl px-4 text-sm font-semibold text-white/90 transition-colors hover:bg-white/10 hover:text-white"
@@ -158,7 +171,7 @@ export default function LandingPage() {
             {/* Thali with floating figures pulled from a real plan */}
             <div className="relative mx-auto w-full max-w-sm sm:max-w-md lg:max-w-[28rem]">
               <div className="motion-safe:animate-[float_7s_ease-in-out_infinite]">
-                <Thali idPrefix="hero-thali" className="drop-shadow-[0_28px_48px_rgba(0,0,0,0.35)]" />
+                <Thali priority className="drop-shadow-[0_28px_48px_rgba(0,0,0,0.35)]" />
               </div>
 
               <div className="absolute -left-2 top-6 rounded-2xl bg-white/95 px-3.5 py-2.5 shadow-lg backdrop-blur sm:left-0">
@@ -201,7 +214,7 @@ export default function LandingPage() {
       </section>
 
       {/* ---------------- How it works ---------------- */}
-      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+      <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-6 px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <div className="max-w-2xl">
           <p className="eyebrow">How it works</p>
           <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
@@ -215,7 +228,10 @@ export default function LandingPage() {
 
         <ol className="mt-12 grid gap-6 lg:grid-cols-3">
           {STEPS.map((step, index) => (
-            <li key={step.title} className="surface group relative overflow-hidden p-6">
+            <li
+              key={step.title}
+              className="surface group relative overflow-hidden p-6 transition-[box-shadow,transform] duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[var(--shadow-md)]"
+            >
               <div className="rounded-2xl bg-canvas p-4 ring-1 ring-line">
                 <step.Art />
               </div>
@@ -232,7 +248,7 @@ export default function LandingPage() {
       </section>
 
       {/* ---------------- Sample day ---------------- */}
-      <section className="border-y border-line bg-white">
+      <section id="sample-plan" className="scroll-mt-6 border-y border-line bg-white">
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-24">
           <div>
             <p className="eyebrow">A day on the plan</p>
@@ -294,7 +310,10 @@ export default function LandingPage() {
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((feature) => (
-            <article key={feature.title} className="surface p-6 transition-shadow hover:shadow-[var(--shadow-md)]">
+            <article
+              key={feature.title}
+              className="surface p-6 transition-[box-shadow,transform] duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[var(--shadow-md)]"
+            >
               <span className={`grid size-11 place-items-center rounded-xl ${feature.tint}`}>
                 <feature.icon className="size-5" aria-hidden="true" />
               </span>
@@ -325,6 +344,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* ---------------- Footer ---------------- */}
       <footer className="border-t border-line bg-white">

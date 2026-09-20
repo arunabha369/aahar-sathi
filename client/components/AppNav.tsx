@@ -59,7 +59,9 @@ export function Sidebar({ user }: { user: { name: string; email: string } }) {
                   aria-current={active ? 'page' : undefined}
                   className={cn(
                     'group relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors',
-                    active ? 'bg-brand-50 text-brand-800' : 'text-ink-soft hover:bg-canvas hover:text-ink',
+                    active
+                      ? 'bg-brand-50 text-brand-800 ring-1 ring-inset ring-brand-100'
+                      : 'text-ink-soft hover:bg-canvas hover:text-ink',
                   )}
                 >
                   <span
@@ -107,26 +109,23 @@ export function Sidebar({ user }: { user: { name: string; email: string } }) {
 
 /** Mobile chrome: a slim top bar and a thumb-reachable tab bar. */
 export function MobileTopBar({ user }: { user: { name: string } }) {
-  const { signOut, pending } = useSignOut();
-
   return (
-    <header className="no-print sticky top-0 z-40 flex items-center justify-between border-b border-line bg-white/90 px-4 py-2.5 backdrop-blur-md lg:hidden">
+    <header className="no-print sticky top-0 z-40 flex items-center justify-between border-b border-line bg-white/90 px-4 py-2.5 shadow-[0_1px_0_rgb(14_26_22_/_0.03)] backdrop-blur-md lg:hidden">
       <Link href="/dashboard" className="flex items-center gap-2.5 rounded-xl" aria-label="Aahar Sathi home">
         <Mark className="size-9" />
         <span className="text-[0.9375rem] font-extrabold tracking-tight text-ink">Aahar Sathi</span>
       </Link>
-      <button
-        type="button"
-        onClick={signOut}
-        disabled={pending}
-        className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft disabled:opacity-60"
+      <Link
+        href="/settings"
+        className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-[0.8125rem] font-semibold text-ink-soft transition-colors hover:bg-canvas"
+        aria-label="Open settings"
       >
         <span className="grid size-8 place-items-center rounded-full bg-brand-100 text-xs font-extrabold text-brand-800">
           {user.name.slice(0, 1).toUpperCase()}
         </span>
-        <LogOut className="size-4 text-muted" aria-hidden="true" />
-        <span className="sr-only">Sign out</span>
-      </button>
+        <Settings className="size-4 text-muted" aria-hidden="true" />
+        <span className="sr-only">Settings</span>
+      </Link>
     </header>
   );
 }

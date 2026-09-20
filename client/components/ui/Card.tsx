@@ -71,11 +71,11 @@ export function PageHeader({
   eyebrow?: string;
 }) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
         {eyebrow ? <p className="eyebrow mb-1.5">{eyebrow}</p> : null}
         <h1 className="text-[1.75rem] font-extrabold leading-tight text-ink sm:text-[2rem]">{title}</h1>
-        {description ? <p className="mt-1.5 max-w-2xl text-[0.9375rem] text-muted">{description}</p> : null}
+        {description ? <p className="mt-1.5 max-w-2xl text-[0.9375rem] leading-relaxed text-muted">{description}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
     </header>

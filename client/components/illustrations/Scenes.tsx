@@ -8,9 +8,10 @@ export function ProfileScene({ className }: { className?: string }) {
   return (
     <Image
       src="/images/profile-scene.jpg"
-      alt="Profile setup form illustration"
+      alt=""
       width={672}
       height={504}
+      sizes="(max-width: 1024px) 100vw, 31vw"
       className={frame(className)}
     />
   );
@@ -21,9 +22,10 @@ export function MathsScene({ className }: { className?: string }) {
   return (
     <Image
       src="/images/maths-scene.jpg"
-      alt="Nutrition calculation dashboard illustration"
+      alt=""
       width={672}
       height={504}
+      sizes="(max-width: 1024px) 100vw, 31vw"
       className={frame(className)}
     />
   );
@@ -34,9 +36,10 @@ export function PlanScene({ className }: { className?: string }) {
   return (
     <Image
       src="/images/plan-scene.jpg"
-      alt="Weekly meal plan illustration"
+      alt=""
       width={672}
       height={504}
+      sizes="(max-width: 1024px) 100vw, 31vw"
       className={frame(className)}
     />
   );
@@ -48,9 +51,10 @@ export function EmptyPlate({ className }: { className?: string }) {
   return (
     <Image
       src="/images/empty-plate.jpg"
-      alt="Empty plate illustration"
+      alt=""
       width={400}
       height={400}
+      sizes="160px"
       className={emptyFrame(className)}
     />
   );
@@ -60,9 +64,10 @@ export function EmptyBasket({ className }: { className?: string }) {
   return (
     <Image
       src="/images/empty-basket.jpg"
-      alt="Empty shopping basket illustration"
+      alt=""
       width={400}
       height={400}
+      sizes="160px"
       className={emptyFrame(className)}
     />
   );
@@ -72,9 +77,10 @@ export function EmptyTrend({ className }: { className?: string }) {
   return (
     <Image
       src="/images/empty-trend.jpg"
-      alt="Empty trend chart illustration"
+      alt=""
       width={400}
       height={400}
+      sizes="160px"
       className={emptyFrame(className)}
     />
   );

@@ -86,7 +86,7 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
     return (
       <Panel padding="lg" className="mx-auto max-w-lg text-center">
         <div className="mx-auto w-40 motion-safe:animate-[float_3.5s_ease-in-out_infinite]">
-          <Thali idPrefix="wizard-thali" />
+          <Thali />
         </div>
         <h2 className="mt-6 text-xl font-extrabold text-ink">Building your 7-day plan…</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
@@ -100,10 +100,17 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
   }
 
   const current = STEPS[step]!;
+  const progress = Math.round(((step + 1) / STEPS.length) * 100);
 
   return (
     <div className="mx-auto max-w-2xl">
       {/* Stepper */}
+      <div className="mb-3 flex items-center justify-between gap-3" aria-live="polite">
+        <p className="eyebrow">
+          Step {step + 1} of {STEPS.length}
+        </p>
+        <p className="text-xs font-bold text-brand-800 tabular-nums">{progress}% complete</p>
+      </div>
       <ol className="mb-7 flex items-center gap-2" aria-label="Progress">
         {STEPS.map((item, index) => {
           const done = index < step;

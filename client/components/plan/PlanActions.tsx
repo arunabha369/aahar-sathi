@@ -92,7 +92,7 @@ export function PlanActions({ plan, serverToday }: { plan: Plan; serverToday: st
       </Button>
       <Button onClick={() => window.print()} variant="secondary" size="sm">
         <Printer className="size-4 text-muted" aria-hidden="true" />
-        Download PDF
+        Print or save PDF
       </Button>
       <a
         href={`https://wa.me/?text=${encodeURIComponent(todaySummary(plan, today))}`}

@@ -41,7 +41,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div
         className="no-print pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4"
-        role="status"
         aria-live="polite"
       >
         {toasts.map((toast) => (
@@ -51,6 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               'pointer-events-auto flex max-w-md items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-lg)] animate-rise',
               toast.tone === 'success' ? 'bg-ink' : 'bg-chilli-600',
             )}
+            role={toast.tone === 'error' ? 'alert' : 'status'}
           >
             {toast.tone === 'success' ? (
               <CheckCircle2 className="size-5 shrink-0" aria-hidden="true" />

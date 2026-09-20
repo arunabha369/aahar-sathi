@@ -1,6 +1,6 @@
 'use client';
 
-import { useOptimistic, useTransition } from 'react';
+import { useId, useOptimistic, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check } from 'lucide-react';
 import { useToast } from '@/components/ui/Toast';
@@ -18,10 +18,12 @@ interface WaterTrackerProps {
 
 /** A tumbler that fills from the bottom — the clip path is shared by every glass. */
 function Glass({ filled }: { filled: boolean }) {
+  const clipId = useId();
+
   return (
     <svg viewBox="0 0 28 36" aria-hidden="true" className="size-full">
       <defs>
-        <clipPath id="as-glass-clip">
+        <clipPath id={clipId}>
           <path d="M5 4h18l-2.2 27.4A3 3 0 0 1 17.8 34h-7.6a3 3 0 0 1-3-2.6L5 4Z" />
         </clipPath>
       </defs>
@@ -32,7 +34,7 @@ function Glass({ filled }: { filled: boolean }) {
         strokeWidth="2"
       />
       {filled ? (
-        <g clipPath="url(#as-glass-clip)">
+        <g clipPath={`url(#${clipId})`}>
           <rect x="0" y="11" width="28" height="25" fill="#36BFFA" />
           <path d="M0 12c4-3 7-3 11 0s7 3 11 0 6-3 6-3v4H0Z" fill="#7CD4FD" />
         </g>

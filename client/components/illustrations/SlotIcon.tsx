@@ -1,29 +1,30 @@
 import Image from 'next/image';
 import type { PlanSlot } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 interface SlotIconProps {
   slot: PlanSlot;
   className?: string;
 }
 
-const SLOT_IMAGES: Record<PlanSlot, { src: string; alt: string }> = {
-  breakfast: { src: '/images/slot-breakfast.jpg', alt: 'Sunrise — breakfast' },
-  midMorning: { src: '/images/slot-midmorning.jpg', alt: 'Apple — mid-morning snack' },
-  lunch: { src: '/images/slot-lunch.jpg', alt: 'Thali plate — lunch' },
-  eveningSnack: { src: '/images/slot-eveningsnack.jpg', alt: 'Chai cup — evening snack' },
-  dinner: { src: '/images/slot-dinner.jpg', alt: 'Crescent moon — dinner' },
+const SLOT_IMAGES: Record<PlanSlot, string> = {
+  breakfast: '/images/slot-breakfast.jpg',
+  midMorning: '/images/slot-midmorning.jpg',
+  lunch: '/images/slot-lunch.jpg',
+  eveningSnack: '/images/slot-eveningsnack.jpg',
+  dinner: '/images/slot-dinner.jpg',
 };
 
 /** One icon per meal slot — sunrise, fruit, thali, chai, moon. */
 export function SlotIcon({ slot, className = 'size-8' }: SlotIconProps) {
-  const { src, alt } = SLOT_IMAGES[slot] ?? SLOT_IMAGES.dinner;
+  const src = SLOT_IMAGES[slot] ?? SLOT_IMAGES.dinner;
+
   return (
-    <Image
-      src={src}
-      alt={alt}
-      width={64}
-      height={64}
-      className={`${className} rounded-lg object-cover`}
-    />
+    <span
+      aria-hidden="true"
+      className={cn('relative block shrink-0 overflow-hidden rounded-xl bg-canvas ring-1 ring-line', className)}
+    >
+      <Image src={src} alt="" fill sizes="48px" className="scale-[1.4] object-cover" />
+    </span>
   );
 }

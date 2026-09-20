@@ -58,6 +58,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className={jakarta.variable}>
       <body className="min-h-dvh antialiased">
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

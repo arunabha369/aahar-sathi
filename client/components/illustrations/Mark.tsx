@@ -7,13 +7,18 @@ import { cn } from '@/lib/utils';
  */
 export function Mark({ className = 'size-10' }: { className?: string }) {
   return (
-    <Image
-      src="/images/app-mark.jpg"
-      alt="Aahar Sathi logo"
-      width={80}
-      height={80}
-      className={cn(className, 'rounded-xl object-cover')}
-    />
+    <span
+      aria-hidden="true"
+      className={cn('relative block shrink-0 overflow-hidden rounded-xl bg-saffron-500', className)}
+    >
+      <Image
+        src="/images/app-mark.jpg"
+        alt=""
+        fill
+        sizes="40px"
+        className="scale-[1.6] object-cover object-center"
+      />
+    </span>
   );
 }
 
