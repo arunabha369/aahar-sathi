@@ -117,20 +117,19 @@ export function Hero() {
         </div>
 
         <div className="relative mx-auto w-full max-w-[34rem]">
-          <div className="relative mx-auto aspect-square w-[86%] lg:mr-0 lg:w-[80%]">
-            <div aria-hidden="true" className="absolute -inset-[7%] rounded-full border border-brand-200/80" />
-            <div aria-hidden="true" className="absolute -inset-[2%] rounded-full bg-brand-100/70" />
+          <div className="relative mx-auto w-full lg:mr-0">
             <Image
-              src="/images/hero-thali.webp"
-              alt="A home-cooked thali with rotis, rice, dal, green beans, curd and pickle"
-              fill
+              src="/images/hero-character.png"
+              alt="A character presenting a personalised Indian meal plan with calorie tracking, dal, roti, rice and a green smoothie"
+              width={1024}
+              height={680}
               preload
-              sizes="(max-width: 1024px) 80vw, 29rem"
-              className="rounded-full object-cover shadow-[var(--shadow-lg)]"
+              sizes="(max-width: 1024px) 90vw, 34rem"
+              className="h-auto w-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.1)]"
             />
           </div>
 
-          <div className="relative z-10 mx-auto -mt-16 w-[min(20rem,100%)] text-left lg:absolute lg:-bottom-10 lg:-left-10 lg:mt-0 lg:w-[19rem]">
+          <div className="relative z-10 mx-auto -mt-8 w-[min(20rem,100%)] text-left lg:absolute lg:-bottom-10 lg:-left-10 lg:mt-0 lg:w-[19rem]">
             <PlanCard />
           </div>
 
