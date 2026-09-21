@@ -1,5 +1,4 @@
-import { MACRO_COLORS } from '@/lib/constants';
-import type { BmiCategory, Targets } from '@/lib/types';
+import type { BmiCategory } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 const BMI_BANDS: { label: BmiCategory; from: number; to: number; color: string }[] = [
@@ -46,82 +45,5 @@ export function BmiGauge({ bmi, className }: { bmi: number; className?: string }
         <span>40</span>
       </div>
     </div>
-  );
-}
-
-/** Protein / carbs / fat as one bar, separated by surface-coloured gaps. */
-export function MacroBar({ targets, className }: { targets: Targets; className?: string }) {
-  const kcal = {
-    protein: targets.protein * 4,
-    carbs: targets.carbs * 4,
-    fat: targets.fat * 9,
-  };
-  const total = kcal.protein + kcal.carbs + kcal.fat || 1;
-
-  const segments = [
-    { key: 'Protein', value: kcal.protein, color: MACRO_COLORS.protein, grams: targets.protein },
-    { key: 'Carbs', value: kcal.carbs, color: MACRO_COLORS.carbs, grams: targets.carbs },
-    { key: 'Fat', value: kcal.fat, color: MACRO_COLORS.fat, grams: targets.fat },
-  ];
-
-  return (
-    <div className={cn('w-full', className)}>
-      <div className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-full">
-        {segments.map((segment) => (
-          <span
-            key={segment.key}
-            className="h-full first:rounded-l-full last:rounded-r-full"
-            style={{ width: `${(segment.value / total) * 100}%`, backgroundColor: segment.color }}
-          />
-        ))}
-      </div>
-      <ul className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1">
-        {segments.map((segment) => (
-          <li key={segment.key} className="flex items-center gap-1.5 text-[0.6875rem] font-semibold text-muted">
-            <span className="size-2 rounded-full" style={{ backgroundColor: segment.color }} aria-hidden="true" />
-            {segment.key} {segment.grams} g
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/** A compact ring for "how much of the day is planned". */
-export function ProgressRing({
-  value,
-  max,
-  label,
-  className,
-}: {
-  value: number;
-  max: number;
-  label?: string;
-  className?: string;
-}) {
-  const radius = 26;
-  const circumference = 2 * Math.PI * radius;
-  const ratio = Math.max(0, Math.min(1, max === 0 ? 0 : value / max));
-
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true" className={cn('size-16', className)}>
-      <circle cx="32" cy="32" r={radius} fill="none" stroke="#EEF1EF" strokeWidth="7" />
-      <circle
-        cx="32"
-        cy="32"
-        r={radius}
-        fill="none"
-        stroke="#027A48"
-        strokeWidth="7"
-        strokeLinecap="round"
-        strokeDasharray={`${circumference * ratio} ${circumference}`}
-        transform="rotate(-90 32 32)"
-      />
-      {label ? (
-        <text x="32" y="36" textAnchor="middle" fontSize="15" fontWeight="800" fill="#0E1A16">
-          {label}
-        </text>
-      ) : null}
-    </svg>
   );
 }

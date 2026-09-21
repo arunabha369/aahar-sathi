@@ -10,6 +10,7 @@ import { GeneratePlanButton } from '@/components/plan/GeneratePlanButton';
 import { PlanActions } from '@/components/plan/PlanActions';
 import { PrintGrocery } from '@/components/plan/PrintGrocery';
 import { StatCards } from '@/components/plan/StatCards';
+import { TodayCard } from '@/components/plan/TodayCard';
 import { WaterTracker } from '@/components/plan/WaterTracker';
 import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
@@ -65,7 +66,25 @@ export default async function DashboardPage() {
         actions={<PlanActions plan={plan} serverToday={serverToday} />}
       />
 
-      <StatCards targets={plan.targets} />
+      {/* What matters right now: the next meal and today's water. */}
+      <div className="grid gap-5 xl:grid-cols-3">
+        <div className="min-w-0 xl:col-span-2">
+          <TodayCard days={plan.days} targets={plan.targets} serverToday={serverToday} />
+        </div>
+        <Panel className="no-print">
+          <PanelHeader
+            eyebrow="Today"
+            title="Water"
+            icon={<Droplets className="size-[1.125rem] text-water-600" aria-hidden="true" />}
+            description="Tap a glass to log it. Tap the last full glass to undo."
+          />
+          <WaterTracker target={plan.targets.waterGlasses} logs={waterLogs} serverToday={serverToday} />
+        </Panel>
+      </div>
+
+      <div className="mt-5">
+        <StatCards targets={plan.targets} />
+      </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-3">
         <div className="min-w-0 space-y-5 xl:col-span-2">
@@ -90,16 +109,6 @@ export default async function DashboardPage() {
         </div>
 
         <div className="min-w-0 space-y-5">
-          <Panel className="no-print">
-            <PanelHeader
-              eyebrow="Today"
-              title="Water"
-              icon={<Droplets className="size-[1.125rem] text-water-600" aria-hidden="true" />}
-              description="Tap a glass to fill up to it, or tap the last full glass to undo."
-            />
-            <WaterTracker target={plan.targets.waterGlasses} logs={waterLogs} serverToday={serverToday} />
-          </Panel>
-
           <Panel>
             <PanelHeader
               eyebrow="Targets"

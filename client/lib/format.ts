@@ -88,3 +88,25 @@ export function weekdayFromKey(dateKey: string): string {
   const [year, month, day] = dateKey.split('-').map(Number);
   return weekdayKey(new Date(year ?? 2026, (month ?? 1) - 1, day ?? 1));
 }
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/**
+ * "Monday, 21 September" for a 'YYYY-MM-DD' key. Built by hand rather than with
+ * Intl so the server and the browser can never disagree during hydration.
+ */
+export function formatDayLong(dateKey: string): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const date = new Date(year ?? 2026, (month ?? 1) - 1, day ?? 1);
+  return `${WEEKDAY_NAMES[date.getDay()]}, ${date.getDate()} ${MONTH_NAMES[date.getMonth()]}`;
+}
+
+/** '1:00 PM' → 780 (minutes since midnight). */
+export function minutesFromTime(time: string): number {
+  const match = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return 0;
+  let hours = Number(match[1]) % 12;
+  if (match[3]!.toUpperCase() === 'PM') hours += 12;
+  return hours * 60 + Number(match[2]);
+}

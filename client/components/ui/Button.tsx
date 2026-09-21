@@ -1,6 +1,6 @@
 'use client';
 
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ComponentPropsWithRef, ReactNode } from 'react';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,7 +46,7 @@ export function Button({
   children,
   disabled,
   ...props
-}: BaseProps & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: BaseProps & Omit<ComponentPropsWithRef<'button'>, 'children'>) {
   return (
     <button
       {...props}

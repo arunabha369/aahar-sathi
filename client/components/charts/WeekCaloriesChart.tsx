@@ -30,7 +30,7 @@ export function WeekCaloriesChart({ days, targets }: { days: PlanDay[]; targets:
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 20, right: 12, bottom: 0, left: 0 }}>
           <CartesianGrid vertical={false} stroke="#E9EEEB" />
-          <XAxis dataKey="day" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#5F6F69' }} />
+          <XAxis dataKey="day" interval={0} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#5F6F69' }} />
           <YAxis
             tickLine={false}
             axisLine={false}

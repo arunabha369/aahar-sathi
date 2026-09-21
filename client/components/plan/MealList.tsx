@@ -2,6 +2,7 @@
 
 import { RefreshCw, Repeat2 } from 'lucide-react';
 import { ProteinBoost } from '@/components/plan/ProteinBoost';
+import { MacroLine } from '@/components/plan/MacroLine';
 import { MealPhoto } from '@/components/plan/MealPhoto';
 import { SLOT_META } from '@/lib/constants';
 import { formatItem } from '@/lib/format';
@@ -16,13 +17,6 @@ interface MealListProps {
   swappingSlots?: PlanSlot[];
 }
 
-function MacroChip({ letter, grams, className }: { letter: string; grams: number; className: string }) {
-  return (
-    <span className={cn('rounded-md px-1.5 py-0.5 text-[0.6875rem] font-bold tabular-nums', className)}>
-      {letter} {grams}g
-    </span>
-  );
-}
 
 export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: MealListProps) {
   const drift = day.totals.kcal - targets.calories;
@@ -39,17 +33,19 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
             <li
               key={meal.slot}
               className={cn(
-                'group relative flex items-start gap-3.5 px-4 py-4 transition-colors sm:px-5',
+                // Phones: dish on top, macros + Swap share a full-width row underneath.
+                // sm and up: photo | details | Swap, with the macros under the details.
+                'grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3.5 gap-y-2.5 px-4 py-4 transition-colors sm:px-5',
                 index > 0 && 'border-t border-line',
                 swapping ? 'opacity-60' : 'hover:bg-canvas/70 focus-within:bg-canvas/70',
               )}
             >
-              <div className="flex shrink-0 flex-col items-center gap-1.5 pt-0.5">
+              <div className="col-start-1 row-start-1 flex flex-col items-center gap-1.5 pt-0.5 sm:row-span-2">
                 <MealPhoto slug={meal.slug} slot={meal.slot} className="size-14 sm:size-16" sizes="64px" />
                 <span className="text-[0.625rem] font-bold text-muted tabular-nums">{meal.time}</span>
               </div>
 
-              <div className="min-w-0 flex-1">
+              <div className="col-span-2 col-start-2 row-start-1 min-w-0 sm:col-span-1">
                 <p className="eyebrow">{slot.label}</p>
                 <h4 className="mt-0.5 text-[0.9375rem] font-bold leading-snug text-ink">
                   {swapping ? 'Finding another dish…' : meal.name}
@@ -57,16 +53,12 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
                 <p className="mt-1 text-[0.8125rem] leading-relaxed text-muted">
                   {meal.items.map((item) => formatItem(item)).join(' · ')}
                 </p>
-
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                  <span className="rounded-md bg-ink px-1.5 py-0.5 text-[0.6875rem] font-bold text-white tabular-nums">
-                    {meal.kcal} kcal
-                  </span>
-                  <MacroChip letter="P" grams={meal.protein} className="bg-orange-50 text-orange-700" />
-                  <MacroChip letter="C" grams={meal.carbs} className="bg-blue-50 text-blue-700" />
-                  <MacroChip letter="F" grams={meal.fat} className="bg-yellow-50 text-yellow-800" />
-                </div>
               </div>
+
+              <MacroLine
+                meal={meal}
+                className="col-span-2 col-start-1 row-start-2 self-center sm:col-span-1 sm:col-start-2"
+              />
 
               {onSwap ? (
                 <button
@@ -74,7 +66,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
                   onClick={() => onSwap(meal.slot)}
                   disabled={swapping}
                   data-print="hide"
-                  className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 self-center rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink disabled:opacity-60"
+                  className="col-start-3 row-start-2 inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 self-center rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink disabled:opacity-60 sm:row-span-2 sm:row-start-1"
                   aria-label={`Swap ${slot.label.toLowerCase()} on ${day.day}`}
                 >
                   {swapping ? (
@@ -82,6 +74,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
                   ) : (
                     <Repeat2 className="size-4" aria-hidden="true" />
                   )}
+                  {/* Icon-only on phones (the aria-label names it); labelled from sm up. */}
                   <span className="hidden sm:inline">Swap</span>
                 </button>
               ) : null}

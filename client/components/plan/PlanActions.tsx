@@ -1,8 +1,8 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ClipboardCopy, Printer, Share2, Shuffle } from 'lucide-react';
+import { ChevronDown, ClipboardCopy, MessageCircle, Printer, Share2, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
@@ -85,28 +85,121 @@ export function PlanActions({ plan, serverToday }: { plan: Plan; serverToday: st
   };
 
   return (
-    <div data-print="hide" className="no-print flex flex-wrap gap-2">
-      <Button onClick={shuffle} pending={pending} variant="secondary" size="sm">
+    <div data-print="hide" className="no-print flex w-full items-center gap-2 sm:w-auto">
+      <Button onClick={shuffle} pending={pending} variant="secondary" size="sm" className="flex-1 sm:flex-none">
         <Shuffle className="size-4 text-muted" aria-hidden="true" />
         Shuffle week
       </Button>
-      <Button onClick={() => window.print()} variant="secondary" size="sm">
-        <Printer className="size-4 text-muted" aria-hidden="true" />
-        Print or save PDF
-      </Button>
-      <a
-        href={`https://wa.me/?text=${encodeURIComponent(todaySummary(plan, today))}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-3.5 text-[0.8125rem] font-semibold text-ink shadow-xs ring-1 ring-line transition-colors hover:bg-canvas hover:ring-line-strong"
+      <ShareMenu
+        onPrint={() => window.print()}
+        whatsappHref={`https://wa.me/?text=${encodeURIComponent(todaySummary(plan, today))}`}
+        onCopy={copyPlan}
+      />
+    </div>
+  );
+}
+
+const menuItem =
+  'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold text-ink transition-colors hover:bg-canvas focus-visible:bg-canvas';
+
+/**
+ * A disclosure menu: Escape and outside clicks close it, focus returns to the
+ * trigger, and choosing an item closes it — so keyboard and pointer users get the
+ * same behaviour.
+ */
+function ShareMenu({ onPrint, whatsappHref, onCopy }: { onPrint: () => void; whatsappHref: string; onCopy: () => void }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const firstItemRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    firstItemRef.current?.focus();
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    const onPointer = (event: PointerEvent) => {
+      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [open]);
+
+  const choose = (action: () => void) => () => {
+    setOpen(false);
+    triggerRef.current?.focus();
+    action();
+  };
+
+  return (
+    <div
+      ref={wrapperRef}
+      className="relative"
+      // Tabbing out of the open menu closes it rather than leaving it hanging.
+      onBlur={(event) => {
+        if (open && !wrapperRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
+      <Button
+        ref={triggerRef}
+        onClick={() => setOpen((value) => !value)}
+        variant="secondary"
+        size="sm"
+        aria-expanded={open}
+        aria-controls={panelId}
       >
         <Share2 className="size-4 text-muted" aria-hidden="true" />
         Share
-      </a>
-      <Button onClick={copyPlan} variant="secondary" size="sm">
-        <ClipboardCopy className="size-4 text-muted" aria-hidden="true" />
-        Copy plan
+        <ChevronDown className={`size-4 text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </Button>
+
+      {open ? (
+        <div
+          id={panelId}
+          className="surface-raised absolute right-0 top-full z-30 mt-2 w-64 max-w-[calc(100vw-2rem)] p-1.5 animate-fade"
+        >
+          <ul>
+            <li>
+              <button ref={firstItemRef} type="button" className={menuItem} onClick={choose(onPrint)}>
+                <Printer className="size-4 text-muted" aria-hidden="true" />
+                Print or save as PDF
+              </button>
+            </li>
+            <li>
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={menuItem}
+                onClick={() => {
+                  setOpen(false);
+                  triggerRef.current?.focus();
+                }}
+              >
+                <MessageCircle className="size-4 text-muted" aria-hidden="true" />
+                Share today on WhatsApp
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </li>
+            <li>
+              <button type="button" className={menuItem} onClick={choose(onCopy)}>
+                <ClipboardCopy className="size-4 text-muted" aria-hidden="true" />
+                Copy the week as text
+              </button>
+            </li>
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }
