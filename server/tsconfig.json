@@ -17,7 +17,10 @@
     "resolveJsonModule": true,
     "declaration": false,
     "sourceMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    // Source imports name the real .ts files (so Next.js can bundle this API too);
+    // the compiler rewrites them to .js for Node.
+    "rewriteRelativeImportExtensions": true
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "tests"]

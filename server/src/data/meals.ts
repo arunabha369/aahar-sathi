@@ -1,4 +1,4 @@
-import type { MealData, MealIngredient, MealItem, MealSlot, Diet, Region } from '../types.js';
+import type { MealData, MealIngredient, MealItem, MealSlot, Diet, Region } from '../types.ts';
 
 /**
  * A single registry of ingredient names, so "Onion" is spelled the same way in

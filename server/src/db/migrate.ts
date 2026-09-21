@@ -1,5 +1,5 @@
-import { closeDatabase, pool } from './pool.js';
-import { SCHEMA_SQL } from './schema.js';
+import { closeDatabase, pool } from './pool.ts';
+import { SCHEMA_SQL } from './schema.ts';
 
 /** `npm run db:migrate`: creates or updates the tables. Safe to run as often as you like. */
 async function migrate(): Promise<void> {

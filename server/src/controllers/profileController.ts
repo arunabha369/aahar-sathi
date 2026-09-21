@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express';
-import { findUserById, saveProfile } from '../db/users.js';
-import { ApiError } from '../utils/ApiError.js';
-import { toPublicUser } from '../utils/serialize.js';
-import { currentUserId } from '../middleware/requireAuth.js';
-import { validBody } from '../middleware/validate.js';
-import { calculateTargets } from '../services/nutrition.js';
-import type { ProfileBody } from '../validation/schemas.js';
+import { findUserById, saveProfile } from '../db/users.ts';
+import { ApiError } from '../utils/ApiError.ts';
+import { toPublicUser } from '../utils/serialize.ts';
+import { currentUserId } from '../middleware/requireAuth.ts';
+import { validBody } from '../middleware/validate.ts';
+import { calculateTargets } from '../services/nutrition.ts';
+import type { ProfileBody } from '../validation/schemas.ts';
 
 export async function getProfile(req: Request, res: Response): Promise<void> {
   const user = await findUserById(currentUserId(req));

@@ -5,10 +5,10 @@ import {
   listWeightLogs,
   setWaterLog,
   setWeightLog,
-} from '../controllers/logsController.js';
-import { requireAuth } from '../middleware/requireAuth.js';
-import { validate } from '../middleware/validate.js';
-import { dateParamSchema, rangeQuerySchema, waterSchema, weightSchema } from '../validation/schemas.js';
+} from '../controllers/logsController.ts';
+import { requireAuth } from '../middleware/requireAuth.ts';
+import { validate } from '../middleware/validate.ts';
+import { dateParamSchema, rangeQuerySchema, waterSchema, weightSchema } from '../validation/schemas.ts';
 
 export const logRouter: Router = Router();
 

@@ -1,5 +1,5 @@
-import { pool, withTransaction, type Queryable } from './pool.js';
-import type { PlanDay, Profile, Targets } from '../types.js';
+import { pool, withTransaction, type Queryable } from './pool.ts';
+import type { PlanDay, Profile, Targets } from '../types.ts';
 
 export interface PlanRecord {
   id: string;

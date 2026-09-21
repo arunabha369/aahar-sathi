@@ -7,8 +7,8 @@ import {
   classifyBmi,
   glassesToLitres,
   referenceWeight,
-} from '../src/services/nutrition.js';
-import type { Profile } from '../src/types.js';
+} from '../src/services/nutrition.ts';
+import type { Profile } from '../src/types.ts';
 
 const base: Profile = {
   age: 25,

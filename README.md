@@ -68,33 +68,34 @@ npm install          # installs both workspaces
 ### 2. Configure
 
 ```bash
-cp server/.env.example server/.env
-cp client/.env.example client/.env.local
+cp client/.env.example client/.env.local   # the website and its built-in API
+cp server/.env.example server/.env         # the scripts: migrate, seed, tests, standalone API
 ```
 
-**`server/.env`**
+Both need the same `DATABASE_URL` and `JWT_SECRET`.
+
+**`server/.env`** (and the same database/auth values in `client/.env.local`)
 
 | Variable        | Required | Default                                     | What it does                                              |
 | --------------- | -------- | ------------------------------------------- | --------------------------------------------------------- |
 | `DATABASE_URL`  | yes      | —                                           | Postgres connection string (Supabase Session pooler, or local). The server exits if missing. |
 | `DATABASE_CA_CERT` | no    | —                                           | Supabase's CA certificate (file path or PEM) to verify TLS. Without it, TLS is encrypted but unverified. |
-| `DATABASE_POOL_SIZE` | no  | `10`                                        | Connections the API keeps open.                           |
+| `DATABASE_POOL_SIZE` | no  | `10` (`2` on Vercel)                        | Connections each API instance keeps open.                 |
 | `JWT_SECRET`    | yes      | —                                           | Signing key, at least 16 characters. The server exits if missing. |
-| `PORT`          | no       | `5001`                                      | Port the API listens on.                                  |
+| `PORT`          | no       | `5001`                                      | Port for the standalone API (`npm run dev:api`) only.     |
 | `NODE_ENV`      | no       | `development`                               | `production` turns on `trust proxy` and secure cookies.   |
 | `JWT_EXPIRES_IN`| no       | `7d`                                        | Token lifetime; the cookie maxAge matches.                |
-| `CLIENT_ORIGIN` | no       | `http://localhost:3000`                     | CORS origin (a dev convenience — see the rewrite note).   |
+| `CLIENT_ORIGIN` | no       | `http://localhost:3000`                     | CORS origin for the standalone API only.                  |
 | `DEMO_ENABLED`  | no       | `true`                                      | Enables `POST /api/auth/demo` and seeding the demo user.  |
 
 **`client/.env.local`**
 
 | Variable               | Required | Default                   | What it does                                               |
 | ---------------------- | -------- | ------------------------- | ---------------------------------------------------------- |
-| `API_URL`              | yes      | `http://localhost:5001`   | Where Express lives. Used by the `/api` rewrite **and** by Server Components. |
+| `DATABASE_URL`         | yes      | —                         | Same as above — the API runs inside the website.           |
+| `JWT_SECRET`           | yes      | —                         | Same as above.                                             |
+| `DEMO_ENABLED`         | no       | `true`                    | Same as above.                                             |
 | `NEXT_PUBLIC_SITE_URL` | no       | `https://aaharsathi.in`   | `metadataBase`, `robots.txt` and `sitemap.xml`.            |
-
-`API_URL` must be set **at build time as well as at runtime**, because Next.js generates rewrites during
-the build.
 
 ### 3. Create the tables and seed them
 
@@ -114,7 +115,7 @@ The seed upserts all 82 meals by slug (so it is safe to re-run) and creates a de
 ### 4. Run
 
 ```bash
-npm run dev          # Express on :5001 and Next.js on :3000, together
+npm run dev          # the website on :3000, with the API at /api
 ```
 
 Open <http://localhost:3000> and use **Try the demo**, or create an account.
@@ -127,28 +128,33 @@ Run these from the repo root:
 
 | Script            | What it does                                                      |
 | ----------------- | ----------------------------------------------------------------- |
-| `npm run dev`     | Both apps together (concurrently)                                 |
-| `npm run build`   | `tsc` for the server, `next build` for the client                 |
-| `npm start`       | Both apps from their build output                                 |
+| `npm run dev`     | The website with its built-in API, on :3000                       |
+| `npm run build`   | Production build of the website (API included)                    |
+| `npm start`       | Serve that build                                                  |
+| `npm run dev:api` | The API on its own (Express on :5001), if you ever need it        |
 | `npm run lint`    | Server typecheck + ESLint on the client                           |
 | `npm test`        | The full Vitest suite (89 tests)                                  |
 | `npm run seed`    | Seed meals and the demo account                                   |
-| `npm run db:migrate -w server` | Create or update the database tables              |
+| `npm run db:migrate` | Create or update the database tables                           |
 
 Workspace-only variants work too, e.g. `npm run dev -w server` or `npm test -w server`.
 
 ---
 
-## Why the `/api` rewrite exists
+## How the API is served
 
-`client/next.config.ts` rewrites `/api/:path*` to `${API_URL}/api/:path*`.
+There is one deployment. The Express app in `server/` is mounted inside Next.js:
 
-The browser therefore only ever talks to the Next.js origin. The auth cookie is set by Express but arrives
-through the Next.js domain, so it stays **first-party** — no CORS preflights, and no third-party-cookie
-blocking when the two apps are deployed to different hosts (`aaharsathi.in` and `api.aaharsathi.in`).
+- **Browser → `/api/*`** — `client/pages/api/[...path].ts` hands each request to Express unchanged.
+  (It is a Pages Router route because those receive Node's own request/response objects, which
+  Express needs.) Same origin, so the auth cookie stays **first-party** with no CORS.
+- **Server Components** — `client/lib/api/server.ts` runs the same Express app in-process
+  (`callExpress`), forwarding the visitor's cookie and IP, so the first paint already has the
+  user's data without an HTTP round-trip.
 
-Server Components skip the rewrite and call Express directly at `API_URL`, forwarding the cookie from
-`await cookies()`, so the first paint already has the user's data.
+The server source imports its files as `.ts` (so Next.js can bundle it); `tsc` rewrites those to `.js`
+for the standalone build (`rewriteRelativeImportExtensions`). The standalone Express server
+(`npm run dev:api`, `npm start -w server`) still works, and it is what the test suite exercises.
 
 Route protection lives in `client/proxy.ts` (the Next.js 16 replacement for `middleware.ts`). It is an
 optimistic check on the presence of the cookie; **Express is the real security boundary** and verifies the
@@ -233,20 +239,21 @@ point `TEST_DATABASE_URL` elsewhere if yours is not on `localhost:5432`.
 
 ## Deployment
 
-**Client → Vercel** (`aaharsathi.in`)
+**Website + API → Vercel** (`aaharsathi.in`) — one project, nothing else to host
 
-- Root directory `client`, framework preset Next.js
-- Environment: `API_URL=https://api.aaharsathi.in`, `NEXT_PUBLIC_SITE_URL=https://aaharsathi.in`
-- `API_URL` must exist at build time — the rewrite is generated during `next build`
-
-**API → Render or Railway** (`api.aaharsathi.in`)
-
-- Root directory `server`, build `npm ci && npm run build`, start `npm start`
-- Environment: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`,
-  `CLIENT_ORIGIN=https://aaharsathi.in`, `DEMO_ENABLED` as you prefer
-- `NODE_ENV=production` turns on `trust proxy` (so rate limiting sees the real IP) and `secure` cookies
-- Run `npm run db:migrate` and then `npm run seed` once against the production database to create the
-  tables and load the meals
+- Root directory `client`, framework preset Next.js. Leave **"Include files outside the root
+  directory"** on (the default): the build needs `../server`
+- Environment variables:
+  - `DATABASE_URL` — the Supabase pooler string with port **6543** (transaction mode, made for
+    serverless)
+  - `JWT_SECRET` — a long random string (`openssl rand -base64 48`)
+  - `DEMO_ENABLED` — `true` or `false`
+  - `NEXT_PUBLIC_SITE_URL=https://aaharsathi.in`
+- Vercel sets `NODE_ENV=production`, which turns on `trust proxy` (rate limits see the real IP) and
+  `secure` cookies. Each function instance keeps at most 2 database connections and closes idle ones
+  before it sleeps (`@vercel/functions` `attachDatabasePool`)
+- Create the tables and load the meals once, from your machine: `npm run db:migrate && npm run seed`
+  with `server/.env` pointing at the same database
 
 **Database → Supabase**
 
@@ -255,19 +262,17 @@ point `TEST_DATABASE_URL` elsewhere if yours is not on `localhost:5432`.
 - Optionally set `DATABASE_CA_CERT` to Supabase's certificate (Project Settings → Database → SSL
   configuration) so the TLS connection is verified, not just encrypted
 
-Because of the rewrite, the two hosts never exchange cookies directly: the browser sees one origin.
 
 ---
 
 ## Troubleshooting
 
-**`Port 5001 is already in use`** — something else on your machine has the port. Either stop it, or set
-`PORT` in `server/.env` and the matching `API_URL` in `client/.env.local`.
+**`Port 3000 is already in use`** — another app has the port; stop it, or run `npm run dev -w client -- -p 3001`.
 
 **`The meal database is empty`** — run `npm run seed`.
 
-**The server exits on start with "Invalid environment configuration"** — `DATABASE_URL` or `JWT_SECRET` is
-missing from `server/.env`.
+**"Invalid environment configuration"** — `DATABASE_URL` or `JWT_SECRET` is missing: from `client/.env.local`
+(website), `server/.env` (scripts), or the Vercel project's environment variables.
 
 **`The database is reachable but has no tables yet`** — run `npm run db:migrate -w server`, then `npm run seed`.
 

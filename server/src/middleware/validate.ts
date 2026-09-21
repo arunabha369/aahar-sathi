@@ -1,6 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { ZodError, type ZodType } from 'zod';
-import { ApiError } from '../utils/ApiError.js';
+import { ApiError } from '../utils/ApiError.ts';
 
 export interface RequestSchemas {
   body?: ZodType;

@@ -1,9 +1,9 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
-import { pool } from '../src/db/pool.js';
-import { signToken } from '../src/utils/auth.js';
-import { seedMeals, signUpWithProfile } from './helpers.js';
+import { createApp } from '../src/app.ts';
+import { pool } from '../src/db/pool.ts';
+import { signToken } from '../src/utils/auth.ts';
+import { seedMeals, signUpWithProfile } from './helpers.ts';
 
 const app = createApp();
 

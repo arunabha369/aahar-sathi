@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MEALS } from '../src/data/meals.js';
-import { INGREDIENT_CATEGORIES, MEAL_SLOTS, type MealSlot } from '../src/types.js';
+import { MEALS } from '../src/data/meals.ts';
+import { INGREDIENT_CATEGORIES, MEAL_SLOTS, type MealSlot } from '../src/types.ts';
 
 const bySlot = (slot: MealSlot) => MEALS.filter((meal) => meal.slot === slot);
 

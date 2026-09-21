@@ -6,7 +6,7 @@ import {
   type Goal,
   type Profile,
   type Targets,
-} from '../types.js';
+} from '../types.ts';
 
 /** Calorie adjustment applied to TDEE for each goal. */
 export const GOAL_ADJUSTMENT: Record<Goal, number> = {

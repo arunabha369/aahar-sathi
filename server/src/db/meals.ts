@@ -1,6 +1,6 @@
-import { pool } from './pool.js';
-import type { PlannerMeal } from '../services/planGenerator.js';
-import type { MealData } from '../types.js';
+import { pool } from './pool.ts';
+import type { PlannerMeal } from '../services/planGenerator.ts';
+import type { MealData } from '../types.ts';
 
 export async function listMeals(): Promise<PlannerMeal[]> {
   const { rows } = await pool.query<PlannerMeal>(

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { attachDatabasePool } from '@vercel/functions';
 import pg from 'pg';
-import { env } from '../config/env.js';
+import { env } from '../config/env.ts';
 
 // DATE columns hold the user's calendar day ('YYYY-MM-DD'). Left alone, pg turns them
 // into JavaScript Dates at local midnight, which shifts the day across timezones.
@@ -38,8 +39,13 @@ export const pool = new pg.Pool({
   ...connectionConfig(),
   max: env.DATABASE_POOL_SIZE,
   connectionTimeoutMillis: 10_000,
-  idleTimeoutMillis: 30_000,
+  // On Vercel an instance stays awake until its idle connections close, so close them sooner.
+  idleTimeoutMillis: process.env.VERCEL ? 5_000 : 30_000,
 });
+
+// On Vercel: lets idle connections close before an instance is suspended, instead of leaking
+// them on Supabase's pooler. Does nothing anywhere else.
+attachDatabasePool(pool);
 
 // An idle client losing its connection (a pooler restart, say) must not crash the server.
 pool.on('error', (error) => {

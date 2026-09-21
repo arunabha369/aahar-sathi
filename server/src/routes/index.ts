@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { authRouter } from './authRoutes.js';
-import { logRouter } from './logRoutes.js';
-import { planRouter } from './planRoutes.js';
-import { profileRouter } from './profileRoutes.js';
-import { deleteAccount } from '../controllers/authController.js';
-import { requireAuth } from '../middleware/requireAuth.js';
+import { authRouter } from './authRoutes.ts';
+import { logRouter } from './logRoutes.ts';
+import { planRouter } from './planRoutes.ts';
+import { profileRouter } from './profileRoutes.ts';
+import { deleteAccount } from '../controllers/authController.ts';
+import { requireAuth } from '../middleware/requireAuth.ts';
 
 export const apiRouter: Router = Router();
 

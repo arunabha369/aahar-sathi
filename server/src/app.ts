@@ -3,21 +3,21 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { env, isProduction } from './config/env.js';
-import { apiLimiter } from './middleware/rateLimit.js';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
-import { apiRouter } from './routes/index.js';
+import { env, isProduction } from './config/env.ts';
+import { apiLimiter } from './middleware/rateLimit.ts';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.ts';
+import { apiRouter } from './routes/index.ts';
 
 export function createApp(): Express {
   const app = express();
 
-  // Behind Render/Railway/Vercel proxies the client IP arrives in X-Forwarded-For,
+  // Behind Vercel's proxy the client IP arrives in X-Forwarded-For,
   // which express-rate-limit and `secure` cookies both depend on.
   if (isProduction) app.set('trust proxy', 1);
 
   app.use(helmet());
-  // In production the browser only ever talks to the Next.js origin, which
-  // rewrites /api to this server — CORS is a development convenience.
+  // Inside Next.js (the normal setup) the browser calls /api on the same origin, so CORS
+  // only matters for the standalone server during development.
   app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());

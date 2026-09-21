@@ -1,4 +1,4 @@
-import { INGREDIENT_CATEGORIES, type IngredientCategory, type PlanDay } from '../types.js';
+import { INGREDIENT_CATEGORIES, type IngredientCategory, type PlanDay } from '../types.ts';
 
 export interface GroceryGroup {
   category: IngredientCategory;

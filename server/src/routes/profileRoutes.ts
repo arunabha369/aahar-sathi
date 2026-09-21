@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { getProfile, updateProfile } from '../controllers/profileController.js';
-import { requireAuth } from '../middleware/requireAuth.js';
-import { validate } from '../middleware/validate.js';
-import { profileSchema } from '../validation/schemas.js';
+import { getProfile, updateProfile } from '../controllers/profileController.ts';
+import { requireAuth } from '../middleware/requireAuth.ts';
+import { validate } from '../middleware/validate.ts';
+import { profileSchema } from '../validation/schemas.ts';
 
 export const profileRouter: Router = Router();
 

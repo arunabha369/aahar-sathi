@@ -1,6 +1,6 @@
-import type { PlanRecord } from '../db/plans.js';
-import type { UserRecord } from '../db/users.js';
-import type { Profile } from '../types.js';
+import type { PlanRecord } from '../db/plans.ts';
+import type { UserRecord } from '../db/users.ts';
+import type { Profile } from '../types.ts';
 
 export interface PublicUser {
   id: string;

@@ -1,4 +1,4 @@
-import { DIETS, MEAL_SLOTS, REGIONS } from '../types.js';
+import { DIETS, MEAL_SLOTS, REGIONS } from '../types.ts';
 
 /** `('a', 'b')` for a CHECK constraint, built from the same constants the API validates with. */
 const oneOf = (values: readonly string[]) => `(${values.map((value) => `'${value}'`).join(', ')})`;

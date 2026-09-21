@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { demoLogin, login, logout, me, register } from '../controllers/authController.js';
-import { requireAuth } from '../middleware/requireAuth.js';
-import { validate } from '../middleware/validate.js';
-import { authLimiter } from '../middleware/rateLimit.js';
-import { loginSchema, registerSchema } from '../validation/schemas.js';
+import { demoLogin, login, logout, me, register } from '../controllers/authController.ts';
+import { requireAuth } from '../middleware/requireAuth.ts';
+import { validate } from '../middleware/validate.ts';
+import { authLimiter } from '../middleware/rateLimit.ts';
+import { loginSchema, registerSchema } from '../validation/schemas.ts';
 
 export const authRouter: Router = Router();
 

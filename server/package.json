@@ -16,6 +16,7 @@
     "db:migrate:prod": "node dist/db/migrate.js"
   },
   "dependencies": {
+    "@vercel/functions": "^3.9.8",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

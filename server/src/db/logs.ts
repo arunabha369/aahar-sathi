@@ -1,4 +1,4 @@
-import { pool } from './pool.js';
+import { pool } from './pool.ts';
 
 export interface WaterEntry {
   date: string;

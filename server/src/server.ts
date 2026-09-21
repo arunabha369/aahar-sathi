@@ -1,6 +1,6 @@
-import { createApp } from './app.js';
-import { env } from './config/env.js';
-import { checkDatabase } from './db/pool.js';
+import { createApp } from './app.ts';
+import { env } from './config/env.ts';
+import { checkDatabase } from './db/pool.ts';
 
 async function start(): Promise<void> {
   await checkDatabase();

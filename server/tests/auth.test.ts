@@ -1,11 +1,11 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { createApp } from '../src/app.js';
-import { pool } from '../src/db/pool.js';
-import { upsertUserByEmail } from '../src/db/users.js';
-import { hashPassword } from '../src/utils/auth.js';
-import { DEMO_EMAIL } from '../src/controllers/authController.js';
-import { completeProfile } from './helpers.js';
+import { createApp } from '../src/app.ts';
+import { pool } from '../src/db/pool.ts';
+import { upsertUserByEmail } from '../src/db/users.ts';
+import { hashPassword } from '../src/utils/auth.ts';
+import { DEMO_EMAIL } from '../src/controllers/authController.ts';
+import { completeProfile } from './helpers.ts';
 
 const app = createApp();
 

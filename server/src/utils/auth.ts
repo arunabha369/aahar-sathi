@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import type { Response } from 'express';
-import { COOKIE_MAX_AGE_MS, COOKIE_NAME, env, isProduction } from '../config/env.js';
+import { COOKIE_MAX_AGE_MS, COOKIE_NAME, env, isProduction } from '../config/env.ts';
 
 const BCRYPT_ROUNDS = 12;
 

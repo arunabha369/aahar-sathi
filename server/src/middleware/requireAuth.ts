@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
-import { COOKIE_NAME } from '../config/env.js';
-import { userExists } from '../db/users.js';
-import { ApiError } from '../utils/ApiError.js';
-import { verifyToken } from '../utils/auth.js';
+import { COOKIE_NAME } from '../config/env.ts';
+import { userExists } from '../db/users.ts';
+import { ApiError } from '../utils/ApiError.ts';
+import { verifyToken } from '../utils/auth.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

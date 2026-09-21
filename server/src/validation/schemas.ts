@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ACTIVITIES, CUISINES, DIETS, GENDERS, GOALS, PLAN_SLOTS } from '../types.js';
+import { ACTIVITIES, CUISINES, DIETS, GENDERS, GOALS, PLAN_SLOTS } from '../types.ts';
 
 const uuid = z
   .string()

@@ -1,5 +1,5 @@
-import { pool, type Queryable } from './pool.js';
-import type { Profile } from '../types.js';
+import { pool, type Queryable } from './pool.ts';
+import type { Profile } from '../types.ts';
 
 export interface UserRecord {
   id: string;

@@ -10,11 +10,11 @@ import {
   shufflePlan,
   swapMeal,
   updateGroceryItem,
-} from '../controllers/planController.js';
-import { requireAuth } from '../middleware/requireAuth.js';
-import { validate } from '../middleware/validate.js';
-import { planLimiter } from '../middleware/rateLimit.js';
-import { grocerySchema, idParamSchema, plansQuerySchema, swapSchema } from '../validation/schemas.js';
+} from '../controllers/planController.ts';
+import { requireAuth } from '../middleware/requireAuth.ts';
+import { validate } from '../middleware/validate.ts';
+import { planLimiter } from '../middleware/rateLimit.ts';
+import { grocerySchema, idParamSchema, plansQuerySchema, swapSchema } from '../validation/schemas.ts';
 
 export const planRouter: Router = Router();
 

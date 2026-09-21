@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { ApiError } from '../utils/ApiError.js';
-import { isProduction } from '../config/env.js';
-import { zodToApiError } from './validate.js';
+import { ApiError } from '../utils/ApiError.ts';
+import { isProduction } from '../config/env.ts';
+import { zodToApiError } from './validate.ts';
 
 /** Postgres reports what went wrong as a SQLSTATE code plus the constraint involved. */
 interface PostgresError extends Error {

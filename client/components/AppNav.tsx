@@ -19,7 +19,8 @@ const LINKS = [
 ] as const;
 
 function useIsActive() {
-  const pathname = usePathname();
+  // Typed as nullable because the app also has a pages/ folder (for /api); App Router pages always have one.
+  const pathname = usePathname() ?? '';
   return (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 }
 

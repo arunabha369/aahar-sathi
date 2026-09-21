@@ -1,8 +1,8 @@
 import request from 'supertest';
 import type { Express } from 'express';
-import { MEALS } from '../src/data/meals.js';
-import { syncMeals } from '../src/db/meals.js';
-import type { Profile } from '../src/types.js';
+import { MEALS } from '../src/data/meals.ts';
+import { syncMeals } from '../src/db/meals.ts';
+import type { Profile } from '../src/types.ts';
 
 export const completeProfile: Profile = {
   age: 28,

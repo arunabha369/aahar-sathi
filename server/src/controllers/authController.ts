@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
-import { env } from '../config/env.js';
-import { createUser, deleteUser, findUserByEmail, findUserById, findUserWithPasswordByEmail } from '../db/users.js';
-import { ApiError } from '../utils/ApiError.js';
-import { clearAuthCookie, hashPassword, setAuthCookie, signToken, verifyPassword } from '../utils/auth.js';
-import { toPublicUser } from '../utils/serialize.js';
-import { validBody } from '../middleware/validate.js';
-import { currentUserId } from '../middleware/requireAuth.js';
-import type { LoginBody, RegisterBody } from '../validation/schemas.js';
+import { env } from '../config/env.ts';
+import { createUser, deleteUser, findUserByEmail, findUserById, findUserWithPasswordByEmail } from '../db/users.ts';
+import { ApiError } from '../utils/ApiError.ts';
+import { clearAuthCookie, hashPassword, setAuthCookie, signToken, verifyPassword } from '../utils/auth.ts';
+import { toPublicUser } from '../utils/serialize.ts';
+import { validBody } from '../middleware/validate.ts';
+import { currentUserId } from '../middleware/requireAuth.ts';
+import type { LoginBody, RegisterBody } from '../validation/schemas.ts';
 
 export const DEMO_EMAIL = 'demo@aaharsathi.in';
 

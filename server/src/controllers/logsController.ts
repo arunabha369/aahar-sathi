@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
-import * as logs from '../db/logs.js';
-import { ApiError } from '../utils/ApiError.js';
-import { currentUserId } from '../middleware/requireAuth.js';
-import { validBody, validParams, validQuery } from '../middleware/validate.js';
-import { addDays, toDateKey } from '../utils/date.js';
-import type { DateParams, RangeQuery, WaterBody, WeightBody } from '../validation/schemas.js';
+import * as logs from '../db/logs.ts';
+import { ApiError } from '../utils/ApiError.ts';
+import { currentUserId } from '../middleware/requireAuth.ts';
+import { validBody, validParams, validQuery } from '../middleware/validate.ts';
+import { addDays, toDateKey } from '../utils/date.ts';
+import type { DateParams, RangeQuery, WaterBody, WeightBody } from '../validation/schemas.ts';
 
 const DEFAULT_RANGE_DAYS = 90;
 

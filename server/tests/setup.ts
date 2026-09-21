@@ -22,8 +22,8 @@ const { rowCount } = await admin.query('select 1 from pg_database where datname 
 if (rowCount === 0) await admin.query(`create database "${dbName.replace(/"/g, '""')}"`);
 await admin.end();
 
-const { pool, closeDatabase } = await import('../src/db/pool.js');
-const { SCHEMA_SQL } = await import('../src/db/schema.js');
+const { pool, closeDatabase } = await import('../src/db/pool.ts');
+const { SCHEMA_SQL } = await import('../src/db/schema.ts');
 await pool.query(SCHEMA_SQL);
 
 afterEach(async () => {

@@ -1,8 +1,7 @@
-import { cookies } from 'next/headers';
+import 'server-only';
+import { cookies, headers } from 'next/headers';
+import { callExpress } from '@/lib/api/callExpress';
 import type { ApiErrorBody } from '@/lib/types';
-
-// `||`, not `??`: hosts can expose an unset variable as an empty string.
-const API_URL = process.env.API_URL?.trim() || 'http://localhost:5001';
 
 export class ServerApiError extends Error {
   readonly status: number;
@@ -17,24 +16,22 @@ export class ServerApiError extends Error {
 }
 
 /**
- * Server Components call Express directly and forward the auth cookie, so the
- * first paint already has the user's data — no client round-trip.
+ * Server Components call the Express API in-process — no HTTP hop, no URL to configure —
+ * forwarding the auth cookie, so the first paint already has the user's data.
  */
-export async function serverFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const cookieStore = await cookies();
-  const response = await fetch(`${API_URL}/api${path}`, {
-    ...init,
-    headers: {
-      cookie: cookieStore.toString(),
-      ...init.headers,
-    },
-    cache: 'no-store',
+export async function serverFetch<T>(path: string): Promise<T> {
+  const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
+  // The visitor's IP, so rate limits apply per person rather than to "the web server".
+  const forwardedFor = requestHeaders.get('x-forwarded-for');
+
+  const response = await callExpress(`/api${path}`, {
+    cookie: cookieStore.toString(),
+    ...(forwardedFor ? { 'x-forwarded-for': forwardedFor } : {}),
   });
 
-  const text = await response.text();
-  const body: unknown = text ? JSON.parse(text) : {};
+  const body: unknown = response.body ? JSON.parse(response.body) : {};
 
-  if (!response.ok) {
+  if (response.status >= 400) {
     const error = (body as ApiErrorBody).error;
     throw new ServerApiError(
       response.status,

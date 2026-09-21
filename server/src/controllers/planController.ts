@@ -1,15 +1,15 @@
 import type { Request, Response } from 'express';
-import * as plans from '../db/plans.js';
-import { findUserById } from '../db/users.js';
-import { ApiError } from '../utils/ApiError.js';
-import { currentUserId } from '../middleware/requireAuth.js';
-import { validBody, validParams, validQuery } from '../middleware/validate.js';
-import { buildGroceryList } from '../services/grocery.js';
-import { generatePlanDays, swapMealInDays } from '../services/planGenerator.js';
-import { createPlanForUser, loadPlannerMeals } from '../services/planService.js';
-import { toPlanSummary, toPublicPlan } from '../utils/serialize.js';
-import type { GroceryBody, IdParams, PlansQuery, SwapBody } from '../validation/schemas.js';
-import type { Profile } from '../types.js';
+import * as plans from '../db/plans.ts';
+import { findUserById } from '../db/users.ts';
+import { ApiError } from '../utils/ApiError.ts';
+import { currentUserId } from '../middleware/requireAuth.ts';
+import { validBody, validParams, validQuery } from '../middleware/validate.ts';
+import { buildGroceryList } from '../services/grocery.ts';
+import { generatePlanDays, swapMealInDays } from '../services/planGenerator.ts';
+import { createPlanForUser, loadPlannerMeals } from '../services/planService.ts';
+import { toPlanSummary, toPublicPlan } from '../utils/serialize.ts';
+import type { GroceryBody, IdParams, PlansQuery, SwapBody } from '../validation/schemas.ts';
+import type { Profile } from '../types.ts';
 
 const planNotFound = () => ApiError.notFound('We could not find that plan.');
 

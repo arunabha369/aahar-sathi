@@ -11,8 +11,8 @@ import {
   type PlanSlot,
   type Profile,
   type Targets,
-} from '../types.js';
-import { pickOne } from '../utils/random.js';
+} from '../types.ts';
+import { pickOne } from '../utils/random.ts';
 
 /** A meal ready to be planned: the meal data plus the database id we snapshot. */
 export interface PlannerMeal extends MealData {

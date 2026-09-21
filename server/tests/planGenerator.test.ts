@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { MEALS } from '../src/data/meals.js';
-import { buildGroceryList } from '../src/services/grocery.js';
-import { calculateTargets } from '../src/services/nutrition.js';
+import { MEALS } from '../src/data/meals.ts';
+import { buildGroceryList } from '../src/services/grocery.ts';
+import { calculateTargets } from '../src/services/nutrition.ts';
 import {
   dietAllows,
   generatePlanDays,
@@ -10,8 +10,8 @@ import {
   slotTargetKcal,
   swapMealInDays,
   type PlannerMeal,
-} from '../src/services/planGenerator.js';
-import { createRandom } from '../src/utils/random.js';
+} from '../src/services/planGenerator.ts';
+import { createRandom } from '../src/utils/random.ts';
 import {
   ACTIVITIES,
   CUISINES,
@@ -21,7 +21,7 @@ import {
   SLOT_META,
   WEEKDAYS,
   type Profile,
-} from '../src/types.js';
+} from '../src/types.ts';
 
 const plannerMeals: PlannerMeal[] = MEALS.map((meal, index) => ({ ...meal, id: `meal-${index}` }));
 
