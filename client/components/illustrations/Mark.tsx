@@ -2,23 +2,18 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 /**
- * The Aahar Sathi mark: a warm squircle holding a steaming bowl with a leaf.
- * Now uses a real generated image for a polished, production-level look.
+ * The Aahar Sathi mark: a green figure cradling a bowl of Indian food with leaves.
+ * Uses the official brand logo for a polished, production-level look.
  */
 export function Mark({ className = 'size-10' }: { className?: string }) {
   return (
-    <span
-      aria-hidden="true"
-      className={cn('relative block shrink-0 overflow-hidden rounded-xl bg-saffron-500', className)}
-    >
-      <Image
-        src="/images/app-mark.jpg"
-        alt=""
-        fill
-        sizes="40px"
-        className="scale-[1.6] object-cover object-center"
-      />
-    </span>
+    <Image
+      src="/images/aahar-sathi-logo.png"
+      alt="Aahar Sathi logo"
+      width={80}
+      height={80}
+      className={cn(className, 'shrink-0 object-contain')}
+    />
   );
 }
 
