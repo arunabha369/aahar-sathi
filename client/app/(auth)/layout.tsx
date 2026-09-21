@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, Check } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
-import { Thali } from '@/components/illustrations/Thali';
-import { HeroGlow } from '@/components/illustrations/Decor';
+import Image from 'next/image';
 
 const POINTS = [
   'Calorie and macro targets worked out for your body',
@@ -15,18 +14,27 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       {/* Brand panel — desktop only, so the form owns small screens */}
       <aside className="relative hidden overflow-hidden bg-brand-900 p-10 text-white lg:flex lg:flex-col">
-        <HeroGlow idPrefix="auth-glow" />
-        <div className="dot-grid absolute inset-0 opacity-50" aria-hidden="true" />
+        <Image
+          src="/images/auth-panel.webp"
+          alt=""
+          fill
+          preload
+          sizes="55vw"
+          className="object-cover"
+        />
+        {/* Solid brand green behind the copy keeps white text readable on any photo. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-linear-to-t from-brand-900 from-35% via-brand-900/80 to-brand-900/25"
+        />
+        {/* …and a fade at the top, where the logo's small tagline meets the window light. */}
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-44 bg-linear-to-b from-brand-900/85 to-transparent" />
 
         <div className="relative flex h-full flex-col">
           <Logo href="/" tone="light" />
 
-          <div className="my-auto py-10">
-            <div className="mx-auto w-full max-w-[22rem]">
-              <Thali priority className="drop-shadow-[0_24px_40px_rgba(0,0,0,0.35)]" />
-            </div>
-
-            <h2 className="mt-10 max-w-md text-[1.75rem] font-extrabold leading-tight tracking-tight">
+          <div className="mt-auto pb-10 pt-40">
+            <h2 className="max-w-md text-[1.75rem] font-extrabold leading-tight tracking-tight">
               Food you already cook, portioned for the body you have.
             </h2>
 

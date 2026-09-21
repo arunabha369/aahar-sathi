@@ -2,7 +2,7 @@
 
 import { RefreshCw, Repeat2 } from 'lucide-react';
 import { ProteinBoost } from '@/components/plan/ProteinBoost';
-import { SlotIcon } from '@/components/illustrations/SlotIcon';
+import { MealPhoto } from '@/components/plan/MealPhoto';
 import { SLOT_META } from '@/lib/constants';
 import { formatItem } from '@/lib/format';
 import type { Diet, PlanDay, PlanSlot, Targets } from '@/lib/types';
@@ -45,7 +45,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
               )}
             >
               <div className="flex shrink-0 flex-col items-center gap-1.5 pt-0.5">
-                <SlotIcon slot={meal.slot} className="size-9" />
+                <MealPhoto slug={meal.slug} slot={meal.slot} className="size-14 sm:size-16" sizes="64px" />
                 <span className="text-[0.625rem] font-bold text-muted tabular-nums">{meal.time}</span>
               </div>
 

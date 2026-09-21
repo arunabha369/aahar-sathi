@@ -3,7 +3,8 @@
 import { Field } from '@/components/ui/Field';
 import { OptionCard } from '@/components/ui/OptionCard';
 import { HeightInput } from '@/components/forms/HeightInput';
-import { ActivityIcon, CuisineIcon, DietIcon, GenderIcon, GoalIcon } from '@/components/illustrations/OptionIcons';
+import Image from 'next/image';
+import { ActivityIcon, CuisineIcon, GenderIcon, GoalIcon } from '@/components/illustrations/OptionIcons';
 import {
   ACTIVITY_OPTIONS,
   CUISINE_OPTIONS,
@@ -145,7 +146,11 @@ export function GoalSection({ draft, errors, update, showErrors }: SectionProps)
           {DIET_OPTIONS.map((option) => (
             <OptionCard
               key={option.value}
-              icon={<DietIcon diet={option.value} className="size-5" />}
+              icon={
+                <span className="relative block size-full overflow-hidden rounded-xl">
+                  <Image src={`/images/diet/${option.value}.webp`} alt="" fill sizes="44px" className="object-cover" />
+                </span>
+              }
               label={option.label}
               {...(option.description ? { description: option.description } : {})}
               selected={draft.diet === option.value}

@@ -15,3 +15,6 @@ out
 
 # test output
 coverage
+
+# full-size generated masters (optimised copies live in client/public/images)
+design/originals/

@@ -1,7 +1,8 @@
 import { cookies } from 'next/headers';
 import type { ApiErrorBody } from '@/lib/types';
 
-const API_URL = process.env.API_URL ?? 'http://localhost:5001';
+// `||`, not `??`: hosts can expose an unset variable as an empty string.
+const API_URL = process.env.API_URL?.trim() || 'http://localhost:5001';
 
 export class ServerApiError extends Error {
   readonly status: number;

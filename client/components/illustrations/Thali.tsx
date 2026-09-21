@@ -15,10 +15,10 @@ export function Thali({
 }) {
   return (
     <Image
-      src="/images/hero-thali.jpg"
+      src="/images/hero-thali.webp"
       alt="An Indian thali with rotis, rice, dal, vegetables and curd"
-      width={800}
-      height={800}
+      width={1000}
+      height={1000}
       preload={priority}
       sizes="(max-width: 640px) 20rem, (max-width: 1024px) 26rem, 28rem"
       className={cn('h-auto w-full rounded-full object-cover', className)}

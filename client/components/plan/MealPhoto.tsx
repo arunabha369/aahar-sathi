@@ -1,0 +1,30 @@
+import Image from 'next/image';
+import { SlotIcon } from '@/components/illustrations/SlotIcon';
+import { mealPhotoSrc } from '@/lib/mealPhotos';
+import type { PlanSlot } from '@/lib/types';
+import { cn } from '@/lib/utils';
+
+interface MealPhotoProps {
+  slug: string;
+  slot: PlanSlot;
+  /** Sets the rendered size; the photo and the fallback icon share it. */
+  className: string;
+  /** Rendered width in CSS pixels, so next/image picks the right source. */
+  sizes: string;
+}
+
+/** The dish photo when there is one, otherwise the slot's icon — never a broken image. */
+export function MealPhoto({ slug, slot, className, sizes }: MealPhotoProps) {
+  const src = mealPhotoSrc(slug);
+  if (!src) return <SlotIcon slot={slot} className={className} />;
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn('relative block shrink-0 overflow-hidden rounded-xl bg-canvas ring-1 ring-line', className)}
+    >
+      {/* Decorative: the dish name is already in the heading beside it. */}
+      <Image src={src} alt="" fill sizes={sizes} className="object-cover" />
+    </span>
+  );
+}

@@ -15,7 +15,7 @@ import { Logo } from '@/components/ui/Logo';
 import { Thali } from '@/components/illustrations/Thali';
 import { HeroGlow, Underline, WaveDivider } from '@/components/illustrations/Decor';
 import { MathsScene, PlanScene, ProfileScene } from '@/components/illustrations/Scenes';
-import { SlotIcon } from '@/components/illustrations/SlotIcon';
+import { MealPhoto } from '@/components/plan/MealPhoto';
 import { DISCLAIMER } from '@/lib/constants';
 
 const FACTS = [
@@ -83,11 +83,11 @@ const FEATURES = [
 ];
 
 const SAMPLE_DAY = [
-  { slot: 'breakfast', time: '7:00 AM', name: 'Poha with peanuts and sprouts', kcal: 531, protein: 23 },
-  { slot: 'midMorning', time: '10:30 AM', name: 'Sprouts chaat with lemon', kcal: 224, protein: 15 },
-  { slot: 'lunch', time: '1:00 PM', name: 'Rajma with rice and salad', kcal: 650, protein: 20 },
-  { slot: 'eveningSnack', time: '4:30 PM', name: 'Masala chaas with peanuts', kcal: 215, protein: 10 },
-  { slot: 'dinner', time: '7:30 PM', name: 'Palak paneer with rotis', kcal: 529, protein: 22 },
+  { slot: 'breakfast', slug: 'poha-peanuts', time: '7:00 AM', name: 'Poha with peanuts and sprouts', kcal: 531, protein: 23 },
+  { slot: 'midMorning', slug: 'sprouts-chaat', time: '10:30 AM', name: 'Sprouts chaat with lemon', kcal: 224, protein: 15 },
+  { slot: 'lunch', slug: 'rajma-chawal', time: '1:00 PM', name: 'Rajma with rice and salad', kcal: 650, protein: 20 },
+  { slot: 'eveningSnack', slug: 'chaas-peanuts', time: '4:30 PM', name: 'Masala chaas with peanuts', kcal: 215, protein: 10 },
+  { slot: 'dinner', slug: 'palak-paneer-roti', time: '7:30 PM', name: 'Palak paneer with rotis', kcal: 529, protein: 22 },
 ] as const;
 
 export default function LandingPage() {
@@ -283,7 +283,7 @@ export default function LandingPage() {
             <ol className="divide-y divide-line">
               {SAMPLE_DAY.map((meal) => (
                 <li key={meal.slot} className="flex items-center gap-3.5 px-5 py-3.5">
-                  <SlotIcon slot={meal.slot} className="size-9 shrink-0" />
+                  <MealPhoto slug={meal.slug} slot={meal.slot} className="size-12" sizes="48px" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[0.6875rem] font-bold uppercase tracking-wider text-muted">{meal.time}</p>
                     <p className="truncate text-[0.9375rem] font-semibold text-ink">{meal.name}</p>
