@@ -38,7 +38,7 @@ export function DishMarquee({ dishes }: { dishes: Dish[] }) {
   const [paused, setPaused] = useState(false);
 
   return (
-    <section aria-labelledby="dishes-heading" className="border-y border-line bg-white py-12 sm:py-14">
+    <section aria-labelledby="dishes-heading" className="border-y border-line bg-surface py-12 sm:py-14">
       <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div>
           <p className="text-[0.8125rem] font-bold uppercase tracking-[0.12em] text-brand-700">On the menu</p>
@@ -50,7 +50,7 @@ export function DishMarquee({ dishes }: { dishes: Dish[] }) {
           type="button"
           onClick={() => setPaused((value) => !value)}
           aria-pressed={paused}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink motion-reduce:hidden"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-surface-2 hover:text-ink motion-reduce:hidden"
         >
           {paused ? <Play className="size-4" aria-hidden="true" /> : <Pause className="size-4" aria-hidden="true" />}
           {paused ? 'Play' : 'Pause'}

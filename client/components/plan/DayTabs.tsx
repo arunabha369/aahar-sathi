@@ -76,15 +76,15 @@ export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = f
               className={cn(
                 'group relative min-h-[3.25rem] shrink-0 rounded-xl px-4 text-center transition-all',
                 selected
-                  ? 'bg-brand-700 text-white shadow-[var(--shadow-brand)]'
-                  : 'bg-white text-ink-soft ring-1 ring-line hover:ring-line-strong',
+                  ? 'bg-accent text-accent-ink'
+                  : 'bg-surface-2 text-ink-soft ring-1 ring-line hover:bg-surface-3 hover:text-ink',
               )}
             >
               <span className="block text-[0.8125rem] font-bold">{candidate.day}</span>
               <span
                 className={cn(
                   'block text-[0.625rem] font-semibold tabular-nums',
-                  selected ? 'text-white' : 'text-muted',
+                  selected ? 'text-accent-ink/75' : 'text-muted',
                 )}
               >
                 {isToday ? 'Today' : `${candidate.totals.kcal} kcal`}

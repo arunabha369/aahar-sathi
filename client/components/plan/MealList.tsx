@@ -24,7 +24,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
 
   return (
     <div>
-      <ol className="overflow-hidden rounded-2xl border border-line bg-white" data-print="card">
+      <ol className="overflow-hidden rounded-2xl border border-line bg-surface" data-print="card">
         {day.meals.map((meal, index) => {
           const slot = SLOT_META[meal.slot];
           const swapping = swappingSlots.includes(meal.slot);
@@ -37,10 +37,10 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
                 // sm and up: photo | details | Swap, with the macros under the details.
                 'grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3.5 gap-y-2.5 px-4 py-4 transition-colors sm:px-5',
                 index > 0 && 'border-t border-line',
-                swapping ? 'opacity-60' : 'hover:bg-canvas/70 focus-within:bg-canvas/70',
+                swapping ? 'opacity-60' : 'hover:bg-surface-2/60 focus-within:bg-surface-2/60',
               )}
             >
-              <div className="col-start-1 row-start-1 flex flex-col items-center gap-1.5 pt-0.5 sm:row-span-2">
+              <div className="col-start-1 row-start-1 flex flex-col items-center gap-1.5 pt-0.5 sm:row-[1/3]">
                 <MealPhoto slug={meal.slug} slot={meal.slot} className="size-14 sm:size-16" sizes="64px" />
                 <span className="text-[0.625rem] font-bold text-muted tabular-nums">{meal.time}</span>
               </div>
@@ -66,7 +66,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
                   onClick={() => onSwap(meal.slot)}
                   disabled={swapping}
                   data-print="hide"
-                  className="col-start-3 row-start-2 inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 self-center rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink disabled:opacity-60 sm:row-span-2 sm:row-start-1"
+                  className="col-start-3 row-start-2 inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 self-center rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60 sm:row-[1/3]"
                   aria-label={`Swap ${slot.label.toLowerCase()} on ${day.day}`}
                 >
                   {swapping ? (
@@ -83,7 +83,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
         })}
       </ol>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-canvas px-4 py-3 ring-1 ring-line" aria-live="polite">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-2 px-4 py-3 ring-1 ring-line" aria-live="polite">
         <p className="text-sm font-semibold text-ink">
           Day total <span className="tabular-nums">{day.totals.kcal.toLocaleString('en-IN')} kcal</span>
           <span className="ml-1.5 font-normal text-muted">

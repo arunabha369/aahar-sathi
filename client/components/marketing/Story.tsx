@@ -10,7 +10,7 @@ export function ProblemSolution() {
         They assume foods you do not cook, weights you cannot measure, and a body that is not yours.
       </SectionIntro>
 
-      <div className="reveal mt-12 overflow-hidden rounded-3xl border border-line bg-white">
+      <div className="reveal mt-12 overflow-hidden rounded-3xl border border-line bg-surface">
         <div className="hidden grid-cols-2 border-b border-line bg-canvas text-[0.8125rem] font-bold uppercase tracking-[0.1em] sm:grid">
           <p className="px-6 py-4 text-muted">The usual diet chart</p>
           <p className="border-l border-line px-6 py-4 text-brand-700">Aahar Sathi</p>
@@ -50,7 +50,7 @@ function MiniField({ label, value, unit }: { label: string; value: string; unit:
   return (
     <div>
       <p className="text-[0.6875rem] font-semibold text-muted">{label}</p>
-      <p className="mt-1 flex items-center justify-between rounded-lg border border-line bg-white px-3 py-2 text-sm font-semibold text-ink">
+      <p className="mt-1 flex items-center justify-between rounded-lg border border-line bg-surface px-3 py-2 text-sm font-semibold text-ink">
         {value}
         <span className="text-xs font-semibold text-muted">{unit}</span>
       </p>
@@ -74,7 +74,7 @@ function ProfileMock() {
               key={level}
               className={cn(
                 'rounded-lg px-2.5 py-1.5 text-xs font-bold',
-                level === 'Moderate' ? 'bg-brand-700 text-white' : 'border border-line bg-white text-ink-soft',
+                level === 'Moderate' ? 'bg-accent text-accent-ink' : 'border border-line bg-surface-2 text-ink-soft',
               )}
             >
               {level}
@@ -102,7 +102,7 @@ function MathsMock() {
           </li>
         ))}
       </ul>
-      <p className="mt-3 flex items-baseline justify-between gap-3 rounded-xl bg-brand-700 px-3.5 py-2.5 text-white">
+      <p className="mt-3 flex items-baseline justify-between gap-3 rounded-xl bg-accent px-3.5 py-2.5 text-accent-ink">
         <span className="text-[0.8125rem] font-semibold">Your daily target</span>
         <span className="text-lg font-extrabold tabular-nums">
           {DEMO.calories.toLocaleString('en-IN')} <span className="text-xs font-bold">kcal</span>
@@ -121,7 +121,7 @@ function WeekMock() {
       {week.map(([day, kcal], index) => (
         <div key={day} className="flex flex-1 flex-col items-center gap-1.5">
           <span
-            className={cn('w-full rounded-md', index === 0 ? 'bg-brand-700' : 'bg-brand-200')}
+            className={cn('w-full rounded-md', index === 0 ? 'bg-accent' : 'bg-brand-200')}
             style={{ height: `${Math.round(((kcal - 1900) / 300) * 72) + 18}px` }}
           />
           <span className={cn('text-[0.6875rem] font-bold', index === 0 ? 'text-brand-800' : 'text-muted')}>{day}</span>
@@ -151,7 +151,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" aria-labelledby="how-heading" className="border-y border-line bg-white">
+    <section id="how-it-works" aria-labelledby="how-heading" className="border-y border-line bg-surface">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <SectionIntro id="how-heading" eyebrow="How it works" title="From your numbers to your thali in three steps." />
 
@@ -162,7 +162,7 @@ export function HowItWorks() {
                 <step.Mock />
               </div>
               <div className="mt-6 flex items-center gap-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink text-sm font-extrabold text-white">
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-sm font-extrabold text-accent-ink">
                   {index + 1}
                 </span>
                 <h3 className="text-lg font-bold text-ink">{step.title}</h3>

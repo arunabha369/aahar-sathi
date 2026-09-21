@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, Check } from 'lucide-react';
 import { MacroLine } from '@/components/plan/MacroLine';
 import { MealPhoto } from '@/components/plan/MealPhoto';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { MACRO_COLORS, SERIES_COLORS, SLOT_META } from '@/lib/constants';
+import { MACRO_COLORS, SLOT_META } from '@/lib/constants';
 import { formatDayLong, formatItem, minutesFromTime, weekdayFromKey } from '@/lib/format';
 import { useLocalToday } from '@/lib/useLocalToday';
 import { useMinutesNow } from '@/lib/useNow';
@@ -20,67 +20,107 @@ interface TodayCardProps {
   serverToday: string;
 }
 
-/** Bullet chart row: value bar, target marker, and the numbers in words beside it. */
-function Bullet({
+type Status = 'ok' | 'low' | 'high' | 'under';
+
+function statusOf(value: number, target: number, lowAt?: number): Status {
+  const ratio = target > 0 ? value / target : 0;
+  return lowAt !== undefined && ratio < lowAt ? 'low' : ratio > 1.15 ? 'high' : ratio >= 0.9 ? 'ok' : 'under';
+}
+
+/** `compact` lets the label wrap and drops "of target", for the narrow macro tiles. */
+function StatusBadge({ status, ratio, compact = false }: { status: Status; ratio: number; compact?: boolean }) {
+  const wrap = compact ? '' : 'whitespace-nowrap';
+  if (status === 'ok') {
+    return (
+      <span className={cn('inline-flex items-center gap-0.5 text-[0.6875rem] font-bold text-brand-700', wrap)}>
+        <Check className="size-3 shrink-0" strokeWidth={3} aria-hidden="true" /> On target
+      </span>
+    );
+  }
+  if (status === 'low' || status === 'high') {
+    const Arrow = status === 'low' ? ArrowDown : ArrowUp;
+    return (
+      <span className={cn('inline-flex items-center gap-0.5 text-[0.6875rem] font-bold text-saffron-700', wrap)}>
+        <Arrow className="size-3 shrink-0" strokeWidth={3} aria-hidden="true" /> {status === 'low' ? 'Low' : 'High'}
+      </span>
+    );
+  }
+  return (
+    <span className={cn('text-[0.6875rem] font-bold text-muted tabular-nums', wrap)}>
+      {Math.round(ratio * 100)}%{compact ? '' : ' of target'}
+    </span>
+  );
+}
+
+/** Macro tile: planned grams against target, with a thin bar in the macro's colour. */
+function MacroTile({
   label,
   value,
   target,
-  unit,
   color,
   lowAt,
 }: {
   label: string;
   value: number;
   target: number;
-  unit: string;
   color: string;
-  /** Below this share of target the row reads "Low"; undefined means no low warning. */
+  /** Below this share of target the tile reads "Low"; undefined means no low warning. */
   lowAt?: number;
 }) {
   const ratio = target > 0 ? value / target : 0;
-  const max = Math.max(target * 1.25, value * 1.05);
-  const status =
-    lowAt !== undefined && ratio < lowAt ? 'low' : ratio > 1.15 ? 'high' : ratio >= 0.9 ? 'ok' : 'under';
-
-  const badge =
-    status === 'ok' ? (
-      <span className="inline-flex items-center gap-0.5 rounded-md bg-brand-50 px-1.5 py-0.5 text-[0.6875rem] font-bold text-brand-800">
-        <Check className="size-3" strokeWidth={3} aria-hidden="true" /> On target
-      </span>
-    ) : status === 'low' || status === 'high' ? (
-      <span className="inline-flex items-center gap-0.5 rounded-md bg-saffron-50 px-1.5 py-0.5 text-[0.6875rem] font-bold text-saffron-800">
-        {status === 'low' ? (
-          <ArrowDown className="size-3" strokeWidth={3} aria-hidden="true" />
-        ) : (
-          <ArrowUp className="size-3" strokeWidth={3} aria-hidden="true" />
-        )}
-        {status === 'low' ? 'Low' : 'High'}
-      </span>
-    ) : (
-      <span className="text-[0.6875rem] font-bold text-muted tabular-nums">{Math.round(ratio * 100)}% of target</span>
-    );
 
   return (
-    <div>
-      <dt className="flex items-center justify-between gap-3 text-[0.8125rem]">
-        <span className="font-semibold text-ink-soft">{label}</span>
-        {badge}
+    <div className="min-w-0 rounded-2xl bg-surface-2 p-2.5 sm:p-3">
+      <dt className="flex items-center gap-1 text-xs font-semibold text-muted sm:gap-1.5">
+        <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} aria-hidden="true" />
+        {label}
       </dt>
-      <dd className="mt-1.5 flex items-center gap-3">
-        <span className="relative h-2.5 min-w-0 flex-1 rounded-full bg-canvas ring-1 ring-inset ring-line" aria-hidden="true">
+      <dd className="mt-1.5">
+        <span className="block text-lg font-extrabold leading-none text-ink tabular-nums">{value} g</span>
+        <span className="mt-0.5 block text-xs font-semibold text-muted tabular-nums">of {target} g</span>
+        <span className="mt-2 block h-1 overflow-hidden rounded-full bg-surface-3" aria-hidden="true">
           <span
-            className="absolute inset-y-0 left-0 rounded-full"
-            style={{ width: `${Math.min(100, (value / max) * 100)}%`, backgroundColor: color }}
-          />
-          <span
-            className="absolute -inset-y-1 w-0.5 rounded-full bg-ink"
-            style={{ left: `calc(${(target / max) * 100}% - 1px)` }}
+            className="block h-full rounded-full"
+            style={{ width: `${Math.min(100, ratio * 100)}%`, backgroundColor: color }}
           />
         </span>
-        <span className="shrink-0 whitespace-nowrap text-[0.8125rem] font-semibold text-muted tabular-nums">
-          <span className="font-bold text-ink">{value.toLocaleString('en-IN')}</span> / {target.toLocaleString('en-IN')} {unit}
+        <span className="mt-1.5 block">
+          <StatusBadge status={statusOf(value, target, lowAt)} ratio={ratio} compact />
         </span>
       </dd>
+    </div>
+  );
+}
+
+/** The calorie ring: how much of today's plan is still ahead of you by the clock. */
+function CalorieRing({ planned, done, ready }: { planned: number; done: number; ready: boolean }) {
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  const share = planned > 0 ? Math.min(1, done / planned) : 0;
+  const left = Math.max(0, planned - done);
+
+  return (
+    <div className="relative size-36 shrink-0 sm:size-40">
+      <svg viewBox="0 0 120 120" className="size-full -rotate-90" aria-hidden="true">
+        <circle cx="60" cy="60" r={radius} fill="none" strokeWidth="10" className="stroke-surface-3" />
+        <circle
+          cx="60"
+          cy="60"
+          r={radius}
+          fill="none"
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - share)}
+          className={cn('stroke-accent transition-[stroke-dashoffset] duration-700', share === 0 && 'opacity-0')}
+        />
+      </svg>
+      <p className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span className="text-[1.75rem] font-extrabold leading-none tracking-tight text-ink tabular-nums sm:text-[2rem]">
+          {ready ? left.toLocaleString('en-IN') : planned.toLocaleString('en-IN')}
+        </span>
+        <span className="mt-1 text-xs font-semibold text-muted">{ready ? 'kcal left today' : 'kcal planned'}</span>
+      </p>
     </div>
   );
 }
@@ -97,22 +137,20 @@ export function TodayCard({ days, targets, serverToday }: TodayCardProps) {
   const allDone = minutes !== null && upcomingIndex === -1;
   const featured = allDone ? tomorrow.meals[0]! : upcomingIndex >= 0 ? today.meals[upcomingIndex]! : null;
   const isNow = featured !== null && !allDone && minutes !== null && minutes >= minutesFromTime(featured.time);
+  // Meals whose time has come count as behind you; the ring shows what is still ahead.
+  const doneKcal =
+    minutes === null
+      ? 0
+      : today.meals.filter((meal) => minutesFromTime(meal.time) <= minutes).reduce((sum, meal) => sum + meal.kcal, 0);
 
   return (
     <section aria-labelledby="today-heading" className="surface p-5 sm:p-6" data-print="hide">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <p className="eyebrow">Today</p>
-          <h2 id="today-heading" className="mt-1 text-lg font-bold text-ink sm:text-xl">
-            {formatDayLong(todayKey)}
-          </h2>
-        </div>
-        <p className="text-sm font-semibold text-muted tabular-nums">
-          <span className="font-bold text-ink">{today.totals.kcal.toLocaleString('en-IN')}</span> kcal planned
-        </p>
-      </div>
+      <p className="eyebrow">Today</p>
+      <h2 id="today-heading" className="mt-1 text-lg font-bold text-ink sm:text-xl">
+        {formatDayLong(todayKey)}
+      </h2>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:gap-8">
+      <div className="mt-5">
         {/* Up next */}
         <div className="min-w-0">
           {featured === null ? (
@@ -131,13 +169,13 @@ export function TodayCard({ days, targets, serverToday }: TodayCardProps) {
               <p
                 className={cn(
                   'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.75rem] font-bold',
-                  isNow ? 'bg-brand-700 text-white' : 'bg-brand-50 text-brand-800',
+                  isNow ? 'bg-accent text-accent-ink' : 'bg-brand-50 text-brand-800',
                 )}
               >
                 {allDone ? 'Tomorrow' : isNow ? 'Now' : 'Up next'} · {SLOT_META[featured.slot].label} · {featured.time}
               </p>
               <div className="mt-3 flex gap-4">
-                <MealPhoto slug={featured.slug} slot={featured.slot} className="size-20 sm:size-24" sizes="96px" />
+                <MealPhoto slug={featured.slug} slot={featured.slot} className="size-20 sm:size-24" sizes="96px" eager />
                 <div className="min-w-0">
                   <h3 className="text-base font-bold leading-snug text-ink sm:text-lg">{featured.name}</h3>
                   <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-muted">
@@ -160,7 +198,7 @@ export function TodayCard({ days, targets, serverToday }: TodayCardProps) {
                     aria-hidden="true"
                     className={cn(
                       'block h-1.5 rounded-full',
-                      passed ? 'bg-brand-600' : current ? 'bg-brand-300' : 'bg-line',
+                      passed ? 'bg-accent' : current ? 'bg-brand-300' : 'bg-line',
                     )}
                   />
                   <span className={cn('mt-1.5 block truncate text-[0.6875rem] font-bold', current ? 'text-brand-800' : 'text-muted')}>
@@ -178,13 +216,37 @@ export function TodayCard({ days, targets, serverToday }: TodayCardProps) {
         </div>
 
         {/* Today's plan against target */}
-        <div className="min-w-0 border-t border-line pt-5 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-          <p className="text-[0.8125rem] font-bold text-ink">Today&apos;s plan vs your targets</p>
-          <dl className="mt-3 space-y-3.5">
-            <Bullet label="Calories" value={today.totals.kcal} target={targets.calories} unit="kcal" color={SERIES_COLORS.calories} />
-            <Bullet label="Protein" value={today.totals.protein} target={targets.protein} unit="g" color={MACRO_COLORS.protein} lowAt={0.85} />
-            <Bullet label="Carbs" value={today.totals.carbs} target={targets.carbs} unit="g" color={MACRO_COLORS.carbs} />
-            <Bullet label="Fat" value={today.totals.fat} target={targets.fat} unit="g" color={MACRO_COLORS.fat} />
+        <div className="mt-5 grid gap-4 border-t border-line pt-5 md:grid-cols-[auto_minmax(0,1fr)] md:items-center md:gap-6">
+          <div>
+          <div className="flex items-center gap-5">
+            <CalorieRing planned={today.totals.kcal} done={doneKcal} ready={minutes !== null} />
+            <dl className="min-w-0 space-y-3 text-[0.8125rem]">
+              <div>
+                <dt className="font-semibold text-muted">Planned today</dt>
+                <dd className="font-bold text-ink tabular-nums">{today.totals.kcal.toLocaleString('en-IN')} kcal</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-muted">Your target</dt>
+                <dd className="font-bold text-ink tabular-nums">{targets.calories.toLocaleString('en-IN')} kcal</dd>
+              </div>
+              <div>
+                <dt className="sr-only">Plan against target</dt>
+                <dd>
+                  <StatusBadge
+                    status={statusOf(today.totals.kcal, targets.calories)}
+                    ratio={targets.calories > 0 ? today.totals.kcal / targets.calories : 0}
+                  />
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <p className="mt-2 text-xs text-muted">The ring fills as each meal time passes.</p>
+          </div>
+
+          <dl className="grid grid-cols-3 gap-2">
+            <MacroTile label="Protein" value={today.totals.protein} target={targets.protein} color={MACRO_COLORS.protein} lowAt={0.85} />
+            <MacroTile label="Carbs" value={today.totals.carbs} target={targets.carbs} color={MACRO_COLORS.carbs} />
+            <MacroTile label="Fat" value={today.totals.fat} target={targets.fat} color={MACRO_COLORS.fat} />
           </dl>
         </div>
       </div>

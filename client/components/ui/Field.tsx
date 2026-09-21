@@ -12,7 +12,7 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'id'> {
 }
 
 export const inputShell =
-  'min-h-12 w-full rounded-xl border bg-white px-3.5 text-base font-medium text-ink sm:text-[0.9375rem] shadow-xs transition-colors placeholder:font-normal placeholder:text-muted/70 focus:outline-none';
+  'min-h-12 w-full rounded-xl border bg-surface-2 px-3.5 text-base font-medium text-ink sm:text-[0.9375rem] shadow-xs transition-colors placeholder:font-normal placeholder:text-muted focus:outline-none';
 
 export function Field({ label, error, hint, suffix, leading, className, ...props }: FieldProps) {
   const id = useId();

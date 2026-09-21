@@ -10,7 +10,7 @@ import { DISCLAIMER } from '@/lib/constants';
 
 export function Regions() {
   return (
-    <section aria-labelledby="regions-heading" className="border-y border-line bg-white">
+    <section aria-labelledby="regions-heading" className="border-y border-line bg-surface">
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <SectionIntro id="regions-heading" eyebrow="Your kind of food" title="From idli to ghugni — the food you grew up with.">
           Pick a favourite cuisine and about seven in ten dishes come from it. The rest keep the week interesting.
@@ -61,7 +61,7 @@ export function Method() {
           </div>
         </div>
 
-        <dl className="reveal divide-y divide-line self-start overflow-hidden rounded-3xl border border-line bg-white">
+        <dl className="reveal divide-y divide-line self-start overflow-hidden rounded-3xl border border-line bg-surface">
           {METHOD.map((row) => (
             <div key={row.label} className="grid gap-1 px-6 py-4 sm:grid-cols-[10rem_1fr] sm:gap-4">
               <dt className="text-sm font-semibold text-muted">{row.label}</dt>
@@ -76,7 +76,7 @@ export function Method() {
 
 export function Faq() {
   return (
-    <section id="faq" aria-labelledby="faq-heading" className="border-t border-line bg-white">
+    <section id="faq" aria-labelledby="faq-heading" className="border-t border-line bg-surface">
       <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:gap-16 lg:px-8 lg:py-28">
         <SectionIntro id="faq-heading" eyebrow="FAQ" title="Questions, answered." className="lg:sticky lg:top-28 lg:self-start">
           Something else on your mind? Try the demo — it is the fastest way to see how the plan works.
@@ -105,16 +105,16 @@ export function FinalCta() {
   const photos = ['masala-dosa-sambar', 'palak-paneer-roti', 'khaman-dhokla'];
   return (
     <section aria-labelledby="cta-heading" className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
-      <div className="reveal grid items-center gap-10 overflow-hidden rounded-[2rem] bg-brand-900 p-8 sm:p-12 lg:grid-cols-[1.2fr_1fr] lg:p-14">
+      <div className="reveal grid items-center gap-10 overflow-hidden rounded-[2rem] border border-line bg-surface p-8 sm:p-12 lg:grid-cols-[1.2fr_1fr] lg:p-14">
         <div>
-          <h2 id="cta-heading" className="text-[2rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-white sm:text-[2.625rem]">
+          <h2 id="cta-heading" className="text-[2rem] font-extrabold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[2.625rem]">
             Your first week is a minute away.
           </h2>
-          <p className="mt-4 max-w-lg text-lg leading-relaxed text-brand-100">
+          <p className="mt-4 max-w-lg text-lg leading-relaxed text-ink-soft">
             Answer a few questions and get targets, seven days of meals and a grocery list — free.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/register" size="lg" variant="inverse" className="w-full sm:w-auto">
+            <ButtonLink href="/register" size="lg" className="w-full sm:w-auto">
               Create your free plan
               <ArrowRight className="size-4" aria-hidden="true" />
             </ButtonLink>
@@ -162,7 +162,7 @@ export function SiteFooter() {
   ];
 
   return (
-    <footer className="border-t border-line bg-white">
+    <footer className="border-t border-line bg-surface">
       <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 sm:grid-cols-[1.4fr_1fr_1fr]">
           <div>

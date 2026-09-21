@@ -2,7 +2,7 @@
 
 import { Bar, BarChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartFrame, TooltipBox } from '@/components/charts/ChartFrame';
-import { SERIES_COLORS } from '@/lib/constants';
+import { CHART_COLORS, SERIES_COLORS } from '@/lib/constants';
 import { addDays, formatDate, formatShortDate, todayKey } from '@/lib/format';
 import type { WaterLog } from '@/lib/types';
 
@@ -25,7 +25,7 @@ export function WaterChart({ logs, target }: { logs: WaterLog[]; target: number 
       subtitle={`Goal hit on ${metTarget} of the last 14 days`}
       keys={[
         { label: 'Glasses logged', color: SERIES_COLORS.water, kind: 'bar' },
-        { label: `Target ${target} glasses`, color: '#0E1A16', kind: 'line' },
+        { label: `Target ${target} glasses`, color: CHART_COLORS.target, kind: 'line' },
       ]}
       height="h-64"
       table={{
@@ -36,12 +36,12 @@ export function WaterChart({ logs, target }: { logs: WaterLog[]; target: number 
     >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 20, right: 12, bottom: 0, left: -12 }}>
-          <CartesianGrid vertical={false} stroke="#E9EEEB" />
+          <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} />
           <XAxis
             dataKey="date"
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: '#5F6F69' }}
+            tick={{ fontSize: 11, fill: CHART_COLORS.tick }}
             tickFormatter={formatShortDate}
             minTickGap={12}
           />
@@ -51,15 +51,15 @@ export function WaterChart({ logs, target }: { logs: WaterLog[]; target: number 
             width={40}
             allowDecimals={false}
             domain={[0, (max: number) => Math.max(max, target) + 2]}
-            tick={{ fontSize: 12, fill: '#5F6F69' }}
+            tick={{ fontSize: 12, fill: CHART_COLORS.tick }}
           />
           <ReferenceLine
             y={target}
-            stroke="#0E1A16"
+            stroke={CHART_COLORS.target}
             strokeWidth={1}
           />
           <Tooltip
-            cursor={{ fill: '#0E1A16', fillOpacity: 0.04 }}
+            cursor={{ fill: '#ffffff', fillOpacity: 0.05 }}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               const day = payload[0]?.payload as WaterLog;

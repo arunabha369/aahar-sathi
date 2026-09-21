@@ -31,7 +31,7 @@ export function DemoButton({ className }: { className?: string }) {
 
   return (
     <Button variant="secondary" size="lg" onClick={tryDemo} pending={pending} className={className}>
-      <Sparkles className="size-4 text-orange-500" aria-hidden="true" />
+      <Sparkles className="size-4 text-saffron-500" aria-hidden="true" />
       Try the demo
     </Button>
   );

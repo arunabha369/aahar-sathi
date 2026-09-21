@@ -40,7 +40,7 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
               aria-pressed={mode === option}
               className={cn(
                 'min-h-11 rounded-md px-3.5 text-xs font-bold transition-colors',
-                mode === option ? 'bg-white text-ink shadow-xs' : 'text-muted hover:text-ink',
+                mode === option ? 'bg-surface-3 text-ink ring-1 ring-line-strong' : 'text-muted hover:text-ink',
               )}
             >
               {option === 'cm' ? 'cm' : 'ft + in'}
@@ -63,7 +63,7 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${id}-error` : undefined}
             className={cn(
-              'min-h-12 w-full rounded-xl border bg-white px-3.5 pr-14 text-base font-medium text-ink sm:text-[0.9375rem] shadow-xs transition-colors focus:outline-none',
+              'min-h-12 w-full rounded-xl border bg-surface-2 px-3.5 pr-14 text-base font-medium text-ink sm:text-[0.9375rem] shadow-xs transition-colors focus:outline-none',
               error
                 ? 'border-chilli-400 focus:border-chilli-500 focus:ring-2 focus:ring-chilli-500/15'
                 : 'border-line hover:border-line-strong focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15',
@@ -89,7 +89,7 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? `${id}-error` : undefined}
               className={cn(
-                'min-h-12 w-full rounded-xl border bg-white px-3.5 pr-12 text-base font-medium text-ink shadow-xs transition-colors focus:outline-none sm:text-[0.9375rem]',
+                'min-h-12 w-full rounded-xl border bg-surface-2 px-3.5 pr-12 text-base font-medium text-ink shadow-xs transition-colors focus:outline-none sm:text-[0.9375rem]',
                 error
                   ? 'border-chilli-400 focus:border-chilli-500 focus:ring-2 focus:ring-chilli-500/15'
                   : 'border-line hover:border-line-strong focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15',
@@ -112,7 +112,7 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? `${id}-error` : undefined}
               className={cn(
-                'min-h-12 w-full rounded-xl border bg-white px-3.5 pr-12 text-base font-medium text-ink shadow-xs transition-colors focus:outline-none sm:text-[0.9375rem]',
+                'min-h-12 w-full rounded-xl border bg-surface-2 px-3.5 pr-12 text-base font-medium text-ink shadow-xs transition-colors focus:outline-none sm:text-[0.9375rem]',
                 error
                   ? 'border-chilli-400 focus:border-chilli-500 focus:ring-2 focus:ring-chilli-500/15'
                   : 'border-line hover:border-line-strong focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15',

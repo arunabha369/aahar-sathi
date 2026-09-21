@@ -13,7 +13,7 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
       {/* Brand panel — desktop only, so the form owns small screens */}
-      <aside className="relative hidden overflow-hidden bg-brand-900 p-10 text-white lg:flex lg:flex-col">
+      <aside className="relative hidden overflow-hidden bg-canvas p-10 text-white lg:flex lg:flex-col">
         <Image
           src="/images/auth-panel.webp"
           alt=""
@@ -22,13 +22,13 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
           sizes="55vw"
           className="object-cover"
         />
-        {/* Solid brand green behind the copy keeps white text readable on any photo. */}
+        {/* Near-black behind the copy keeps white text readable on any photo. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-linear-to-t from-brand-900 from-35% via-brand-900/80 to-brand-900/25"
+          className="absolute inset-0 bg-linear-to-t from-canvas from-35% via-canvas/80 to-canvas/25"
         />
         {/* …and a fade at the top, where the logo's small tagline meets the window light. */}
-        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-44 bg-linear-to-b from-brand-900/85 to-transparent" />
+        <div aria-hidden="true" className="absolute inset-x-0 top-0 h-44 bg-linear-to-b from-canvas/85 to-transparent" />
 
         <div className="relative flex h-full flex-col">
           <Logo href="/" tone="light" />
@@ -41,8 +41,8 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
             <ul className="mt-6 space-y-3">
               {POINTS.map((point) => (
                 <li key={point} className="flex items-start gap-3 text-[0.9375rem] text-white/85">
-                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/15">
-                    <Check className="size-3 text-brand-300" strokeWidth={3.5} aria-hidden="true" />
+                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent">
+                    <Check className="size-3 text-accent-ink" strokeWidth={3.5} aria-hidden="true" />
                   </span>
                   {point}
                 </li>
@@ -55,7 +55,7 @@ export default function AuthLayout({ children }: LayoutProps<'/'>) {
       </aside>
 
       {/* Form side */}
-      <main id="main-content" className="flex flex-col bg-canvas">
+      <main id="main-content" className="flex flex-col bg-canvas lg:border-l lg:border-line">
         <div className="flex items-center justify-between px-4 py-5 sm:px-8 lg:justify-end">
           <span className="lg:hidden">
             <Logo href="/" showTagline={false} />

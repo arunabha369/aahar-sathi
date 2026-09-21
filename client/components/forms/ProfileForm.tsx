@@ -116,7 +116,7 @@ export function ProfileForm({ profile, currentTargets }: ProfileFormProps) {
               { label: 'Water', value: `${newTargets.waterGlasses} glasses` },
               { label: 'BMI', value: `${newTargets.bmi.toFixed(1)} · ${newTargets.bmiCategory}` },
             ].map((item) => (
-              <li key={item.label} className="rounded-xl bg-canvas px-4 py-3 ring-1 ring-line">
+              <li key={item.label} className="rounded-xl bg-surface-2 px-4 py-3 ring-1 ring-line">
                 <p className="text-[0.6875rem] font-semibold text-muted">{item.label}</p>
                 <p className="mt-0.5 text-[0.9375rem] font-extrabold text-ink">{item.value}</p>
               </li>

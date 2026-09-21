@@ -3,56 +3,70 @@
 @theme {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* Warm neutrals — white cards should read as paper, not as holes */
-  --color-canvas: #f6f7f5;
-  --color-ink: #0e1a16;
-  --color-ink-soft: #35443e;
-  --color-muted: #5f6f69;
-  --color-line: #e3e8e5;
-  --color-line-strong: #cfd8d4;
+  /* Dark, near-black neutrals. Surfaces step up in lightness instead of casting shadows. */
+  --color-canvas: #0a0b0a;
+  --color-surface: #151716;
+  --color-surface-2: #1d201e;
+  --color-surface-3: #272b28;
+  --color-ink: #f5f7f4;
+  --color-ink-soft: #cdd3ce;
+  --color-muted: #9ba39d;
+  --color-line: #2a2e2b;
+  --color-line-strong: #454b47;
 
-  /* Brand — deep, appetising green */
-  --color-brand-50: #ecfdf3;
-  --color-brand-100: #d1fadf;
-  --color-brand-200: #a6f4c5;
-  --color-brand-300: #6ce9a6;
-  --color-brand-400: #32d583;
-  --color-brand-500: #12b76a;
-  --color-brand-600: #039855;
-  --color-brand-700: #027a48;
-  --color-brand-800: #05603a;
-  --color-brand-900: #054f31;
+  /* The one loud colour: a lime accent for primary actions, selection and progress.
+     accent-ink is the text that sits on it. */
+  --color-accent: #9ef07a;
+  --color-accent-hover: #b4f497;
+  --color-accent-ink: #0a0b0a;
 
-  /* Saffron — the warm side of the palette, for accents and fills */
-  --color-saffron-50: #fff8eb;
-  --color-saffron-100: #feefc7;
-  --color-saffron-200: #fedf89;
-  --color-saffron-300: #fec84b;
-  --color-saffron-400: #fdb022;
-  --color-saffron-500: #f79009;
-  --color-saffron-600: #dc6803;
-  --color-saffron-700: #b54708;
-  --color-saffron-800: #93370d;
+  /* Macro colours stay orange / blue / yellow, lifted so they read on dark */
+  --color-protein: #fb923c;
+  --color-carbs: #60a5fa;
+  --color-fat: #facc15;
 
-  /* Spice red + a cool tone for water */
-  --color-chilli-50: #fef3f2;
-  --color-chilli-100: #fee4e2;
-  --color-chilli-200: #fecdca;
-  --color-chilli-300: #fda29b;
-  --color-chilli-400: #f97066;
-  --color-chilli-500: #f04438;
-  --color-chilli-600: #d92d20;
-  --color-chilli-700: #b42318;
-  --color-chilli-800: #912018;
-  --color-water-50: #f0f9ff;
-  --color-water-100: #e0f2fe;
-  --color-water-200: #b9e6fe;
-  --color-water-300: #7cd4fd;
-  --color-water-400: #36bffa;
-  --color-water-500: #0ba5ec;
-  --color-water-600: #0086c9;
-  --color-water-700: #026aa2;
-  --color-water-800: #065986;
+  /* Tinted scales run dark-to-light like Radix dark scales: low steps are tinted
+     backgrounds, 500 is the vivid fill, high steps are text on dark. That keeps
+     pairs like bg-brand-50 + text-brand-800 meaning "soft badge" in this theme. */
+  --color-brand-50: #172112;
+  --color-brand-100: #1d2c15;
+  --color-brand-200: #2b431c;
+  --color-brand-300: #466f2a;
+  --color-brand-400: #7cc956;
+  --color-brand-500: #9ef07a;
+  --color-brand-600: #aef38f;
+  --color-brand-700: #bdf5a3;
+  --color-brand-800: #cff8bb;
+  --color-brand-900: #e6fcdb;
+
+  --color-saffron-50: #261a0b;
+  --color-saffron-100: #33220c;
+  --color-saffron-200: #4d320f;
+  --color-saffron-300: #8a5a12;
+  --color-saffron-400: #e58e1a;
+  --color-saffron-500: #f7a23b;
+  --color-saffron-600: #fbb45c;
+  --color-saffron-700: #fcc77f;
+  --color-saffron-800: #fdd9a3;
+
+  --color-chilli-50: #2a1413;
+  --color-chilli-100: #381816;
+  --color-chilli-200: #55201c;
+  --color-chilli-300: #8f2c24;
+  --color-chilli-400: #e5534a;
+  --color-chilli-500: #f26b62;
+  --color-chilli-600: #f7867e;
+  --color-chilli-700: #faa39c;
+  --color-chilli-800: #fcc1bc;
+  --color-water-50: #0c1d29;
+  --color-water-100: #0f2636;
+  --color-water-200: #133a52;
+  --color-water-300: #1c5e85;
+  --color-water-400: #2ea3e0;
+  --color-water-500: #4db8f0;
+  --color-water-600: #6fc6f3;
+  --color-water-700: #94d5f6;
+  --color-water-800: #b8e4fa;
 
   --radius-xs: 0.5rem;
   --radius-sm: 0.75rem;
@@ -61,12 +75,12 @@
   --radius-xl: 1.5rem;
   --radius-2xl: 1.75rem;
 
-  /* Layered, tinted shadows — a grey drop shadow looks like a bug */
-  --shadow-xs: 0 1px 2px rgb(14 26 22 / 0.05);
-  --shadow-sm: 0 1px 2px rgb(14 26 22 / 0.05), 0 2px 6px -2px rgb(14 26 22 / 0.06);
-  --shadow-md: 0 2px 4px -1px rgb(14 26 22 / 0.05), 0 12px 24px -8px rgb(14 26 22 / 0.1);
-  --shadow-lg: 0 4px 8px -2px rgb(14 26 22 / 0.06), 0 24px 48px -16px rgb(14 26 22 / 0.16);
-  --shadow-brand: 0 1px 2px rgb(2 122 72 / 0.2), 0 8px 20px -6px rgb(2 122 72 / 0.35);
+  /* On near-black, depth comes from a faint top highlight plus a deep, soft drop */
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-sm: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.7);
+  --shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 24px 56px -16px rgb(0 0 0 / 0.85);
+  --shadow-brand: 0 8px 24px -8px rgb(158 240 122 / 0.45);
 
   --animate-rise: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade: fade 0.3s ease-out both;
@@ -108,6 +122,8 @@
     scroll-padding-bottom: 10rem;
     -webkit-text-size-adjust: 100%;
     background-color: var(--color-canvas);
+    /* Native controls, scrollbars and autofill follow the dark theme */
+    color-scheme: dark;
   }
 
   body {
@@ -139,14 +155,14 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand-700);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
     border-radius: 0.5rem;
   }
 
   ::selection {
-    background-color: var(--color-brand-100);
-    color: var(--color-brand-900);
+    background-color: var(--color-accent);
+    color: var(--color-accent-ink);
   }
 
   button,
@@ -170,14 +186,14 @@
 
 @layer components {
   .surface {
-    background: linear-gradient(145deg, #ffffff 0%, #ffffff 72%, #fbfcfb 100%);
+    background: var(--color-surface);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-sm);
   }
 
   .surface-raised {
-    background: linear-gradient(145deg, #ffffff 0%, #ffffff 72%, #fbfcfb 100%);
+    background: var(--color-surface-2);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md);
@@ -195,24 +211,24 @@
   .skeleton {
     background-image: linear-gradient(
       90deg,
-      #eceeec 0%,
-      #f5f6f5 42%,
-      #eceeec 84%
+      #1d201e 0%,
+      #272b28 42%,
+      #1d201e 84%
     );
     background-size: 640px 100%;
     animation: var(--animate-shimmer);
   }
 
-  /* Dotted paper texture for dark brand panels */
+  /* Dotted texture for hero panels */
   .dot-grid {
-    background-image: radial-gradient(circle at center, rgb(255 255 255 / 0.16) 1px, transparent 1px);
+    background-image: radial-gradient(circle at center, rgb(255 255 255 / 0.1) 1px, transparent 1px);
     background-size: 22px 22px;
   }
 
   .hairline-grid {
     background-image:
-      linear-gradient(to right, rgb(14 26 22 / 0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgb(14 26 22 / 0.04) 1px, transparent 1px);
+      linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
     background-size: 28px 28px;
   }
 
@@ -223,9 +239,9 @@
     z-index: 100;
     transform: translate(-50%, -160%);
     border-radius: 0.75rem;
-    background: var(--color-ink);
+    background: var(--color-accent);
     padding: 0.75rem 1rem;
-    color: #fff;
+    color: var(--color-accent-ink);
     font-size: 0.875rem;
     font-weight: 700;
     transition: transform 150ms ease;
@@ -270,6 +286,62 @@
 @media print {
   @page {
     margin: 12mm;
+  }
+
+  /* A handout is printed on white paper: put the light palette back. */
+  :root {
+    color-scheme: light;
+    --color-canvas: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-2: #f6f7f5;
+    --color-surface-3: #eceeec;
+    --color-ink: #0e1a16;
+    --color-ink-soft: #35443e;
+    --color-muted: #5f6f69;
+    --color-line: #e3e8e5;
+    --color-line-strong: #cfd8d4;
+    --color-accent: #027a48;
+    --color-accent-ink: #ffffff;
+    --color-protein: #c2410c;
+    --color-carbs: #1d4ed8;
+    --color-fat: #a16207;
+    --color-brand-50: #ecfdf3;
+    --color-brand-100: #d1fadf;
+    --color-brand-200: #a6f4c5;
+    --color-brand-300: #6ce9a6;
+    --color-brand-400: #32d583;
+    --color-brand-500: #12b76a;
+    --color-brand-600: #039855;
+    --color-brand-700: #027a48;
+    --color-brand-800: #05603a;
+    --color-brand-900: #054f31;
+    --color-saffron-50: #fff8eb;
+    --color-saffron-100: #feefc7;
+    --color-saffron-200: #fedf89;
+    --color-saffron-300: #fec84b;
+    --color-saffron-400: #fdb022;
+    --color-saffron-500: #f79009;
+    --color-saffron-600: #dc6803;
+    --color-saffron-700: #b54708;
+    --color-saffron-800: #93370d;
+    --color-chilli-50: #fef3f2;
+    --color-chilli-100: #fee4e2;
+    --color-chilli-200: #fecdca;
+    --color-chilli-300: #fda29b;
+    --color-chilli-400: #f97066;
+    --color-chilli-500: #f04438;
+    --color-chilli-600: #d92d20;
+    --color-chilli-700: #b42318;
+    --color-chilli-800: #912018;
+    --color-water-50: #f0f9ff;
+    --color-water-100: #e0f2fe;
+    --color-water-200: #b9e6fe;
+    --color-water-300: #7cd4fd;
+    --color-water-400: #36bffa;
+    --color-water-500: #0ba5ec;
+    --color-water-600: #0086c9;
+    --color-water-700: #026aa2;
+    --color-water-800: #065986;
   }
 
   html,

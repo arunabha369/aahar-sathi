@@ -16,7 +16,7 @@ const position = (bmi: number) => ((Math.min(SCALE_MAX, Math.max(SCALE_MIN, bmi)
 export function BmiGauge({ bmi, className }: { bmi: number; className?: string }) {
   return (
     <div className={cn('w-full', className)}>
-      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-canvas">
+      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-surface-3">
         <div className="flex h-full w-full">
           {BMI_BANDS.map((band) => (
             <span
@@ -33,7 +33,7 @@ export function BmiGauge({ bmi, className }: { bmi: number; className?: string }
       <div className="relative h-0">
         <span
           aria-hidden="true"
-          className="absolute -top-[1.05rem] size-4 -translate-x-1/2 rounded-full border-[3px] border-white bg-ink shadow-sm"
+          className="absolute -top-[1.05rem] size-4 -translate-x-1/2 rounded-full border-[3px] border-surface bg-ink shadow-sm"
           style={{ left: `${position(bmi)}%` }}
         />
       </div>

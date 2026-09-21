@@ -55,8 +55,8 @@ export default async function PlansPage(props: PageProps<'/plans'>) {
                   className={cn(
                     'grid min-h-11 min-w-11 place-items-center rounded-xl px-3 text-sm font-bold transition-colors',
                     number === page
-                      ? 'bg-brand-700 text-white'
-                      : 'bg-white text-muted ring-1 ring-line hover:text-ink',
+                      ? 'bg-accent text-accent-ink'
+                      : 'bg-surface-2 text-muted ring-1 ring-line hover:text-ink',
                   )}
                 >
                   {number}

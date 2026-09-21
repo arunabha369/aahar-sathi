@@ -47,13 +47,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             className={cn(
-              'pointer-events-auto flex max-w-md items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-lg)] animate-rise',
-              toast.tone === 'success' ? 'bg-ink' : 'bg-chilli-600',
+              'pointer-events-auto flex max-w-md items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-semibold shadow-[var(--shadow-lg)] animate-rise',
+              toast.tone === 'success' ? 'bg-surface-3 text-ink ring-1 ring-line-strong' : 'bg-chilli-500 text-accent-ink',
             )}
             role={toast.tone === 'error' ? 'alert' : 'status'}
           >
             {toast.tone === 'success' ? (
-              <CheckCircle2 className="size-5 shrink-0" aria-hidden="true" />
+              <CheckCircle2 className="size-5 shrink-0 text-accent" aria-hidden="true" />
             ) : (
               <XCircle className="size-5 shrink-0" aria-hidden="true" />
             )}

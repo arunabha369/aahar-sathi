@@ -86,16 +86,25 @@ export const BMI_BADGE: Record<BmiCategory, { className: string; note: string }>
  * Macro colours: orange, blue and yellow, stepped to 600 so all three clear the
  * lightness band and stay separable for colour-blind readers.
  */
+/** Mirrors --color-protein / --color-carbs / --color-fat, for SVG and chart fills. */
 export const MACRO_COLORS = {
-  protein: '#ea580c',
-  carbs: '#2563eb',
-  fat: '#ca8a04',
+  protein: '#fb923c',
+  carbs: '#60a5fa',
+  fat: '#facc15',
 } as const;
 
 export const SERIES_COLORS = {
-  calories: '#027a48',
-  weight: '#7c3aed',
-  water: '#0086c9',
+  calories: '#9ef07a',
+  weight: '#a78bfa',
+  water: '#4db8f0',
+} as const;
+
+/** Chart chrome on the dark surface: grid, axis text, the target line and the hover cursor. */
+export const CHART_COLORS = {
+  grid: '#2a2e2b',
+  tick: '#9ba39d',
+  target: '#f5f7f4',
+  surface: '#151716',
 } as const;
 
 /** Easy add-ons shown when a day falls short on protein. */

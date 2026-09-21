@@ -24,7 +24,7 @@ export function CalculationPanel({ inputs, targets }: { inputs: Profile; targets
     <details className="surface group overflow-hidden p-0" data-print="card">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 sm:p-6">
         <div className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-canvas text-brand-700 ring-1 ring-line">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-brand-700 ring-1 ring-line">
             <Info className="size-[1.125rem]" aria-hidden="true" />
           </span>
           <div>

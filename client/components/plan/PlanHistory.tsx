@@ -73,7 +73,7 @@ export function PlanHistory({ plans }: { plans: PlanSummary[] }) {
               </div>
               <Link
                 href={`/plans/${plan.id}`}
-                className="grid size-11 shrink-0 place-items-center rounded-xl text-muted ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink"
+                className="grid size-11 shrink-0 place-items-center rounded-xl text-muted ring-1 ring-line transition-colors hover:bg-surface-2 hover:text-ink"
                 aria-label={`Open the plan from ${formatDate(plan.createdAt.slice(0, 10))}`}
               >
                 <ArrowUpRight className="size-[1.125rem]" aria-hidden="true" />

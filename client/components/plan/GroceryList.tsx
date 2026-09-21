@@ -53,7 +53,7 @@ export function GroceryList({ planId, groups, total, checked }: GroceryListProps
           </p>
         </div>
         <div
-          className="h-2 min-w-32 flex-1 overflow-hidden rounded-full bg-canvas"
+          className="h-2 min-w-32 flex-1 overflow-hidden rounded-full bg-surface-3"
           role="progressbar"
           aria-label="Grocery items bought"
           aria-valuemin={0}
@@ -61,7 +61,7 @@ export function GroceryList({ planId, groups, total, checked }: GroceryListProps
           aria-valuenow={bought}
         >
           <div
-            className="h-full rounded-full bg-brand-600 transition-[width] duration-300"
+            className="h-full rounded-full bg-accent transition-[width] duration-300"
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -77,7 +77,7 @@ export function GroceryList({ planId, groups, total, checked }: GroceryListProps
           return (
             <section key={group.category} className="surface break-inside-avoid p-4" data-print="card">
               <h2 className="mb-3 flex items-center gap-2.5 border-b border-line pb-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-canvas ring-1 ring-line">
+                <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-2 ring-1 ring-line">
                   <CategoryIcon category={group.category} className="size-5" />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-bold text-ink">
@@ -86,7 +86,7 @@ export function GroceryList({ planId, groups, total, checked }: GroceryListProps
                 <span
                   className={cn(
                     'shrink-0 rounded-full px-2 py-0.5 text-[0.6875rem] font-bold tabular-nums',
-                    done ? 'bg-brand-50 text-brand-800' : 'bg-canvas text-muted',
+                    done ? 'bg-brand-50 text-brand-800' : 'bg-surface-2 text-muted',
                   )}
                 >
                   {groupChecked}/{group.items.length}
@@ -100,7 +100,7 @@ export function GroceryList({ planId, groups, total, checked }: GroceryListProps
                     <li key={item}>
                       <label
                         className={cn(
-                          'flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-1.5 transition-colors hover:bg-canvas',
+                          'flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-1.5 transition-colors hover:bg-surface-2',
                           isChecked && 'text-muted',
                         )}
                       >
@@ -109,11 +109,11 @@ export function GroceryList({ planId, groups, total, checked }: GroceryListProps
                           aria-hidden="true"
                           className={cn(
                             'grid size-[1.375rem] shrink-0 place-items-center rounded-[0.35rem] border-2 transition-colors',
-                            isChecked ? 'border-brand-700 bg-brand-700' : 'border-line-strong bg-white',
+                            isChecked ? 'border-accent bg-accent' : 'border-line-strong bg-surface-2',
                             'peer-focus-visible:ring-2 peer-focus-visible:ring-brand-700 peer-focus-visible:ring-offset-2',
                           )}
                         >
-                          {isChecked ? <Check className="size-3.5 text-white" strokeWidth={3.5} /> : null}
+                          {isChecked ? <Check className="size-3.5 text-accent-ink" strokeWidth={3.5} /> : null}
                         </span>
                         <span className={cn('text-[0.875rem] font-medium', isChecked && 'line-through')}>{item}</span>
                       </label>

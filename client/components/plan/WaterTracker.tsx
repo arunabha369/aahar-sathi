@@ -29,17 +29,16 @@ function Glass({ filled }: { filled: boolean }) {
       </defs>
       <path
         d="M5 4h18l-2.2 27.4A3 3 0 0 1 17.8 34h-7.6a3 3 0 0 1-3-2.6L5 4Z"
-        fill="#FFFFFF"
-        stroke={filled ? '#0086C9' : '#CFD8D4'}
         strokeWidth="2"
+        className={cn('fill-surface-2', filled ? 'stroke-water-500' : 'stroke-line-strong')}
       />
       {filled ? (
         <g clipPath={`url(#${clipId})`}>
-          <rect x="0" y="11" width="28" height="25" fill="#36BFFA" />
-          <path d="M0 12c4-3 7-3 11 0s7 3 11 0 6-3 6-3v4H0Z" fill="#7CD4FD" />
+          <rect x="0" y="11" width="28" height="25" className="fill-water-400" />
+          <path d="M0 12c4-3 7-3 11 0s7 3 11 0 6-3 6-3v4H0Z" className="fill-water-500" />
         </g>
       ) : null}
-      <rect x="4" y="2" width="20" height="3.4" rx="1.7" fill={filled ? '#0086C9' : '#E3E8E5'} />
+      <rect x="4" y="2" width="20" height="3.4" rx="1.7" className={filled ? 'fill-water-500' : 'fill-line-strong'} />
     </svg>
   );
 }
@@ -82,7 +81,7 @@ export function WaterTracker({ target, logs, serverToday }: WaterTrackerProps) {
       </div>
 
       <div
-        className="mt-3 h-2 overflow-hidden rounded-full bg-canvas"
+        className="mt-3 h-2 overflow-hidden rounded-full bg-surface-3"
         role="progressbar"
         aria-valuenow={glasses}
         aria-valuemin={0}
@@ -111,7 +110,7 @@ export function WaterTracker({ target, logs, serverToday }: WaterTrackerProps) {
               aria-label={`${filled ? 'Glass' : 'Fill up to glass'} ${number} of ${target}`}
               className={cn(
                 'grid size-11 place-items-center rounded-xl p-1.5 transition-all active:scale-95',
-                filled ? 'bg-water-50 ring-1 ring-water-200' : 'ring-1 ring-line hover:bg-canvas',
+                filled ? 'bg-water-50 ring-1 ring-water-200' : 'ring-1 ring-line hover:bg-surface-2',
               )}
             >
               <span className="block size-full">
@@ -124,8 +123,8 @@ export function WaterTracker({ target, logs, serverToday }: WaterTrackerProps) {
 
       {complete ? (
         <p className="mt-5 flex items-center gap-2.5 rounded-2xl bg-water-50 px-4 py-3 text-sm font-bold text-water-700 ring-1 ring-inset ring-water-200">
-          <span className="grid size-6 place-items-center rounded-full bg-water-600">
-            <Check className="size-3.5 text-white" strokeWidth={3.5} aria-hidden="true" />
+          <span className="grid size-6 place-items-center rounded-full bg-water-500">
+            <Check className="size-3.5 text-accent-ink" strokeWidth={3.5} aria-hidden="true" />
           </span>
           Great job — water goal complete!
         </p>

@@ -36,7 +36,7 @@ export default async function PlanDetailPage(props: PageProps<'/plans/[id]'>) {
     <div className="animate-rise">
       <Link
         href="/plans"
-        className="no-print mb-4 inline-flex min-h-10 items-center gap-1.5 rounded-xl text-sm font-semibold text-muted transition-colors hover:text-ink"
+        className="no-print mb-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold text-muted transition-colors hover:text-ink"
       >
         <ArrowLeft className="size-4" aria-hidden="true" />
         All plans

@@ -14,7 +14,7 @@ const SELECTED: Record<Tone, string> = {
 };
 
 const CHECK: Record<Tone, string> = {
-  brand: 'bg-brand-700',
+  brand: 'bg-accent',
   saffron: 'bg-saffron-600',
   water: 'bg-water-600',
   chilli: 'bg-chilli-600',
@@ -47,8 +47,8 @@ export function OptionCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={cn(
-        'group relative flex w-full items-center gap-3 rounded-2xl border bg-white text-left shadow-xs transition-all duration-150',
-        'hover:border-line-strong hover:shadow-sm active:scale-[0.99]',
+        'group relative flex w-full items-center gap-3 rounded-2xl border bg-surface-2 text-left transition-all duration-150',
+        'hover:border-line-strong active:scale-[0.99]',
         compact ? 'min-h-14 px-3.5 py-3' : 'min-h-[4.25rem] px-4 py-3.5',
         selected ? cn('ring-4', SELECTED[tone]) : 'border-line',
       )}
@@ -58,7 +58,7 @@ export function OptionCard({
           className={cn(
             'grid shrink-0 place-items-center rounded-xl transition-colors',
             compact ? 'size-9' : 'size-11',
-            selected ? 'bg-white shadow-xs' : 'bg-canvas',
+            selected ? 'bg-surface-3' : 'bg-canvas',
           )}
         >
           {icon}
@@ -76,10 +76,10 @@ export function OptionCard({
         aria-hidden="true"
         className={cn(
           'grid size-5 shrink-0 place-items-center rounded-full transition-all',
-          selected ? CHECK[tone] : 'border-2 border-line-strong bg-white group-hover:border-muted',
+          selected ? CHECK[tone] : 'border-2 border-line-strong group-hover:border-muted',
         )}
       >
-        {selected ? <Check className="size-3 text-white" strokeWidth={3.5} /> : null}
+        {selected ? <Check className="size-3 text-accent-ink" strokeWidth={3.5} /> : null}
       </span>
     </button>
   );

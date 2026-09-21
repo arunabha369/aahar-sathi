@@ -40,7 +40,7 @@ export function DangerZone({ email }: { email: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-canvas px-4 py-4 ring-1 ring-line">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface-2 px-4 py-4 ring-1 ring-line">
         <div>
           <p className="text-sm font-bold text-ink">Sign out</p>
           <p className="text-sm text-muted">You are signed in as {email}.</p>
@@ -53,7 +53,7 @@ export function DangerZone({ email }: { email: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-chilli-50 px-4 py-4 ring-1 ring-inset ring-chilli-200">
         <div className="flex gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-chilli-600 shadow-xs">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-chilli-100 text-chilli-600">
             <AlertTriangle className="size-[1.125rem]" aria-hidden="true" />
           </span>
           <div>
@@ -78,7 +78,7 @@ export function DangerZone({ email }: { email: string }) {
       <dialog
         ref={dialogRef}
         aria-labelledby="delete-title"
-        className="w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-line p-0 shadow-[var(--shadow-lg)] backdrop:bg-ink/40 open:animate-rise"
+        className="w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-line p-0 shadow-[var(--shadow-lg)] backdrop:bg-black/70 open:animate-rise"
       >
         <div className="p-6">
           <span className="grid size-11 place-items-center rounded-xl bg-chilli-50 text-chilli-600">

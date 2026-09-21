@@ -19,7 +19,7 @@ export function ProteinBoost({ dayProtein, targetProtein, diet }: ProteinBoostPr
 
   return (
     <div className="flex gap-3 rounded-2xl bg-saffron-50 p-4 ring-1 ring-inset ring-saffron-200">
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-saffron-700 shadow-xs">
+      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-saffron-100 text-saffron-700">
         <Beef className="size-[1.125rem]" aria-hidden="true" />
       </span>
       <div>
@@ -31,7 +31,7 @@ export function ProteinBoost({ dayProtein, targetProtein, diet }: ProteinBoostPr
           {suggestions.map((suggestion) => (
             <li
               key={suggestion.label}
-              className="rounded-full bg-white px-2.5 py-1 text-[0.6875rem] font-bold text-saffron-800 shadow-xs"
+              className="rounded-full bg-saffron-100 px-2.5 py-1 text-[0.6875rem] font-bold text-saffron-800"
             >
               {suggestion.label} · +{suggestion.protein} g
             </li>

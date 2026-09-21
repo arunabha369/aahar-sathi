@@ -76,7 +76,7 @@ export function ChartFrame({ title, hideTitle = false, subtitle, keys, children,
 
 export function TooltipBox({ label, rows }: { label: string; rows: { name: string; value: string; color?: string }[] }) {
   return (
-    <div className="rounded-xl border border-line bg-white px-3 py-2 shadow-[var(--shadow-md)]">
+    <div className="rounded-xl border border-line-strong bg-surface-3 px-3 py-2 shadow-[var(--shadow-md)]">
       <p className="text-xs font-bold text-ink">{label}</p>
       <ul className="mt-1 space-y-0.5">
         {rows.map((row) => (

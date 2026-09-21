@@ -92,8 +92,8 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
           Working out your calories, picking a dish for every slot of every day and writing your grocery list.
         </p>
-        <div className="mx-auto mt-6 h-1.5 w-48 overflow-hidden rounded-full bg-canvas">
-          <div className="h-full w-1/2 animate-pulse rounded-full bg-brand-700" />
+        <div className="mx-auto mt-6 h-1.5 w-48 overflow-hidden rounded-full bg-surface-3">
+          <div className="h-full w-1/2 animate-pulse rounded-full bg-accent" />
         </div>
       </Panel>
     );
@@ -121,9 +121,9 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
                 aria-current={active ? 'step' : undefined}
                 className={cn(
                   'grid size-8 shrink-0 place-items-center rounded-full text-[0.8125rem] font-extrabold transition-colors',
-                  done && 'bg-brand-700 text-white',
-                  active && 'bg-brand-700 text-white ring-4 ring-brand-100',
-                  !done && !active && 'bg-white text-muted ring-1 ring-line',
+                  done && 'bg-accent text-accent-ink',
+                  active && 'bg-accent text-accent-ink ring-4 ring-brand-200',
+                  !done && !active && 'bg-surface-2 text-muted ring-1 ring-line',
                 )}
               >
                 {done ? <Check className="size-4" strokeWidth={3} aria-hidden="true" /> : index + 1}
@@ -139,7 +139,7 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
               {index < STEPS.length - 1 ? (
                 <span
                   aria-hidden="true"
-                  className={cn('h-0.5 flex-1 rounded-full', done ? 'bg-brand-700' : 'bg-line')}
+                  className={cn('h-0.5 flex-1 rounded-full', done ? 'bg-accent' : 'bg-line')}
                 />
               ) : null}
             </li>

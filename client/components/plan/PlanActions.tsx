@@ -100,7 +100,7 @@ export function PlanActions({ plan, serverToday }: { plan: Plan; serverToday: st
 }
 
 const menuItem =
-  'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold text-ink transition-colors hover:bg-canvas focus-visible:bg-canvas';
+  'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold text-ink transition-colors hover:bg-surface-3 focus-visible:bg-surface-3';
 
 /**
  * A disclosure menu: Escape and outside clicks close it, focus returns to the

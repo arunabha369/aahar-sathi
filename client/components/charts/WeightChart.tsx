@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ChartFrame, TooltipBox } from '@/components/charts/ChartFrame';
-import { SERIES_COLORS } from '@/lib/constants';
+import { CHART_COLORS, SERIES_COLORS } from '@/lib/constants';
 import { formatDate, formatShortDate } from '@/lib/format';
 import type { WeightLog } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -35,7 +35,7 @@ export function WeightChart({ logs }: { logs: WeightLog[] }) {
               aria-pressed={days === range.days}
               className={cn(
                 'min-h-11 rounded-md px-4 text-xs font-bold transition-colors',
-                days === range.days ? 'bg-white text-ink shadow-xs' : 'text-muted hover:text-ink',
+                days === range.days ? 'bg-surface-3 text-ink ring-1 ring-line-strong' : 'text-muted hover:text-ink',
               )}
             >
               {range.label}
@@ -63,12 +63,12 @@ export function WeightChart({ logs }: { logs: WeightLog[] }) {
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={visible} margin={{ top: 12, right: 12, bottom: 0, left: -20 }}>
-            <CartesianGrid vertical={false} stroke="#E9EEEB" />
+            <CartesianGrid vertical={false} stroke={CHART_COLORS.grid} />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 12, fill: '#5F6F69' }}
+              tick={{ fontSize: 12, fill: CHART_COLORS.tick }}
               tickFormatter={formatShortDate}
               minTickGap={24}
             />
@@ -77,7 +77,7 @@ export function WeightChart({ logs }: { logs: WeightLog[] }) {
               tickLine={false}
               axisLine={false}
               width={44}
-              tick={{ fontSize: 12, fill: '#5F6F69' }}
+              tick={{ fontSize: 12, fill: CHART_COLORS.tick }}
             />
             <Tooltip
               content={({ active, payload }) => {
@@ -97,8 +97,8 @@ export function WeightChart({ logs }: { logs: WeightLog[] }) {
               stroke={SERIES_COLORS.weight}
               strokeWidth={2}
               strokeLinecap="round"
-              dot={{ r: 4, fill: SERIES_COLORS.weight, stroke: '#ffffff', strokeWidth: 2 }}
-              activeDot={{ r: 6, fill: SERIES_COLORS.weight, stroke: '#ffffff', strokeWidth: 2 }}
+              dot={{ r: 4, fill: SERIES_COLORS.weight, stroke: CHART_COLORS.surface, strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: SERIES_COLORS.weight, stroke: CHART_COLORS.surface, strokeWidth: 2 }}
               isAnimationActive={false}
             />
           </LineChart>

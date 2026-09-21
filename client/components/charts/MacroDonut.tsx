@@ -2,7 +2,7 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { ChartFrame, TooltipBox } from '@/components/charts/ChartFrame';
-import { MACRO_COLORS } from '@/lib/constants';
+import { CHART_COLORS, MACRO_COLORS } from '@/lib/constants';
 import type { Targets } from '@/lib/types';
 
 interface Slice {
@@ -42,7 +42,7 @@ export function MacroDonut({ targets, hideTitle = false }: { targets: Targets; h
             innerRadius="62%"
             outerRadius="92%"
             paddingAngle={2}
-            stroke="#ffffff"
+            stroke={CHART_COLORS.surface}
             strokeWidth={2}
             isAnimationActive={false}
           >
@@ -82,7 +82,7 @@ export function MacroLegend({ targets }: { targets: Targets }) {
   return (
     <ul className="mt-4 grid grid-cols-3 gap-2">
       {items.map((item) => (
-        <li key={item.name} className="rounded-xl bg-canvas px-3 py-2.5 text-center ring-1 ring-line">
+        <li key={item.name} className="rounded-xl bg-surface-2 px-3 py-2.5 text-center ring-1 ring-line">
           <span className="flex items-center justify-center gap-1.5 text-xs font-semibold text-muted">
             <span className="size-2.5 rounded-full" style={{ backgroundColor: item.color }} aria-hidden="true" />
             {item.name}

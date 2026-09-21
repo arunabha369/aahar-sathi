@@ -19,7 +19,7 @@ function Tile({
   className?: string;
 }) {
   return (
-    <li className={cn('reveal flex flex-col overflow-hidden rounded-3xl border border-line bg-white', className)}>
+    <li className={cn('reveal flex flex-col overflow-hidden rounded-3xl border border-line bg-surface', className)}>
       <div className="p-6 pb-0 sm:p-7 sm:pb-0">
         <h3 className="text-lg font-bold tracking-tight text-ink">{title}</h3>
         <p className="mt-1.5 text-[0.9375rem] leading-relaxed text-muted">{body}</p>
@@ -70,7 +70,7 @@ function SwapVisual() {
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-muted line-through">Chole with jeera rice</span>
       </div>
       <div className="flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-bold text-white">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-3 py-1 text-xs font-bold text-canvas">
           <Repeat2 className="size-3.5" /> Swap
           <ArrowDown className="size-3.5" />
         </span>
@@ -98,10 +98,10 @@ function GroceryVisual() {
             <span
               className={cn(
                 'grid size-5 shrink-0 place-items-center rounded-[0.3rem] border-2',
-                item.done ? 'border-brand-700 bg-brand-700' : 'border-line-strong',
+                item.done ? 'border-accent bg-accent' : 'border-line-strong',
               )}
             >
-              {item.done ? <Check className="size-3 text-white" strokeWidth={3.5} /> : null}
+              {item.done ? <Check className="size-3 text-accent-ink" strokeWidth={3.5} /> : null}
             </span>
             <span className={cn('min-w-0 flex-1 truncate text-sm', item.done ? 'text-muted line-through' : 'font-medium text-ink')}>
               {item.name}
@@ -155,7 +155,7 @@ function MacroVisual() {
       </div>
       <dl className="mt-4 grid grid-cols-3 gap-2">
         {macros.map((macro) => (
-          <div key={macro.label} className="rounded-xl bg-canvas px-3 py-2.5">
+          <div key={macro.label} className="rounded-xl bg-surface-2 px-3 py-2.5">
             <dt className="flex items-center gap-1.5 text-xs font-semibold text-muted">
               <span className="size-2 rounded-full" style={{ backgroundColor: macro.color }} />
               {macro.label}
@@ -193,9 +193,9 @@ function ProgressVisual() {
         <span className="text-sm font-semibold text-muted">over 30 days</span>
       </div>
       <svg viewBox={`0 0 ${width} ${height + 8}`} className="mt-4 h-28 w-full" preserveAspectRatio="none">
-        <path d={area} fill="#7c3aed" fillOpacity="0.08" />
-        <path d={line} fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <circle cx={last[0]} cy={last[1]} r="5" fill="#7c3aed" stroke="#fff" strokeWidth="2" />
+        <path d={area} fill="#a78bfa" fillOpacity="0.15" />
+        <path d={line} fill="none" stroke="#a78bfa" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <circle cx={last[0]} cy={last[1]} r="5" fill="#a78bfa" stroke="#151716" strokeWidth="2" />
       </svg>
     </div>
   );
