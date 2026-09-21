@@ -4,7 +4,14 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(5001),
-  MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
+  // Postgres connection string — Supabase: Project Settings → Database → Connection string.
+  DATABASE_URL: z
+    .string()
+    .min(1, 'DATABASE_URL is required')
+    .refine((value) => /^postgres(ql)?:\/\//.test(value), 'DATABASE_URL must start with postgresql://'),
+  // Optional: the Supabase CA certificate (PEM text or a file path) to verify the TLS connection.
+  DATABASE_CA_CERT: z.string().optional(),
+  DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(50).default(10),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   CLIENT_ORIGIN: z.string().default('http://localhost:3000'),

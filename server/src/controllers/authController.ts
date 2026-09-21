@@ -1,9 +1,6 @@
 import type { Request, Response } from 'express';
 import { env } from '../config/env.js';
-import { Plan } from '../models/Plan.js';
-import { User } from '../models/User.js';
-import { WaterLog } from '../models/WaterLog.js';
-import { WeightLog } from '../models/WeightLog.js';
+import { createUser, deleteUser, findUserByEmail, findUserById, findUserWithPasswordByEmail } from '../db/users.js';
 import { ApiError } from '../utils/ApiError.js';
 import { clearAuthCookie, hashPassword, setAuthCookie, signToken, verifyPassword } from '../utils/auth.js';
 import { toPublicUser } from '../utils/serialize.js';
@@ -16,32 +13,26 @@ export const DEMO_EMAIL = 'demo@aaharsathi.in';
 export async function register(req: Request, res: Response): Promise<void> {
   const { name, email, password } = validBody<RegisterBody>(req);
 
-  const existing = await User.exists({ email });
-  if (existing) {
+  if (await findUserByEmail(email)) {
     throw ApiError.conflict('An account with this email already exists. Try signing in instead.');
   }
 
-  const user = await User.create({
-    name,
-    email,
-    passwordHash: await hashPassword(password),
-    profile: {},
-    profileComplete: false,
-  });
+  // A race between two sign-ups with one email still ends in a 409: the unique index catches it.
+  const user = await createUser({ name, email, passwordHash: await hashPassword(password) });
 
-  setAuthCookie(res, signToken(user._id.toString()));
+  setAuthCookie(res, signToken(user.id));
   res.status(201).json({ user: toPublicUser(user) });
 }
 
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = validBody<LoginBody>(req);
 
-  const user = await User.findOne({ email }).select('+passwordHash');
+  const user = await findUserWithPasswordByEmail(email);
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     throw ApiError.unauthorized('That email and password do not match.');
   }
 
-  setAuthCookie(res, signToken(user._id.toString()));
+  setAuthCookie(res, signToken(user.id));
   res.json({ user: toPublicUser(user) });
 }
 
@@ -50,12 +41,12 @@ export async function demoLogin(_req: Request, res: Response): Promise<void> {
     throw ApiError.forbidden('The demo account is switched off on this server.');
   }
 
-  const user = await User.findOne({ email: DEMO_EMAIL });
+  const user = await findUserByEmail(DEMO_EMAIL);
   if (!user) {
     throw ApiError.notFound('The demo account has not been seeded yet. Run `npm run seed`.');
   }
 
-  setAuthCookie(res, signToken(user._id.toString()));
+  setAuthCookie(res, signToken(user.id));
   res.json({ user: toPublicUser(user) });
 }
 
@@ -65,19 +56,14 @@ export function logout(_req: Request, res: Response): void {
 }
 
 export async function me(req: Request, res: Response): Promise<void> {
-  const user = await User.findById(currentUserId(req));
+  const user = await findUserById(currentUserId(req));
   if (!user) throw ApiError.unauthorized();
   res.json({ user: toPublicUser(user) });
 }
 
 export async function deleteAccount(req: Request, res: Response): Promise<void> {
-  const userId = currentUserId(req);
-  await Promise.all([
-    Plan.deleteMany({ user: userId }),
-    WaterLog.deleteMany({ user: userId }),
-    WeightLog.deleteMany({ user: userId }),
-  ]);
-  await User.deleteOne({ _id: userId });
+  // Plans and logs are removed by the database's ON DELETE CASCADE.
+  await deleteUser(currentUserId(req));
   clearAuthCookie(res);
   res.json({ ok: true });
 }

@@ -1,10 +1,10 @@
 import { createApp } from './app.js';
-import { connectDb } from './config/db.js';
 import { env } from './config/env.js';
+import { checkDatabase } from './db/pool.js';
 
 async function start(): Promise<void> {
-  await connectDb(env.MONGODB_URI);
-  console.log('✅ Connected to MongoDB');
+  await checkDatabase();
+  console.log('✅ Connected to Postgres');
 
   const app = createApp();
   const server = app.listen(env.PORT, () => {

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { User } from '../models/User.js';
+import { findUserById, saveProfile } from '../db/users.js';
 import { ApiError } from '../utils/ApiError.js';
 import { toPublicUser } from '../utils/serialize.js';
 import { currentUserId } from '../middleware/requireAuth.js';
@@ -8,7 +8,7 @@ import { calculateTargets } from '../services/nutrition.js';
 import type { ProfileBody } from '../validation/schemas.js';
 
 export async function getProfile(req: Request, res: Response): Promise<void> {
-  const user = await User.findById(currentUserId(req));
+  const user = await findUserById(currentUserId(req));
   if (!user) throw ApiError.unauthorized();
 
   res.json({
@@ -22,11 +22,7 @@ export async function getProfile(req: Request, res: Response): Promise<void> {
 export async function updateProfile(req: Request, res: Response): Promise<void> {
   const profile = validBody<ProfileBody>(req);
 
-  const user = await User.findByIdAndUpdate(
-    currentUserId(req),
-    { $set: { profile, profileComplete: true } },
-    { returnDocument: 'after', runValidators: true },
-  );
+  const user = await saveProfile(currentUserId(req), profile);
   if (!user) throw ApiError.unauthorized();
 
   res.json({

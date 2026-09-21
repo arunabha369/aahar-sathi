@@ -1,6 +1,5 @@
-import type { Types } from 'mongoose';
-import type { PlanDoc } from '../models/Plan.js';
-import type { UserDoc } from '../models/User.js';
+import type { PlanRecord } from '../db/plans.js';
+import type { UserRecord } from '../db/users.js';
 import type { Profile } from '../types.js';
 
 export interface PublicUser {
@@ -12,13 +11,10 @@ export interface PublicUser {
   createdAt: string;
 }
 
-type UserLike = Pick<UserDoc, 'name' | 'email' | 'profile' | 'profileComplete' | 'createdAt'> & {
-  _id: Types.ObjectId;
-};
-
-export function toPublicUser(user: UserLike): PublicUser {
+/** Builds the response field by field, so a password hash can never ride along. */
+export function toPublicUser(user: UserRecord): PublicUser {
   return {
-    id: user._id.toString(),
+    id: user.id,
     name: user.name,
     email: user.email,
     profile: user.profile ?? {},
@@ -29,18 +25,18 @@ export function toPublicUser(user: UserLike): PublicUser {
 
 export interface PublicPlan {
   id: string;
-  inputs: PlanDoc['inputs'];
-  targets: PlanDoc['targets'];
-  days: PlanDoc['days'];
+  inputs: PlanRecord['inputs'];
+  targets: PlanRecord['targets'];
+  days: PlanRecord['days'];
   groceryChecked: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export function toPublicPlan(plan: PlanDoc): PublicPlan {
+export function toPublicPlan(plan: PlanRecord): PublicPlan {
   return {
-    id: plan._id.toString(),
+    id: plan.id,
     inputs: plan.inputs,
     targets: plan.targets,
     days: plan.days,
@@ -53,20 +49,20 @@ export function toPublicPlan(plan: PlanDoc): PublicPlan {
 
 export interface PlanSummary {
   id: string;
-  goal: PlanDoc['inputs']['goal'];
-  diet: PlanDoc['inputs']['diet'];
-  cuisine: PlanDoc['inputs']['cuisine'];
+  goal: PlanRecord['inputs']['goal'];
+  diet: PlanRecord['inputs']['diet'];
+  cuisine: PlanRecord['inputs']['cuisine'];
   calories: number;
   protein: number;
   bmi: number;
-  bmiCategory: PlanDoc['targets']['bmiCategory'];
+  bmiCategory: PlanRecord['targets']['bmiCategory'];
   isActive: boolean;
   createdAt: string;
 }
 
-export function toPlanSummary(plan: PlanDoc): PlanSummary {
+export function toPlanSummary(plan: PlanRecord): PlanSummary {
   return {
-    id: plan._id.toString(),
+    id: plan.id,
     goal: plan.inputs.goal,
     diet: plan.inputs.diet,
     cuisine: plan.inputs.cuisine,

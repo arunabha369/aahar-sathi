@@ -124,7 +124,7 @@ describe('plan ownership', () => {
       .expect(404);
   });
 
-  it('rejects an id that is not an ObjectId', async () => {
+  it('rejects an id that is not a UUID', async () => {
     const { agent } = await signUpWithProfile(app);
     await agent.get('/api/plans/not-an-id').expect(400);
   });

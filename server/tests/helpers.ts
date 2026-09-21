@@ -1,7 +1,7 @@
 import request from 'supertest';
 import type { Express } from 'express';
 import { MEALS } from '../src/data/meals.js';
-import { Meal } from '../src/models/Meal.js';
+import { syncMeals } from '../src/db/meals.js';
 import type { Profile } from '../src/types.js';
 
 export const completeProfile: Profile = {
@@ -16,7 +16,7 @@ export const completeProfile: Profile = {
 };
 
 export async function seedMeals(): Promise<void> {
-  await Meal.insertMany(MEALS);
+  await syncMeals(MEALS);
 }
 
 let counter = 0;

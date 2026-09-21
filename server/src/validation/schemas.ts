@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { ACTIVITIES, CUISINES, DIETS, GENDERS, GOALS, PLAN_SLOTS } from '../types.js';
 
-const objectId = z
+const uuid = z
   .string()
-  .regex(/^[0-9a-fA-F]{24}$/, 'That id is not valid.');
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'That id is not valid.');
 
 const isoDate = z
   .string()
@@ -58,7 +58,7 @@ export const profileSchema = z.object({
 });
 export type ProfileBody = z.infer<typeof profileSchema>;
 
-export const idParamSchema = z.object({ id: objectId });
+export const idParamSchema = z.object({ id: uuid });
 export type IdParams = z.infer<typeof idParamSchema>;
 
 export const dateParamSchema = z.object({ date: isoDate });

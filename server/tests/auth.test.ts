@@ -1,9 +1,11 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
-import { User } from '../src/models/User.js';
+import { pool } from '../src/db/pool.js';
+import { upsertUserByEmail } from '../src/db/users.js';
 import { hashPassword } from '../src/utils/auth.js';
 import { DEMO_EMAIL } from '../src/controllers/authController.js';
+import { completeProfile } from './helpers.js';
 
 const app = createApp();
 
@@ -100,11 +102,11 @@ describe('GET /api/auth/me', () => {
 
 describe('POST /api/auth/demo', () => {
   it('signs in the seeded demo user', async () => {
-    await User.create({
+    await upsertUserByEmail({
       name: 'Demo User',
       email: DEMO_EMAIL,
       passwordHash: await hashPassword('Demo@1234'),
-      profileComplete: true,
+      profile: completeProfile,
     });
 
     const response = await request(app).post('/api/auth/demo').expect(200);
@@ -122,7 +124,10 @@ describe('DELETE /api/account', () => {
     await agent.post('/api/auth/register').send(credentials).expect(201);
     await agent.delete('/api/account').expect(200);
 
-    expect(await User.countDocuments()).toBe(0);
+    const { rows } = await pool.query<{ users: number; plans: number }>(
+      'select (select count(*)::int from app.users) as users, (select count(*)::int from app.plans) as plans',
+    );
+    expect(rows[0]).toEqual({ users: 0, plans: 0 });
     await agent.get('/api/auth/me').expect(401);
   });
 });
@@ -131,5 +136,16 @@ describe('unknown routes', () => {
   it('returns a JSON 404', async () => {
     const response = await request(app).get('/api/nope').expect(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
+  });
+});
+
+describe('malformed request bodies', () => {
+  it('answers broken JSON with a 400, not a server error', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send('{"email":')
+      .expect(400);
+    expect(response.body.error.message).toBe('The request body is not valid JSON.');
   });
 });

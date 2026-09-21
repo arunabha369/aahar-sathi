@@ -15,10 +15,10 @@ North, South, East and West India.
 | --------- | --------------------------------------------------------------- |
 | Frontend  | Next.js 16 (App Router, Turbopack), React 19, Tailwind CSS 4, TypeScript |
 | Backend   | Node.js 22+, Express 5, TypeScript (tsx for dev, tsc for build)  |
-| Database  | MongoDB with Mongoose                                            |
+| Database  | Postgres on Supabase, via node-postgres (`pg`)                   |
 | Charts    | Recharts 3                                                       |
 | Auth      | JWT in an httpOnly cookie                                        |
-| Tests     | Vitest, Supertest, mongodb-memory-server                         |
+| Tests     | Vitest, Supertest, a local Postgres test database                |
 
 ---
 
@@ -38,8 +38,8 @@ aahar-sathi/
 │   └── proxy.ts             route protection (replaces middleware.ts)
 ├── server/
 │   ├── src/app.ts           Express app
-│   ├── src/config/          env validation, database connection
-│   ├── src/models/          User, Meal, Plan, WaterLog, WeightLog
+│   ├── src/config/          env validation
+│   ├── src/db/              Postgres pool, schema + migrate script, queries per table
 │   ├── src/routes/          auth, profile, plans, logs
 │   ├── src/controllers/
 │   ├── src/middleware/      requireAuth, validate, errorHandler, rateLimit
@@ -57,7 +57,7 @@ aahar-sathi/
 ### Prerequisites
 
 - Node.js 22 or newer
-- MongoDB running locally, or a MongoDB Atlas connection string
+- A Postgres database: a Supabase project, or Postgres running locally (14 or newer)
 
 ### 1. Install
 
@@ -76,7 +76,9 @@ cp client/.env.example client/.env.local
 
 | Variable        | Required | Default                                     | What it does                                              |
 | --------------- | -------- | ------------------------------------------- | --------------------------------------------------------- |
-| `MONGODB_URI`   | yes      | —                                           | Database connection string. The server exits if missing.  |
+| `DATABASE_URL`  | yes      | —                                           | Postgres connection string (Supabase Session pooler, or local). The server exits if missing. |
+| `DATABASE_CA_CERT` | no    | —                                           | Supabase's CA certificate (file path or PEM) to verify TLS. Without it, TLS is encrypted but unverified. |
+| `DATABASE_POOL_SIZE` | no  | `10`                                        | Connections the API keeps open.                           |
 | `JWT_SECRET`    | yes      | —                                           | Signing key, at least 16 characters. The server exits if missing. |
 | `PORT`          | no       | `5001`                                      | Port the API listens on.                                  |
 | `NODE_ENV`      | no       | `development`                               | `production` turns on `trust proxy` and secure cookies.   |
@@ -94,13 +96,17 @@ cp client/.env.example client/.env.local
 `API_URL` must be set **at build time as well as at runtime**, because Next.js generates rewrites during
 the build.
 
-### 3. Seed the database
+### 3. Create the tables and seed them
 
 ```bash
+npm run db:migrate -w server   # creates the tables; safe to re-run
 npm run seed
 ```
 
-This upserts all 82 meals by slug (so it is safe to re-run) and creates a demo account:
+The tables live in a private `app` schema with row level security switched on, so Supabase's public
+REST API (and its anon key) cannot reach them — only this server's own connection can.
+
+The seed upserts all 82 meals by slug (so it is safe to re-run) and creates a demo account:
 
 > **demo@aaharsathi.in** / **Demo@1234** — complete profile, an active 7-day plan, and 30 days of weight
 > and water logs so the charts have something to draw.
@@ -125,8 +131,9 @@ Run these from the repo root:
 | `npm run build`   | `tsc` for the server, `next build` for the client                 |
 | `npm start`       | Both apps from their build output                                 |
 | `npm run lint`    | Server typecheck + ESLint on the client                           |
-| `npm test`        | The full Vitest suite (84 tests)                                  |
+| `npm test`        | The full Vitest suite (89 tests)                                  |
 | `npm run seed`    | Seed meals and the demo account                                   |
+| `npm run db:migrate -w server` | Create or update the database tables              |
 
 Workspace-only variants work too, e.g. `npm run dev -w server` or `npm test -w server`.
 
@@ -209,14 +216,18 @@ week in the same slot, and takes an injectable random function so tests are dete
 npm test
 ```
 
-84 tests covering:
+89 tests covering:
 
 - `nutrition.test.ts` — the worked examples, the calorie floor, the underweight guard, macro consistency
 - `meals.test.ts` — every meal's macros within 10% of its kcal, per-slot diet coverage, ingredient categories
 - `planGenerator.test.ts` — day totals within ±10% of target across 150 random profiles, diet rules,
   repetition rules, portion scaling, swapping, the grocery list
-- `auth.test.ts`, `plans.test.ts`, `logs.test.ts` — the API end to end (Supertest + mongodb-memory-server),
+- `auth.test.ts`, `plans.test.ts`, `logs.test.ts` — the API end to end (Supertest + Postgres),
   including ownership checks and validation errors
+- `database.test.ts` — cascade deletes, one active plan under concurrent requests, dates round-tripping
+
+The API tests need a local Postgres. They create and use `aahar_sathi_test` (emptied after every test);
+point `TEST_DATABASE_URL` elsewhere if yours is not on `localhost:5432`.
 
 ---
 
@@ -231,15 +242,18 @@ npm test
 **API → Render or Railway** (`api.aaharsathi.in`)
 
 - Root directory `server`, build `npm ci && npm run build`, start `npm start`
-- Environment: `MONGODB_URI`, `JWT_SECRET`, `NODE_ENV=production`,
+- Environment: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV=production`,
   `CLIENT_ORIGIN=https://aaharsathi.in`, `DEMO_ENABLED` as you prefer
 - `NODE_ENV=production` turns on `trust proxy` (so rate limiting sees the real IP) and `secure` cookies
-- Run `npm run seed` once against the production database to load the meals
+- Run `npm run db:migrate` and then `npm run seed` once against the production database to create the
+  tables and load the meals
 
-**Database → MongoDB Atlas**
+**Database → Supabase**
 
-- Create a cluster and a database user, allow your API host's IPs, and use the connection string as
-  `MONGODB_URI`
+- In your Supabase project, open **Connect** and copy the **Session pooler** string (it works over IPv4;
+  the direct-connection host is IPv6-only). Fill in your database password and use it as `DATABASE_URL`
+- Optionally set `DATABASE_CA_CERT` to Supabase's certificate (Project Settings → Database → SSL
+  configuration) so the TLS connection is verified, not just encrypted
 
 Because of the rewrite, the two hosts never exchange cookies directly: the browser sees one origin.
 
@@ -252,8 +266,13 @@ Because of the rewrite, the two hosts never exchange cookies directly: the brows
 
 **`The meal database is empty`** — run `npm run seed`.
 
-**The server exits on start with "Invalid environment configuration"** — `MONGODB_URI` or `JWT_SECRET` is
+**The server exits on start with "Invalid environment configuration"** — `DATABASE_URL` or `JWT_SECRET` is
 missing from `server/.env`.
+
+**`The database is reachable but has no tables yet`** — run `npm run db:migrate -w server`, then `npm run seed`.
+
+**`Tenant or user not found`** (Supabase) — the pooler string's region or project ref is wrong; copy it again
+from Supabase → Connect.
 
 ---
 

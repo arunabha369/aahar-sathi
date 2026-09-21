@@ -1,22 +1,19 @@
 import type { NextFunction, Request, Response } from 'express';
-import { Error as MongooseError } from 'mongoose';
 import { ZodError } from 'zod';
 import { ApiError } from '../utils/ApiError.js';
 import { isProduction } from '../config/env.js';
 import { zodToApiError } from './validate.js';
 
-interface MongoDuplicateKeyError extends Error {
-  code: number;
-  keyPattern?: Record<string, unknown>;
+/** Postgres reports what went wrong as a SQLSTATE code plus the constraint involved. */
+interface PostgresError extends Error {
+  code: string;
+  constraint?: string;
 }
 
-function isDuplicateKeyError(error: unknown): error is MongoDuplicateKeyError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: unknown }).code === 11000
-  );
+function isPostgresError(error: unknown): error is PostgresError {
+  if (!(error instanceof Error)) return false;
+  const { code } = error as { code?: unknown };
+  return typeof code === 'string' && /^[0-9A-Z]{5}$/.test(code);
 }
 
 export function notFoundHandler(req: Request, _res: Response, next: NextFunction): void {
@@ -35,23 +32,20 @@ export function errorHandler(
     apiError = error;
   } else if (error instanceof ZodError) {
     apiError = zodToApiError(error);
-  } else if (error instanceof MongooseError.ValidationError) {
-    apiError = new ApiError(
-      400,
-      'VALIDATION_ERROR',
-      'Some of the details you entered are not valid.',
-      Object.values(error.errors).map((issue) => ({
-        field: issue.path,
-        message: issue.message,
-      })),
-    );
-  } else if (error instanceof MongooseError.CastError) {
-    apiError = ApiError.badRequest('That id is not valid.');
-  } else if (isDuplicateKeyError(error)) {
-    const field = Object.keys(error.keyPattern ?? {})[0] ?? 'value';
+  } else if (error instanceof SyntaxError && (error as { type?: unknown }).type === 'entity.parse.failed') {
+    // express.json() could not parse the request body.
+    apiError = ApiError.badRequest('The request body is not valid JSON.');
+  } else if (isPostgresError(error) && error.code === '23505') {
+    // unique_violation — in practice, two sign-ups racing for the same email.
     apiError = ApiError.conflict(
-      field === 'email' ? 'An account with this email already exists.' : `That ${field} is already taken.`,
+      error.constraint === 'users_email_key' ? 'An account with this email already exists.' : 'That already exists.',
     );
+  } else if (isPostgresError(error) && error.code === '22P02') {
+    // invalid_text_representation — a malformed id that slipped past validation.
+    apiError = ApiError.badRequest('That id is not valid.');
+  } else if (isPostgresError(error) && error.code === '23514') {
+    // check_violation — the database's own range checks.
+    apiError = new ApiError(400, 'VALIDATION_ERROR', 'Some of the details you entered are not valid.');
   } else if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError')) {
     apiError = ApiError.unauthorized('Your session has expired. Please sign in again.');
   } else {
