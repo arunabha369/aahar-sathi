@@ -29,6 +29,8 @@ export const metadata: Metadata = {
     'macro calculator',
   ],
   applicationName: 'Aahar Sathi',
+  // iOS "Add to Home Screen": open full-screen with a dark status bar and a short title.
+  appleWebApp: { capable: true, title: 'Aahar Sathi', statusBarStyle: 'black' },
   authors: [{ name: 'Aahar Sathi' }],
   openGraph: {
     type: 'website',

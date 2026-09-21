@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Panel, PanelHeader, PageHeader } from '@/components/ui/Card';
 import { DangerZone } from '@/components/forms/DangerZone';
+import { InstallAppPanel } from '@/components/InstallApp';
 import { ProfileForm } from '@/components/forms/ProfileForm';
 import { serverFetch } from '@/lib/api/server';
 import { getCurrentUser } from '@/lib/auth';
@@ -20,6 +21,17 @@ export default async function SettingsPage() {
       <PageHeader eyebrow="Account" title="Settings" description={`Signed in as ${user.email}`} />
 
       <ProfileForm profile={profile} currentTargets={targets} />
+
+      <div className="mt-5">
+        <Panel>
+          <PanelHeader
+            eyebrow="App"
+            title="Install Aahar Sathi"
+            description="Keep it on your phone or computer and open it like any other app."
+          />
+          <InstallAppPanel />
+        </Panel>
+      </div>
 
       <div className="mt-5">
         <Panel>

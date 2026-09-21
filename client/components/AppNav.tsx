@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { CalendarRange, LayoutDashboard, LogOut, Settings, ShoppingBasket, TrendingUp } from 'lucide-react';
+import { InstallAppButton } from '@/components/InstallApp';
 import { Logo } from '@/components/ui/Logo';
 import { Mark } from '@/components/illustrations/Mark';
 import { api } from '@/lib/api/client';
@@ -84,6 +85,7 @@ export function Sidebar({ user }: { user: { name: string; email: string } }) {
       </nav>
 
       <div className="border-t border-line p-3">
+        <InstallAppButton className="mb-2" />
         <div className="flex items-center gap-3 rounded-xl px-2 py-2">
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-sm font-extrabold text-accent-ink">
             {user.name.slice(0, 1).toUpperCase()}
@@ -115,17 +117,20 @@ export function MobileTopBar({ user }: { user: { name: string } }) {
         <Mark className="size-9" />
         <span className="text-[0.9375rem] font-extrabold tracking-tight text-ink">Aahar Sathi</span>
       </Link>
-      <Link
-        href="/settings"
-        className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-[0.8125rem] font-semibold text-ink-soft transition-colors hover:bg-surface-2"
-        aria-label="Open settings"
-      >
-        <span className="grid size-8 place-items-center rounded-full bg-accent text-xs font-extrabold text-accent-ink">
-          {user.name.slice(0, 1).toUpperCase()}
-        </span>
-        <Settings className="size-4 text-muted" aria-hidden="true" />
-        <span className="sr-only">Settings</span>
-      </Link>
+      <div className="flex items-center gap-1">
+        <InstallAppButton compact />
+        <Link
+          href="/settings"
+          className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-[0.8125rem] font-semibold text-ink-soft transition-colors hover:bg-surface-2"
+          aria-label="Open settings"
+        >
+          <span className="grid size-8 place-items-center rounded-full bg-accent text-xs font-extrabold text-accent-ink">
+            {user.name.slice(0, 1).toUpperCase()}
+          </span>
+          <Settings className="size-4 text-muted" aria-hidden="true" />
+          <span className="sr-only">Settings</span>
+        </Link>
+      </div>
     </header>
   );
 }
