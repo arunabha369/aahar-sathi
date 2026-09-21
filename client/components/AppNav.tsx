@@ -111,7 +111,7 @@ export function Sidebar({ user }: { user: { name: string; email: string } }) {
 export function MobileTopBar({ user }: { user: { name: string } }) {
   return (
     <header className="no-print sticky top-0 z-40 flex items-center justify-between border-b border-line bg-white/90 px-4 py-2.5 shadow-[0_1px_0_rgb(14_26_22_/_0.03)] backdrop-blur-md lg:hidden">
-      <Link href="/dashboard" className="flex items-center gap-2.5 rounded-xl" aria-label="Aahar Sathi home">
+      <Link href="/dashboard" className="flex min-h-11 items-center gap-2.5 rounded-xl" aria-label="Aahar Sathi home">
         <Mark className="size-9" />
         <span className="text-[0.9375rem] font-extrabold tracking-tight text-ink">Aahar Sathi</span>
       </Link>

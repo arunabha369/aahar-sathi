@@ -74,7 +74,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
                   onClick={() => onSwap(meal.slot)}
                   disabled={swapping}
                   data-print="hide"
-                  className="inline-flex min-h-11 shrink-0 items-center gap-1.5 self-center rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink disabled:opacity-60"
+                  className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 self-center rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink disabled:opacity-60"
                   aria-label={`Swap ${slot.label.toLowerCase()} on ${day.day}`}
                 >
                   {swapping ? (

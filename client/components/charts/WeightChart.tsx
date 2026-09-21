@@ -34,7 +34,7 @@ export function WeightChart({ logs }: { logs: WeightLog[] }) {
               onClick={() => setDays(range.days)}
               aria-pressed={days === range.days}
               className={cn(
-                'min-h-10 rounded-md px-4 text-xs font-bold transition-colors',
+                'min-h-11 rounded-md px-4 text-xs font-bold transition-colors',
                 days === range.days ? 'bg-white text-ink shadow-xs' : 'text-muted hover:text-ink',
               )}
             >

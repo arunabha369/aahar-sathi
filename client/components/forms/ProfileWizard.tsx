@@ -148,7 +148,7 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
       </ol>
 
       <Panel padding="lg">
-        <h1 className="text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{current.title}</h1>
+        <h2 className="text-xl font-extrabold tracking-tight text-ink sm:text-2xl">{current.title}</h2>
         <p className="mt-1 mb-6 text-sm text-muted">{current.hint}</p>
 
         {step === 0 ? <BodySection draft={draft} errors={errors} update={update} showErrors={showErrors} /> : null}

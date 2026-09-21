@@ -73,7 +73,7 @@ export function PlanHistory({ plans }: { plans: PlanSummary[] }) {
               </div>
               <Link
                 href={`/plans/${plan.id}`}
-                className="grid size-10 shrink-0 place-items-center rounded-xl text-muted ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink"
+                className="grid size-11 shrink-0 place-items-center rounded-xl text-muted ring-1 ring-line transition-colors hover:bg-canvas hover:text-ink"
                 aria-label={`Open the plan from ${formatDate(plan.createdAt.slice(0, 10))}`}
               >
                 <ArrowUpRight className="size-[1.125rem]" aria-hidden="true" />
@@ -118,7 +118,7 @@ export function PlanHistory({ plans }: { plans: PlanSummary[] }) {
                 variant="ghost"
                 onClick={() => remove(plan.id)}
                 disabled={busyId === plan.id}
-                className="text-chilli-600 hover:bg-red-50 hover:text-chilli-700"
+                className="text-chilli-600 hover:bg-chilli-50 hover:text-chilli-700"
               >
                 <Trash2 className="size-4" aria-hidden="true" />
                 Delete

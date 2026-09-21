@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition, type FocusEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -20,6 +20,19 @@ export function ProfileForm({ profile, currentTargets }: ProfileFormProps) {
   const router = useRouter();
   const toast = useToast();
   const [draft, setDraft] = useState<ProfileDraft>(draftFromProfile(profile));
+  const saveBarRef = useRef<HTMLDivElement>(null);
+
+  // focus-not-obscured: the sticky save bar sits on top of the form, and the browser
+  // does not treat it as an obstruction when moving focus. Nudge the field clear of it.
+  const keepFocusClearOfSaveBar = (event: FocusEvent<HTMLDivElement>) => {
+    const bar = saveBarRef.current;
+    const field = event.target;
+    if (!bar || bar.contains(field)) return;
+    if (field.getBoundingClientRect().bottom > bar.getBoundingClientRect().top - 12) {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      field.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+    }
+  };
   const [showErrors, setShowErrors] = useState(false);
   const [newTargets, setNewTargets] = useState<Targets | null>(null);
   const [saving, startSaving] = useTransition();
@@ -73,7 +86,7 @@ export function ProfileForm({ profile, currentTargets }: ProfileFormProps) {
       newTargets.waterGlasses !== currentTargets.waterGlasses);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" onFocus={keepFocusClearOfSaveBar}>
       <Panel>
         <PanelHeader
           eyebrow="Body"
@@ -123,12 +136,12 @@ export function ProfileForm({ profile, currentTargets }: ProfileFormProps) {
         </Panel>
       ) : null}
 
-      <div className="sticky bottom-20 z-20 lg:bottom-4">
-        <div className="surface-raised flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm text-muted">
+      <div ref={saveBarRef} className="sticky bottom-20 z-20 lg:bottom-4">
+        <div className="surface-raised flex items-center justify-between gap-3 p-3 sm:p-4">
+          <p className="min-w-0 text-xs leading-snug text-muted sm:text-sm" role="status">
             {isValid ? 'Everything looks good.' : 'Please fix the highlighted fields before saving.'}
           </p>
-          <Button onClick={save} pending={saving} disabled={!isValid} size="lg">
+          <Button onClick={save} pending={saving} disabled={!isValid} size="lg" className="shrink-0">
             <Save className="size-4" aria-hidden="true" />
             Save profile
           </Button>

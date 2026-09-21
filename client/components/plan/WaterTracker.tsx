@@ -111,7 +111,7 @@ export function WaterTracker({ target, logs, serverToday }: WaterTrackerProps) {
               aria-label={`${filled ? 'Glass' : 'Fill up to glass'} ${number} of ${target}`}
               className={cn(
                 'grid size-11 place-items-center rounded-xl p-1.5 transition-all active:scale-95',
-                filled ? 'bg-sky-50 ring-1 ring-water-200' : 'ring-1 ring-line hover:bg-canvas',
+                filled ? 'bg-water-50 ring-1 ring-water-200' : 'ring-1 ring-line hover:bg-canvas',
               )}
             >
               <span className="block size-full">
@@ -123,7 +123,7 @@ export function WaterTracker({ target, logs, serverToday }: WaterTrackerProps) {
       </div>
 
       {complete ? (
-        <p className="mt-5 flex items-center gap-2.5 rounded-2xl bg-sky-50 px-4 py-3 text-sm font-bold text-water-700 ring-1 ring-inset ring-water-200">
+        <p className="mt-5 flex items-center gap-2.5 rounded-2xl bg-water-50 px-4 py-3 text-sm font-bold text-water-700 ring-1 ring-inset ring-water-200">
           <span className="grid size-6 place-items-center rounded-full bg-water-600">
             <Check className="size-3.5 text-white" strokeWidth={3.5} aria-hidden="true" />
           </span>

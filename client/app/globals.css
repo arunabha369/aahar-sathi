@@ -35,14 +35,24 @@
   --color-saffron-800: #93370d;
 
   /* Spice red + a cool tone for water */
+  --color-chilli-50: #fef3f2;
+  --color-chilli-100: #fee4e2;
+  --color-chilli-200: #fecdca;
+  --color-chilli-300: #fda29b;
   --color-chilli-400: #f97066;
   --color-chilli-500: #f04438;
   --color-chilli-600: #d92d20;
   --color-chilli-700: #b42318;
+  --color-chilli-800: #912018;
+  --color-water-50: #f0f9ff;
+  --color-water-100: #e0f2fe;
+  --color-water-200: #b9e6fe;
+  --color-water-300: #7cd4fd;
   --color-water-400: #36bffa;
   --color-water-500: #0ba5ec;
   --color-water-600: #0086c9;
   --color-water-700: #026aa2;
+  --color-water-800: #065986;
 
   --radius-xs: 0.5rem;
   --radius-sm: 0.75rem;
@@ -62,6 +72,7 @@
   --animate-fade: fade 0.3s ease-out both;
   --animate-shimmer: shimmer 1.8s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 70s linear infinite;
 }
 
 @keyframes rise {
@@ -76,6 +87,13 @@
   from { background-position: -640px 0; }
   to { background-position: 640px 0; }
 }
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
@@ -84,6 +102,10 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* focus-not-obscured (WCAG 2.2): when focus or an anchor scrolls something into view,
+       keep it clear of the sticky mobile top bar and the bottom tab bar + sticky save bar. */
+    scroll-padding-top: 5rem;
+    scroll-padding-bottom: 10rem;
     -webkit-text-size-adjust: 100%;
     background-color: var(--color-canvas);
   }
@@ -99,6 +121,21 @@
 
   h1, h2, h3, h4 {
     letter-spacing: -0.022em;
+  }
+
+  /* cursor-pointer: Tailwind v4's reset leaves buttons on the default arrow. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"],
+  summary,
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
   }
 
   :focus-visible {
@@ -196,6 +233,25 @@
 
   .skip-link:focus {
     transform: translate(-50%, 0);
+  }
+}
+
+@media (min-width: 64rem) {
+  html {
+    scroll-padding-top: 2rem;
+    scroll-padding-bottom: 7rem;
+  }
+}
+
+/* Scroll reveal: CSS-only, and only where it is both supported and wanted.
+   Anywhere else the content simply renders in its final state. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 22%;
+    }
   }
 }
 

@@ -40,7 +40,7 @@ export function BodySection({ draft, errors, update, showErrors }: SectionProps)
     <div className="space-y-6">
       <fieldset>
         <Legend hint="The Mifflin–St Jeor formula uses a different constant for men and women.">Gender</Legend>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 min-[25rem]:grid-cols-2">
           {GENDER_OPTIONS.map((option) => (
             <OptionCard
               key={option.value}

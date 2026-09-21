@@ -5,8 +5,8 @@ const TONES = {
   neutral: 'bg-canvas text-ink-soft ring-line',
   brand: 'bg-brand-50 text-brand-800 ring-brand-200',
   saffron: 'bg-saffron-50 text-saffron-800 ring-saffron-200',
-  water: 'bg-sky-50 text-water-700 ring-sky-200',
-  chilli: 'bg-red-50 text-chilli-700 ring-red-200',
+  water: 'bg-water-50 text-water-700 ring-water-200',
+  chilli: 'bg-chilli-50 text-chilli-700 ring-chilli-200',
   ink: 'bg-ink text-white ring-transparent',
 } as const;
 

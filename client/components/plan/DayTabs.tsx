@@ -71,6 +71,8 @@ export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = f
               aria-selected={selected}
               aria-controls={`day-panel-${candidate.day}`}
               onClick={() => setActiveDay(index)}
+              // Keep a keyboard-focused tab fully inside the horizontally scrolling strip.
+              onFocus={(event) => event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' })}
               className={cn(
                 'group relative min-h-[3.25rem] shrink-0 rounded-xl px-4 text-center transition-all',
                 selected
@@ -82,7 +84,7 @@ export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = f
               <span
                 className={cn(
                   'block text-[0.625rem] font-semibold tabular-nums',
-                  selected ? 'text-white/80' : 'text-muted',
+                  selected ? 'text-white' : 'text-muted',
                 )}
               >
                 {isToday ? 'Today' : `${candidate.totals.kcal} kcal`}

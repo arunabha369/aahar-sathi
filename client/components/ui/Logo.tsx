@@ -18,7 +18,7 @@ export function Logo({ href = '/', showTagline = true, tone = 'dark', className 
   );
 
   return href ? (
-    <Link href={href} className="rounded-xl" aria-label="Aahar Sathi home">
+    <Link href={href} className="inline-flex min-h-11 items-center rounded-xl" aria-label="Aahar Sathi home">
       {content}
     </Link>
   ) : (

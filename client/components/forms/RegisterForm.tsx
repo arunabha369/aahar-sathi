@@ -62,7 +62,7 @@ export function RegisterForm() {
         {state.error ? (
           <p
             role="alert"
-            className="rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-chilli-700 ring-1 ring-inset ring-red-200"
+            className="rounded-xl bg-chilli-50 px-4 py-3 text-sm font-semibold text-chilli-700 ring-1 ring-inset ring-chilli-200"
           >
             {state.error}
           </p>
@@ -103,7 +103,7 @@ export function RegisterForm() {
 
       <p className="mt-8 text-center text-sm text-muted">
         Already have an account?{' '}
-        <Link href="/login" className="font-bold text-brand-800 underline-offset-4 hover:underline">
+        <Link href="/login" className="-my-3 inline-block py-3 font-bold text-brand-800 underline-offset-4 hover:underline">
           Sign in
         </Link>
       </p>

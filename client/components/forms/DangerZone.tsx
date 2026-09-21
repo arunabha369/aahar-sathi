@@ -51,7 +51,7 @@ export function DangerZone({ email }: { email: string }) {
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-red-50 px-4 py-4 ring-1 ring-inset ring-red-200">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-chilli-50 px-4 py-4 ring-1 ring-inset ring-chilli-200">
         <div className="flex gap-3">
           <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white text-chilli-600 shadow-xs">
             <AlertTriangle className="size-[1.125rem]" aria-hidden="true" />
@@ -81,7 +81,7 @@ export function DangerZone({ email }: { email: string }) {
         className="w-[min(28rem,calc(100vw-2rem))] rounded-2xl border border-line p-0 shadow-[var(--shadow-lg)] backdrop:bg-ink/40 open:animate-rise"
       >
         <div className="p-6">
-          <span className="grid size-11 place-items-center rounded-xl bg-red-50 text-chilli-600">
+          <span className="grid size-11 place-items-center rounded-xl bg-chilli-50 text-chilli-600">
             <AlertTriangle className="size-5" aria-hidden="true" />
           </span>
           <h2 id="delete-title" className="mt-4 text-lg font-extrabold text-ink">

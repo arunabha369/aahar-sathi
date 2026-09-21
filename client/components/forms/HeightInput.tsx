@@ -28,7 +28,7 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
   return (
     <div className="w-full">
       <div className="mb-1.5 flex items-center justify-between gap-3">
-        <label htmlFor={`${id}-cm`} className="text-[0.8125rem] font-semibold text-ink-soft">
+        <label htmlFor={mode === 'cm' ? `${id}-cm` : `${id}-ft`} className="text-[0.8125rem] font-semibold text-ink-soft">
           Height
         </label>
         <div className="inline-flex rounded-lg bg-canvas p-0.5 ring-1 ring-line" role="group" aria-label="Height unit">
@@ -39,7 +39,7 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
               onClick={() => setMode(option)}
               aria-pressed={mode === option}
               className={cn(
-                'min-h-9 rounded-md px-3 text-xs font-bold transition-colors',
+                'min-h-11 rounded-md px-3.5 text-xs font-bold transition-colors',
                 mode === option ? 'bg-white text-ink shadow-xs' : 'text-muted hover:text-ink',
               )}
             >
@@ -63,7 +63,7 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? `${id}-error` : undefined}
             className={cn(
-              'min-h-12 w-full rounded-xl border bg-white px-3.5 pr-14 text-[0.9375rem] font-medium text-ink shadow-xs transition-colors focus:outline-none',
+              'min-h-12 w-full rounded-xl border bg-white px-3.5 pr-14 text-base font-medium text-ink sm:text-[0.9375rem] shadow-xs transition-colors focus:outline-none',
               error
                 ? 'border-chilli-400 focus:border-chilli-500 focus:ring-2 focus:ring-chilli-500/15'
                 : 'border-line hover:border-line-strong focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15',
@@ -86,9 +86,13 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
               onChange={(event) => updateFeetInches(Number(event.target.value || 0), inches)}
               placeholder="5"
               aria-label="Feet"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? `${id}-error` : undefined}
               className={cn(
-                'min-h-12 w-full rounded-2xl border bg-white px-4 pr-12 text-base text-ink focus:outline-none',
-                error ? 'border-red-400' : 'border-line focus:border-green-500',
+                'min-h-12 w-full rounded-xl border bg-white px-3.5 pr-12 text-base font-medium text-ink shadow-xs transition-colors focus:outline-none sm:text-[0.9375rem]',
+                error
+                  ? 'border-chilli-400 focus:border-chilli-500 focus:ring-2 focus:ring-chilli-500/15'
+                  : 'border-line hover:border-line-strong focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15',
               )}
             />
             <span className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-[0.8125rem] font-semibold text-muted">
@@ -105,9 +109,13 @@ export function HeightInput({ valueCm, onChange, error }: HeightInputProps) {
               onChange={(event) => updateFeetInches(feet, Number(event.target.value || 0))}
               placeholder="7"
               aria-label="Inches"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? `${id}-error` : undefined}
               className={cn(
-                'min-h-12 w-full rounded-2xl border bg-white px-4 pr-12 text-base text-ink focus:outline-none',
-                error ? 'border-red-400' : 'border-line focus:border-green-500',
+                'min-h-12 w-full rounded-xl border bg-white px-3.5 pr-12 text-base font-medium text-ink shadow-xs transition-colors focus:outline-none sm:text-[0.9375rem]',
+                error
+                  ? 'border-chilli-400 focus:border-chilli-500 focus:ring-2 focus:ring-chilli-500/15'
+                  : 'border-line hover:border-line-strong focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15',
               )}
             />
             <span className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-[0.8125rem] font-semibold text-muted">
