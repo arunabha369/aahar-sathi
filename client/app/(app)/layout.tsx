@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { BottomNav, MobileTopBar, Sidebar } from '@/components/AppNav';
+import { NavigationProgress } from '@/components/NavigationProgress';
 import { getCurrentUser } from '@/lib/auth';
 import { DISCLAIMER } from '@/lib/constants';
 
@@ -7,6 +9,10 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <div className="min-h-dvh bg-canvas">
+      {/* It reads the search params, which needs a Suspense boundary of its own. */}
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
       <Sidebar user={{ name: user.name, email: user.email }} />
       <MobileTopBar user={{ name: user.name }} />
 

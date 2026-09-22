@@ -8,6 +8,7 @@ import { InstallAppButton } from '@/components/InstallApp';
 import { Logo } from '@/components/ui/Logo';
 import { Mark } from '@/components/illustrations/Mark';
 import { api } from '@/lib/api/client';
+import { usePendingHref } from '@/lib/navigationProgress';
 import { cn } from '@/lib/utils';
 
 /** The phone tab bar: five destinations at most, with Plans raised in the middle. */
@@ -35,7 +36,10 @@ const SIDEBAR_LINKS = [
 function useIsActive() {
   // Typed as nullable because the app also has a pages/ folder (for /api); App Router pages always have one.
   const pathname = usePathname() ?? '';
-  return (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  // A tapped tab lights up at once, while its page is still loading.
+  const pending = usePendingHref()?.split('?')[0];
+  const current = pending ?? pathname;
+  return (href: string) => current === href || current.startsWith(`${href}/`);
 }
 
 function useSignOut() {

@@ -120,6 +120,12 @@
   from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: none; }
 }
+/* Navigation bar: leaps ahead, then creeps towards the end until the page arrives */
+@keyframes nav-progress {
+  0% { transform: scaleX(0); }
+  10% { transform: scaleX(0.35); }
+  100% { transform: scaleX(0.92); }
+}
 @keyframes pop {
   from { opacity: 0; transform: scale(0.4); }
   to { opacity: 1; transform: scale(1); }
