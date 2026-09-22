@@ -48,6 +48,7 @@ export default async function GroceryPage() {
         checked={grocery.checked}
         atHome={grocery.atHome}
         servings={grocery.servings}
+        extras={grocery.extras}
       />
     </div>
   );

@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ChefHat, Clock, Info, Leaf, Minus, Plus, Refrigerator } from 'lucide-react';
+import { ChefHat, Clock, Heart, Info, Leaf, Minus, Plus, Refrigerator } from 'lucide-react';
 import { MealPhoto } from '@/components/plan/MealPhoto';
+import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
+import { CookMode } from '@/components/recipes/CookMode';
+import { ApiError, api } from '@/lib/api/client';
 import { DietMark } from '@/components/recipes/DietMark';
 import { Switch } from '@/components/ui/Switch';
 import { ICON_SLOT, REGION_LABELS, SLOT_LABELS, TAG_LABELS } from '@/components/recipes/recipeMeta';
@@ -17,6 +21,8 @@ const MAX_SERVINGS = 12;
 
 interface RecipeViewProps {
   recipe: Recipe;
+  /** Whether this recipe is starred. */
+  favourite: boolean;
   /** Servings to start at: 1, or the portion(s) in the user's plan. */
   initialServings: number;
   /** Why the recipe opened at that size ("your plan's portion"). */
@@ -25,7 +31,10 @@ interface RecipeViewProps {
   jainByDefault: boolean;
 }
 
-export function RecipeView({ recipe, initialServings, servingsNote, jainByDefault }: RecipeViewProps) {
+export function RecipeView({ recipe, favourite, initialServings, servingsNote, jainByDefault }: RecipeViewProps) {
+  const toast = useToast();
+  const [starred, setStarred] = useState(favourite);
+  const [cooking, setCooking] = useState(false);
   const [servings, setServings] = useState(initialServings);
   const jainFriendly = recipe.tags.includes('jain');
   const [jain, setJain] = useState(jainByDefault && jainFriendly);
@@ -36,6 +45,23 @@ export function RecipeView({ recipe, initialServings, servingsNote, jainByDefaul
     setServings((current) => Math.min(MAX_SERVINGS, Math.max(MIN_SERVINGS, Math.round((current + direction * 0.5) * 2) / 2)));
 
   const shownTags = recipe.tags.filter((tag) => TAG_LABELS[tag]);
+  // One list for the page and for cooking mode, so they can never disagree.
+  const ingredients = recipe.ingredients.map((ingredient) => ({
+    ingredient,
+    leftOut: jain && ingredient.jainAvoid,
+    name: vrat && ingredient.key === 'salt' ? 'Sendha namak (rock salt)' : ingredient.name,
+  }));
+
+  const toggleStar = async () => {
+    const next = !starred;
+    setStarred(next);
+    try {
+      await api.put('/recipes/favourites', { slug: recipe.slug, favourite: next });
+    } catch (error) {
+      setStarred(!next);
+      toast.error(error instanceof ApiError ? error.message : 'We could not save that.');
+    }
+  };
   const macros = [
     { label: 'kcal', value: Math.round(recipe.kcal * servings), className: 'text-ink' },
     { label: 'protein', value: `${Math.round(recipe.protein * servings)} g`, className: 'text-protein' },
@@ -46,7 +72,14 @@ export function RecipeView({ recipe, initialServings, servingsNote, jainByDefaul
   return (
     <article className="animate-rise">
       <header className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-start">
-        <MealPhoto slug={recipe.slug} slot={ICON_SLOT[recipe.slot]} className="size-24 sm:size-28" sizes="112px" eager />
+        <MealPhoto
+          slug={recipe.slug}
+          slot={ICON_SLOT[recipe.slot]}
+          region={recipe.region}
+          className="size-24 sm:size-28"
+          sizes="112px"
+          eager
+        />
         <div className="min-w-0">
           <p className="eyebrow mb-1.5">
             {SLOT_LABELS[recipe.slot]} · {REGION_LABELS[recipe.region] ?? recipe.region}
@@ -61,6 +94,16 @@ export function RecipeView({ recipe, initialServings, servingsNote, jainByDefaul
               {recipe.prepMinutes} min prep · {recipe.cookMinutes} min cooking
             </span>
           </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button onClick={() => setCooking(true)}>
+              <ChefHat className="size-4" aria-hidden="true" />
+              Cook this
+            </Button>
+            <Button variant="secondary" onClick={toggleStar} aria-pressed={starred}>
+              <Heart className={cn('size-4', starred ? 'fill-chilli-500 text-chilli-500' : 'text-muted')} aria-hidden="true" />
+              {starred ? 'Saved' : 'Save'}
+            </Button>
+          </div>
           {shownTags.length > 0 ? (
             <p className="mt-2.5 flex flex-wrap gap-1.5">
               {shownTags.map((tag) => (
@@ -117,9 +160,7 @@ export function RecipeView({ recipe, initialServings, servingsNote, jainByDefaul
           ) : null}
 
           <ul className="divide-y divide-line">
-            {recipe.ingredients.map((ingredient) => {
-              const left = jain && ingredient.jainAvoid;
-              const name = vrat && ingredient.key === 'salt' ? 'Sendha namak (rock salt)' : ingredient.name;
+            {ingredients.map(({ ingredient, leftOut: left, name }) => {
               return (
                 <li key={ingredient.key} className={cn('flex items-baseline gap-3 py-2.5', left && 'text-muted')}>
                   <span
@@ -226,6 +267,14 @@ export function RecipeView({ recipe, initialServings, servingsNote, jainByDefaul
         </div>
       </div>
       <p className="sr-only">Scaled to {quarter(servings)} servings.</p>
+
+      <CookMode
+        recipe={recipe}
+        servings={servings}
+        ingredients={ingredients}
+        open={cooking}
+        onClose={() => setCooking(false)}
+      />
     </article>
   );
 }

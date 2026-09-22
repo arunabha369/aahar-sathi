@@ -1,6 +1,8 @@
 import { env } from './config/env.ts';
 import { MEALS } from './data/meals.ts';
 import { deleteDiaryForUser } from './db/diary.ts';
+import { deleteFavouritesForUser } from './db/favourites.ts';
+import { deleteExtrasForUser } from './db/groceryExtras.ts';
 import { deleteMembersForUser } from './db/household.ts';
 import { clearPantry } from './db/pantry.ts';
 import { deleteRemindersForUser } from './db/reminders.ts';
@@ -59,6 +61,8 @@ async function seedDemoUser(): Promise<void> {
   await deleteMembersForUser(user.id);
   await clearPantry(user.id);
   await deleteRemindersForUser(user.id);
+  await deleteExtrasForUser(user.id);
+  await deleteFavouritesForUser(user.id);
 
   const plan = await createPlanForUser({
     userId: user.id,

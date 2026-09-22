@@ -125,7 +125,14 @@ export function TodayCard({ days, targets, serverToday, diary: initialDiary, str
               {allDone ? 'Tomorrow' : isNow ? 'Now' : 'Up next'} · {mealLabel(featured)} · {featured.time}
             </p>
             <div className="mt-3 flex gap-4">
-              <MealPhoto slug={featured.slug} slot={featured.slot} className="size-20 sm:size-24" sizes="96px" eager />
+              <MealPhoto
+                slug={featured.slug}
+                slot={featured.slot}
+                region={featured.region}
+                className="size-20 sm:size-24"
+                sizes="96px"
+                eager
+              />
               <div className="min-w-0">
                 <h3 className="text-base font-bold leading-snug text-ink sm:text-lg">
                   <Link

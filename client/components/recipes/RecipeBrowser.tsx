@@ -2,7 +2,7 @@
 
 import { useDeferredValue, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { Clock, Search, X } from 'lucide-react';
+import { Clock, Heart, Search, X } from 'lucide-react';
 import { MealPhoto } from '@/components/plan/MealPhoto';
 import { DietMark } from '@/components/recipes/DietMark';
 import { ICON_SLOT, SLOT_LABELS, TAG_LABELS } from '@/components/recipes/recipeMeta';
@@ -11,7 +11,7 @@ import type { Diet, MealSlot, MealTag, RecipeSummary } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 type SlotFilter = MealSlot | 'all';
-type Extra = 'vrat' | 'jain' | 'iftar' | 'sehri' | 'quick';
+type Extra = 'saved' | 'vrat' | 'jain' | 'iftar' | 'sehri' | 'quick';
 
 const SLOT_FILTERS: { value: SlotFilter; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -28,6 +28,7 @@ const DIET_FILTERS: { value: Diet; label: string }[] = [
 ];
 
 const EXTRA_FILTERS: { value: Extra; label: string }[] = [
+  { value: 'saved', label: 'Saved' },
   { value: 'quick', label: 'Under 20 min' },
   { value: 'vrat', label: 'Vrat' },
   { value: 'jain', label: 'Jain-friendly' },
@@ -53,7 +54,8 @@ function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () =>
   );
 }
 
-export function RecipeBrowser({ recipes }: { recipes: RecipeSummary[] }) {
+export function RecipeBrowser({ recipes, favourites }: { recipes: RecipeSummary[]; favourites: string[] }) {
+  const saved = useMemo(() => new Set(favourites), [favourites]);
   const [query, setQuery] = useState('');
   const [slot, setSlot] = useState<SlotFilter>('all');
   const [diets, setDiets] = useState<Diet[]>([]);
@@ -68,12 +70,14 @@ export function RecipeBrowser({ recipes }: { recipes: RecipeSummary[] }) {
       if (slot !== 'all' && recipe.slot !== slot) return false;
       if (diets.length > 0 && !diets.includes(recipe.diet)) return false;
       for (const extra of extras) {
-        if (extra === 'quick' ? recipe.minutes > QUICK_MINUTES : !recipe.tags.includes(extra as MealTag)) return false;
+        if (extra === 'quick' && recipe.minutes > QUICK_MINUTES) return false;
+        if (extra === 'saved' && !saved.has(recipe.slug)) return false;
+        if (extra !== 'quick' && extra !== 'saved' && !recipe.tags.includes(extra as MealTag)) return false;
       }
       const name = recipe.name.toLowerCase();
       return words.every((word) => name.includes(word));
     });
-  }, [recipes, deferredQuery, slot, diets, extras]);
+  }, [recipes, deferredQuery, slot, diets, extras, saved]);
 
   const filtered = query.trim() !== '' || slot !== 'all' || diets.length > 0 || extras.length > 0;
 
@@ -148,11 +152,14 @@ export function RecipeBrowser({ recipes }: { recipes: RecipeSummary[] }) {
                 href={`/recipes/${recipe.slug}`}
                 className="surface flex h-full items-start gap-3.5 p-3.5 transition-colors hover:bg-surface-2"
               >
-                <MealPhoto slug={recipe.slug} slot={ICON_SLOT[recipe.slot]} className="size-16" sizes="64px" />
+                <MealPhoto slug={recipe.slug} slot={ICON_SLOT[recipe.slot]} region={recipe.region} className="size-16" sizes="64px" />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-start gap-2">
                     <DietMark diet={recipe.diet} className="mt-0.5" />
-                    <span className="text-[0.9375rem] font-bold leading-snug text-ink">{recipe.name}</span>
+                    <span className="min-w-0 flex-1 text-[0.9375rem] font-bold leading-snug text-ink">{recipe.name}</span>
+                    {saved.has(recipe.slug) ? (
+                      <Heart className="mt-0.5 size-4 shrink-0 fill-chilli-500 text-chilli-500" aria-label="Saved" />
+                    ) : null}
                   </span>
                   <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.75rem] font-semibold text-muted tabular-nums">
                     <span>{SLOT_LABELS[recipe.slot]}</span>

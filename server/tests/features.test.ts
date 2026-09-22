@@ -422,3 +422,83 @@ describe('reminders API', () => {
     expect((await agent.get('/api/reminders/settings').expect(200)).body.devices).toBe(0);
   });
 });
+
+describe('your own grocery items, ticks and favourites', () => {
+  it('adds items of your own, ticks them, and removes them', async () => {
+    const { agent } = await signUpWithProfile(app);
+    const plan = (await agent.post('/api/plans').expect(201)).body.plan;
+    const before = (await agent.get(`/api/plans/${plan.id}/grocery`).expect(200)).body;
+    expect(before.extras).toEqual([]);
+
+    const { extra } = (await agent.post(`/api/plans/${plan.id}/grocery/extras`).send({ name: '  Soap  ' }).expect(201)).body;
+    expect(extra).toMatchObject({ name: 'Soap' });
+    // Adding the same thing again does not make a second one.
+    await agent.post(`/api/plans/${plan.id}/grocery/extras`).send({ name: 'soap' }).expect(201);
+    await agent.post(`/api/plans/${plan.id}/grocery/extras`).send({ name: 'Extra milk' }).expect(201);
+    await agent.post(`/api/plans/${plan.id}/grocery/extras`).send({ name: '   ' }).expect(400);
+
+    const list = (await agent.get(`/api/plans/${plan.id}/grocery`).expect(200)).body;
+    expect(list.extras.map((item: { name: string }) => item.name)).toEqual(['Soap', 'Extra milk']);
+    expect(list.total).toBe(before.total + 2);
+
+    // Your own items tick like any other.
+    const ticked = (await agent.patch(`/api/plans/${plan.id}/grocery`).send({ item: 'Soap', checked: true }).expect(200)).body;
+    expect(ticked.checked).toContain('Soap');
+
+    await agent.delete(`/api/plans/${plan.id}/grocery/extras/${extra.id}`).expect(200);
+    const after = (await agent.get(`/api/plans/${plan.id}/grocery`).expect(200)).body;
+    expect(after.extras.map((item: { name: string }) => item.name)).toEqual(['Extra milk']);
+    // Removing it takes its tick away too, so the count cannot go wrong.
+    expect(after.checked).not.toContain('Soap');
+    await agent.delete(`/api/plans/${plan.id}/grocery/extras/${extra.id}`).expect(404);
+  });
+
+  it('clears every tick for the next shop, leaving what is at home alone', async () => {
+    const { agent } = await signUpWithProfile(app);
+    const plan = (await agent.post('/api/plans').expect(201)).body.plan;
+    const list = (await agent.get(`/api/plans/${plan.id}/grocery`).expect(200)).body;
+    const [first, second] = list.groups[0].items.map((item: { name: string }) => item.name);
+    await agent.patch(`/api/plans/${plan.id}/grocery`).send({ item: first, checked: true }).expect(200);
+    await agent.patch(`/api/plans/${plan.id}/grocery`).send({ item: second, checked: true }).expect(200);
+    await agent.put('/api/pantry').send({ item: second, atHome: true }).expect(200);
+
+    expect((await agent.delete(`/api/plans/${plan.id}/grocery`).expect(200)).body.checked).toEqual([]);
+    const cleared = (await agent.get(`/api/plans/${plan.id}/grocery`).expect(200)).body;
+    expect(cleared.checked).toEqual([]);
+    expect(cleared.atHome).toEqual([second]);
+  });
+
+  it('keeps each list to its own plan and person', async () => {
+    const owner = await signUpWithProfile(app);
+    const other = await signUpWithProfile(app);
+    const plan = (await owner.agent.post('/api/plans').expect(201)).body.plan;
+    const { extra } = (await owner.agent.post(`/api/plans/${plan.id}/grocery/extras`).send({ name: 'Soap' }).expect(201)).body;
+    await other.agent.post(`/api/plans/${plan.id}/grocery/extras`).send({ name: 'Soap' }).expect(404);
+    await other.agent.delete(`/api/plans/${plan.id}/grocery/extras/${extra.id}`).expect(404);
+    await other.agent.delete(`/api/plans/${plan.id}/grocery`).expect(404);
+
+    // A new plan starts with a clean list.
+    const next = (await owner.agent.post('/api/plans').expect(201)).body.plan;
+    expect((await owner.agent.get(`/api/plans/${next.id}/grocery`).expect(200)).body.extras).toEqual([]);
+  });
+
+  it('stars and unstars recipes', async () => {
+    const { agent } = await signUpWithProfile(app);
+    expect((await agent.get('/api/recipes').expect(200)).body.favourites).toEqual([]);
+
+    const starred = (await agent.put('/api/recipes/favourites').send({ slug: 'rajma-chawal', favourite: true }).expect(200)).body;
+    expect(starred.favourites).toEqual(['rajma-chawal']);
+    // Starring twice is the same as starring once.
+    await agent.put('/api/recipes/favourites').send({ slug: 'rajma-chawal', favourite: true }).expect(200);
+    await agent.put('/api/recipes/favourites').send({ slug: 'poha-peanuts', favourite: true }).expect(200);
+    expect((await agent.get('/api/recipes').expect(200)).body.favourites.sort()).toEqual(['poha-peanuts', 'rajma-chawal']);
+    expect((await agent.get('/api/recipes/rajma-chawal').expect(200)).body.favourite).toBe(true);
+
+    await agent.put('/api/recipes/favourites').send({ slug: 'not-a-dish', favourite: true }).expect(404);
+    await agent.put('/api/recipes/favourites').send({ slug: 'Bad Slug', favourite: true }).expect(400);
+
+    const removed = (await agent.put('/api/recipes/favourites').send({ slug: 'rajma-chawal', favourite: false }).expect(200)).body;
+    expect(removed.favourites).toEqual(['poha-peanuts']);
+    expect((await agent.get('/api/recipes/rajma-chawal').expect(200)).body.favourite).toBe(false);
+  });
+});

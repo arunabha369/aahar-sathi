@@ -256,6 +256,13 @@ export interface GroceryResponse {
   atHome: string[];
   /** People the amounts feed: the user plus their household. */
   servings: number;
+  /** Things the user added themselves: soap, extra milk, snacks for guests. */
+  extras: GroceryExtra[];
+}
+
+export interface GroceryExtra {
+  id: string;
+  name: string;
 }
 
 export interface PantryResponse {
@@ -384,6 +391,12 @@ export interface DiarySummary {
 export type MealSlot = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type MealTag = 'vrat' | 'jain' | 'fastOnly' | 'sehri' | 'iftar';
 export type RecipeUnit = 'g' | 'ml' | 'pc' | 'tsp' | 'tbsp' | 'pinch' | 'taste';
+
+export interface RecipeListResponse {
+  recipes: RecipeSummary[];
+  /** Slugs the user has starred. */
+  favourites: string[];
+}
 
 export interface RecipeSummary {
   slug: string;

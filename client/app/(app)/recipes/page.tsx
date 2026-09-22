@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/ui/Card';
 import { RecipeBrowser } from '@/components/recipes/RecipeBrowser';
 import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
-import type { RecipeSummary } from '@/lib/types';
+import type { RecipeListResponse } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Recipes',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function RecipesPage() {
   await requireCompleteProfile();
-  const { recipes } = await serverFetch<{ recipes: RecipeSummary[] }>('/recipes');
+  const { recipes, favourites } = await serverFetch<RecipeListResponse>('/recipes');
 
   return (
     <div className="animate-rise">
@@ -21,7 +21,7 @@ export default async function RecipesPage() {
         title="Recipes"
         description={`Step-by-step recipes for all ${recipes.length} dishes in your plans, including vrat and iftar food. Amounts are for one serving as planned — scale them on each recipe.`}
       />
-      <RecipeBrowser recipes={recipes} />
+      <RecipeBrowser recipes={recipes} favourites={favourites} />
     </div>
   );
 }

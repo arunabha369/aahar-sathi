@@ -1,15 +1,17 @@
 import type { Request, Response } from 'express';
+import { listFavourites, setFavourite } from '../db/favourites.ts';
+import { currentUserId } from '../middleware/requireAuth.ts';
 import { MEALS, ingredientInfo } from '../data/meals.ts';
 import { JAIN_SWAPS, recipeFor } from '../data/recipes/index.ts';
 import { INGREDIENT_FACTS, type IngredientFacts } from '../data/ingredientFacts.ts';
 import { PREP_TASKS } from '../services/batchCooking.ts';
 import { gramsOf } from '../services/recipeMath.ts';
 import { ApiError } from '../utils/ApiError.ts';
-import { validParams } from '../middleware/validate.ts';
-import type { RecipeParams } from '../validation/schemas.ts';
+import { validBody, validParams } from '../middleware/validate.ts';
+import type { FavouriteBody, RecipeParams } from '../validation/schemas.ts';
 
 /** Every dish with a recipe, in the order the meal list keeps them (by slot). */
-export function listRecipes(_req: Request, res: Response): void {
+export async function listRecipes(req: Request, res: Response): Promise<void> {
   const recipes = MEALS.flatMap((meal) => {
     const recipe = recipeFor(meal.slug);
     if (!recipe) return [];
@@ -27,11 +29,19 @@ export function listRecipes(_req: Request, res: Response): void {
       },
     ];
   });
-  res.set('Cache-Control', 'private, max-age=300');
-  res.json({ recipes });
+  res.json({ recipes, favourites: await listFavourites(currentUserId(req)) });
 }
 
-export function getRecipe(req: Request, res: Response): void {
+/** Stars a recipe, or takes the star off. */
+export async function updateFavourite(req: Request, res: Response): Promise<void> {
+  const { slug, favourite } = validBody<FavouriteBody>(req);
+  const userId = currentUserId(req);
+  if (favourite && !recipeFor(slug)) throw ApiError.notFound('We could not find that recipe.');
+  await setFavourite(userId, slug, favourite);
+  res.json({ favourites: await listFavourites(userId) });
+}
+
+export async function getRecipe(req: Request, res: Response): Promise<void> {
   const { slug } = validParams<RecipeParams>(req);
   const meal = MEALS.find((candidate) => candidate.slug === slug);
   const recipe = recipeFor(slug);
@@ -55,9 +65,10 @@ export function getRecipe(req: Request, res: Response): void {
     };
   });
   const jainNotes = [...new Set(recipe.ingredients.map((ingredient) => JAIN_SWAPS[ingredient.key]).filter(Boolean))];
+  const favourites = await listFavourites(currentUserId(req));
 
-  res.set('Cache-Control', 'private, max-age=300');
   res.json({
+    favourite: favourites.includes(slug),
     recipe: {
       slug: meal.slug,
       name: meal.name,

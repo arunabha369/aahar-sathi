@@ -318,3 +318,17 @@ export type PlanRequestBody = z.infer<typeof planRequestSchema>;
 
 export const targetsPreviewSchema = z.object({ profile: profileSchema });
 export type TargetsPreviewBody = z.infer<typeof targetsPreviewSchema>;
+
+export const groceryExtraSchema = z.object({
+  name: z.string().trim().min(1, 'Type what you need.').max(60, 'Keep it under 60 characters.'),
+});
+export type GroceryExtraBody = z.infer<typeof groceryExtraSchema>;
+
+export const extraParamsSchema = z.object({ id: uuid, extraId: uuid });
+export type ExtraParams = z.infer<typeof extraParamsSchema>;
+
+export const favouriteSchema = z.object({
+  slug: z.string().regex(/^[a-z0-9-]{1,80}$/, 'That recipe does not exist.'),
+  favourite: z.boolean(),
+});
+export type FavouriteBody = z.infer<typeof favouriteSchema>;

@@ -6,8 +6,11 @@ import {
   updatePlan,
   deletePlan,
   getActivePlan,
+  addGroceryExtra,
+  clearGroceryTicks,
   getGroceryList,
   getPrepPlan,
+  removeGroceryExtra,
   getPlan,
   listPlans,
   shufflePlan,
@@ -18,6 +21,8 @@ import { requireAuth } from '../middleware/requireAuth.ts';
 import { validate } from '../middleware/validate.ts';
 import { planLimiter } from '../middleware/rateLimit.ts';
 import {
+  extraParamsSchema,
+  groceryExtraSchema,
   grocerySchema,
   idParamSchema,
   planRequestSchema,
@@ -42,4 +47,7 @@ planRouter.post('/:id/swap', validate({ params: idParamSchema, body: swapSchema 
 planRouter.post('/:id/shuffle', planLimiter, validate({ params: idParamSchema }), shufflePlan);
 planRouter.get('/:id/grocery', validate({ params: idParamSchema }), getGroceryList);
 planRouter.patch('/:id/grocery', validate({ params: idParamSchema, body: grocerySchema }), updateGroceryItem);
+planRouter.delete('/:id/grocery', validate({ params: idParamSchema }), clearGroceryTicks);
+planRouter.post('/:id/grocery/extras', validate({ params: idParamSchema, body: groceryExtraSchema }), addGroceryExtra);
+planRouter.delete('/:id/grocery/extras/:extraId', validate({ params: extraParamsSchema }), removeGroceryExtra);
 planRouter.get('/:id/prep', validate({ params: idParamSchema }), getPrepPlan);

@@ -26,8 +26,9 @@ export default async function RecipePage(props: PageProps<'/recipes/[slug]'>) {
   const [{ slug }, searchParams] = await Promise.all([props.params, props.searchParams]);
 
   let recipe: Recipe;
+  let favourite = false;
   try {
-    ({ recipe } = await serverFetch<{ recipe: Recipe }>(`/recipes/${encodeURIComponent(slug)}`));
+    ({ recipe, favourite } = await serverFetch<{ recipe: Recipe; favourite: boolean }>(`/recipes/${encodeURIComponent(slug)}`));
   } catch (error) {
     if (error instanceof ServerApiError && (error.status === 404 || error.status === 400)) notFound();
     throw error;
@@ -49,6 +50,7 @@ export default async function RecipePage(props: PageProps<'/recipes/[slug]'>) {
       </Link>
       <RecipeView
         recipe={recipe}
+        favourite={favourite}
         initialServings={servings}
         servingsNote={
           fromPlan

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getFastingWeek, listCities } from '../controllers/fastingController.ts';
 import { addMember, editMember, listHousehold, removeMember } from '../controllers/householdController.ts';
 import { getPantry, resetPantry, updatePantry } from '../controllers/pantryController.ts';
-import { getRecipe, listRecipes } from '../controllers/recipeController.ts';
+import { getRecipe, listRecipes, updateFavourite } from '../controllers/recipeController.ts';
 import {
   getReminderSettings,
   runScheduledReminders,
@@ -15,6 +15,7 @@ import { requireAuth } from '../middleware/requireAuth.ts';
 import { validate } from '../middleware/validate.ts';
 import {
   fastingQuerySchema,
+  favouriteSchema,
   idParamSchema,
   memberSchema,
   pantrySchema,
@@ -27,6 +28,7 @@ import {
 export const recipeRouter: Router = Router();
 recipeRouter.use(requireAuth);
 recipeRouter.get('/', listRecipes);
+recipeRouter.put('/favourites', validate({ body: favouriteSchema }), updateFavourite);
 recipeRouter.get('/:slug', validate({ params: recipeParamsSchema }), getRecipe);
 
 export const fastingRouter: Router = Router();

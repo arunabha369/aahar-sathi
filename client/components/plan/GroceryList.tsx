@@ -1,12 +1,14 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { Check, House } from 'lucide-react';
+import { useRef, useState, type FormEvent } from 'react';
+import { Check, House, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { CategoryIcon } from '@/components/illustrations/CategoryIcon';
+import { Button } from '@/components/ui/Button';
+import { inputShell } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
 import { sendWhenOnline } from '@/lib/online';
-import type { GroceryGroup, GroceryUpdateResponse, PantryResponse } from '@/lib/types';
+import type { GroceryExtra, GroceryGroup, GroceryUpdateResponse, PantryResponse } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 interface GroceryListProps {
@@ -16,17 +18,22 @@ interface GroceryListProps {
   checked: string[];
   atHome: string[];
   servings: number;
+  extras: GroceryExtra[];
 }
 
 const toggleIn = (current: string[], item: string) =>
   current.includes(item) ? current.filter((entry) => entry !== item) : [...current, item];
 
-export function GroceryList({ planId, groups, total, checked, atHome, servings }: GroceryListProps) {
+export function GroceryList({ planId, groups, total, checked, atHome, servings, extras }: GroceryListProps) {
   const toast = useToast();
   // Local state is the truth once the page has loaded: a tick shows at once and stays. (An
   // optimistic value would snap back to the page's original list when each save finished.)
   const [ticked, setChecked] = useState(checked);
   const [homeItems, setHome] = useState(atHome);
+  const [ownItems, setOwnItems] = useState(extras);
+  const [newItem, setNewItem] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [clearing, setClearing] = useState(false);
   // Saves go one at a time, in the order they were tapped, so a quick tick-untick can't land
   // on the server the wrong way round.
   const queue = useRef<Promise<void>>(Promise.resolve());
@@ -63,6 +70,49 @@ export function GroceryList({ planId, groups, total, checked, atHome, servings }
     );
   };
 
+  /** Something the shop needs that no recipe asks for. */
+  const addOwnItem = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const name = newItem.trim();
+    if (!name || adding) return;
+    setAdding(true);
+    try {
+      const { extra } = await api.post<{ extra: GroceryExtra }>(`/plans/${planId}/grocery/extras`, { name });
+      setOwnItems((current) => (current.some((item) => item.id === extra.id) ? current : [...current, extra]));
+      setNewItem('');
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : 'We could not add that.');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const removeOwnItem = (extra: GroceryExtra) => {
+    setOwnItems((current) => current.filter((item) => item.id !== extra.id));
+    setChecked((current) => current.filter((item) => item !== extra.name));
+    save(
+      () => api.delete(`/plans/${planId}/grocery/extras/${extra.id}`),
+      () => setOwnItems((current) => [...current, extra]),
+      'We could not remove that.',
+    );
+  };
+
+  /** Back to nothing bought, for the next shop. What is at home stays marked. */
+  const clearTicks = async () => {
+    setClearing(true);
+    const previous = ticked;
+    setChecked([]);
+    try {
+      await api.delete(`/plans/${planId}/grocery`);
+      toast.success('Ready for a new shop');
+    } catch (error) {
+      setChecked(previous);
+      toast.error(error instanceof ApiError ? error.message : 'We could not clear your ticks.');
+    } finally {
+      setClearing(false);
+    }
+  };
+
   // What is at home doesn't need buying, so it drops out of the count.
   const home = new Set(homeItems);
   const toBuy = total - home.size;
@@ -94,6 +144,12 @@ export function GroceryList({ planId, groups, total, checked, atHome, servings }
           <div className="h-full rounded-full bg-accent transition-[width] duration-300" style={{ width: `${percent}%` }} />
         </div>
         <p className="text-sm font-bold text-brand-800 tabular-nums">{percent}%</p>
+        {bought > 0 ? (
+          <Button variant="ghost" size="sm" onClick={clearTicks} pending={clearing} className="shrink-0">
+            <RotateCcw className="size-4" aria-hidden="true" />
+            Clear ticks
+          </Button>
+        ) : null}
       </div>
 
       <p className="mb-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-muted" data-print="hide">
@@ -103,6 +159,84 @@ export function GroceryList({ planId, groups, total, checked, atHome, servings }
           anything you already have — it stays marked for next week too.
         </span>
       </p>
+
+      <section className="surface mb-5 p-4" aria-labelledby="own-items-heading" data-print="card">
+        <h2 id="own-items-heading" className="mb-3 flex items-center gap-2.5 border-b border-line pb-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-2 ring-1 ring-line">
+            <Plus className="size-5 text-brand-700" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1 text-[0.9375rem] font-bold text-ink">Anything else you need</span>
+          {ownItems.length > 0 ? (
+            <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[0.6875rem] font-bold text-muted tabular-nums">
+              {ownItems.filter((item) => ticked.includes(item.name)).length}/{ownItems.length}
+            </span>
+          ) : null}
+        </h2>
+
+        {ownItems.length > 0 ? (
+          <ul className="mb-2">
+            {ownItems.map((extra) => {
+              const isChecked = ticked.includes(extra.name);
+              return (
+                <li key={extra.id} className="flex items-center gap-1">
+                  <label
+                    className={cn(
+                      'flex min-h-12 min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg px-1.5 py-1 transition-colors hover:bg-surface-2',
+                      isChecked && 'text-muted',
+                    )}
+                  >
+                    <input type="checkbox" checked={isChecked} onChange={() => toggleBought(extra.name)} className="peer sr-only" />
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'grid size-[1.375rem] shrink-0 place-items-center rounded-[0.35rem] border-2 transition-colors',
+                        isChecked ? 'border-accent bg-accent' : 'border-line-strong bg-surface-2',
+                        'peer-focus-visible:ring-2 peer-focus-visible:ring-brand-700 peer-focus-visible:ring-offset-2',
+                      )}
+                    >
+                      {isChecked ? <Check className="size-3.5 text-accent-ink" strokeWidth={3.5} /> : null}
+                    </span>
+                    <span className={cn('min-w-0 flex-1 text-[0.875rem] font-medium', isChecked && 'line-through')}>
+                      {extra.name}
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => removeOwnItem(extra)}
+                    aria-label={`Remove ${extra.name} from the list`}
+                    data-print="hide"
+                    className="grid size-11 shrink-0 place-items-center rounded-xl text-muted transition-colors hover:bg-surface-2 hover:text-chilli-600"
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="mb-3 text-[0.8125rem] leading-relaxed text-muted">
+            Soap, extra milk, snacks for guests — add whatever else the shop needs and it ticks off like the rest.
+          </p>
+        )}
+
+        <form onSubmit={addOwnItem} className="flex gap-2" data-print="hide">
+          <label className="sr-only" htmlFor="grocery-own-item">
+            Add your own item
+          </label>
+          <input
+            id="grocery-own-item"
+            value={newItem}
+            onChange={(event) => setNewItem(event.target.value)}
+            maxLength={60}
+            placeholder="Soap, extra milk…"
+            className={cn(inputShell, 'border-line hover:border-line-strong focus:border-brand-600 focus:ring-2 focus:ring-brand-600/15')}
+          />
+          <Button type="submit" pending={adding} disabled={newItem.trim() === '' || adding} className="shrink-0">
+            <Plus className="size-4" aria-hidden="true" />
+            Add
+          </Button>
+        </form>
+      </section>
 
       {/* Columns rather than a grid, so short and long aisles pack without gaps. */}
       <div className="columns-1 gap-5 md:columns-2 xl:columns-3 [&>*]:mb-5">

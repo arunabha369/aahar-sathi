@@ -4,6 +4,7 @@ import { findPreferences, findUserById, saveProfile, updatePreferences } from '.
 import { ApiError } from '../utils/ApiError.ts';
 import { currentUserId } from '../middleware/requireAuth.ts';
 import { validBody, validParams, validQuery } from '../middleware/validate.ts';
+import { deleteExtra, insertExtra, listExtras } from '../db/groceryExtras.ts';
 import { listPantry } from '../db/pantry.ts';
 import { buildBatchPlan } from '../services/batchCooking.ts';
 import { buildGroceryList, groceryItemNames } from '../services/grocery.ts';
@@ -12,7 +13,9 @@ import { calculateTargets } from '../services/nutrition.ts';
 import { buildPlan, createPlanForUser, fastTimesOf, loadPlannerMeals, refreshPortions } from '../services/planService.ts';
 import { toPlanSummary, toPublicPlan } from '../utils/serialize.ts';
 import type {
+  ExtraParams,
   GroceryBody,
+  GroceryExtraBody,
   IdParams,
   PlanRequestBody,
   PlansQuery,
@@ -178,18 +181,47 @@ export async function getGroceryList(req: Request, res: Response): Promise<void>
   const { id } = validParams<IdParams>(req);
   const plan = await findOwnedPlan(req, id);
   const list = buildGroceryList(plan.days, plan.inputs);
+  const [pantry, extras] = await Promise.all([listPantry(currentUserId(req)), listExtras(plan.id, plan.userId)]);
   const names = groceryItemNames(list);
-  const pantry = await listPantry(currentUserId(req));
+  for (const extra of extras) names.add(extra.name);
 
   res.json({
     planId: plan.id,
     groups: list.groups,
-    total: list.total,
+    total: list.total + extras.length,
     checked: plan.groceryChecked,
     // Only what this list asks for; the pantry itself can hold more.
     atHome: pantry.filter((item) => names.has(item)),
+    extras,
     servings: 1 + (plan.inputs.household?.length ?? 0),
   });
+}
+
+/** Adds something of the user's own to this plan's shopping list. */
+export async function addGroceryExtra(req: Request, res: Response): Promise<void> {
+  const { id } = validParams<IdParams>(req);
+  const { name } = validBody<GroceryExtraBody>(req);
+  const plan = await findOwnedPlan(req, id);
+  const extra = await insertExtra(plan.id, plan.userId, name);
+  res.status(201).json({ extra });
+}
+
+/** Removes one of those additions, and its tick with it. */
+export async function removeGroceryExtra(req: Request, res: Response): Promise<void> {
+  const { id, extraId } = validParams<ExtraParams>(req);
+  const plan = await findOwnedPlan(req, id);
+  const removed = await deleteExtra(extraId, plan.userId);
+  if (!removed) throw ApiError.notFound('That item is not on this list.');
+  await plans.toggleGroceryItem(plan.id, plan.userId, removed.name, false);
+  res.json({ ok: true });
+}
+
+/** Clears every tick, for the next shop. What is marked as already at home is left alone. */
+export async function clearGroceryTicks(req: Request, res: Response): Promise<void> {
+  const { id } = validParams<IdParams>(req);
+  const plan = await findOwnedPlan(req, id);
+  await plans.setGroceryChecked(plan.id, plan.userId, []);
+  res.json({ checked: [] });
 }
 
 /** The week's batch-cooking plan: what to prepare on Sunday and Wednesday, and when to marinate. */
@@ -204,7 +236,9 @@ export async function updateGroceryItem(req: Request, res: Response): Promise<vo
   const { item, checked } = validBody<GroceryBody>(req);
   const plan = await findOwnedPlan(req, id);
 
-  if (!groceryItemNames(buildGroceryList(plan.days, plan.inputs)).has(item)) {
+  const known = groceryItemNames(buildGroceryList(plan.days, plan.inputs));
+  for (const extra of await listExtras(plan.id, plan.userId)) known.add(extra.name);
+  if (!known.has(item)) {
     throw ApiError.badRequest('That ingredient is not on this plan’s grocery list.');
   }
 

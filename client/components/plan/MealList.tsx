@@ -45,7 +45,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [], cityN
               )}
             >
               <div className="col-start-1 row-start-1 flex flex-col items-center gap-1.5 pt-0.5 sm:row-[1/3]">
-                <MealPhoto slug={meal.slug} slot={meal.slot} className="size-14 sm:size-16" sizes="64px" />
+                <MealPhoto slug={meal.slug} slot={meal.slot} region={meal.region} className="size-14 sm:size-16" sizes="64px" />
                 <span className="text-[0.625rem] font-bold text-muted tabular-nums">{meal.time}</span>
               </div>
 

@@ -206,6 +206,25 @@ create table if not exists app.household_members (
 );
 create index if not exists household_members_user_idx on app.household_members (user_id, created_at);
 
+-- Anything else to buy this week that no recipe asks for: soap, extra milk, snacks for guests.
+-- Tied to the plan whose list they were added to, so a new plan starts a clean list.
+create table if not exists app.grocery_extras (
+  id uuid primary key default gen_random_uuid(),
+  plan_id uuid not null references app.plans (id) on delete cascade,
+  user_id uuid not null references app.users (id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 60),
+  created_at timestamptz not null default now()
+);
+create unique index if not exists grocery_extras_plan_name_idx on app.grocery_extras (plan_id, lower(name));
+
+-- Recipes the user has starred.
+create table if not exists app.recipe_favourites (
+  user_id uuid not null references app.users (id) on delete cascade,
+  slug text not null check (char_length(slug) between 1 and 80),
+  created_at timestamptz not null default now(),
+  primary key (user_id, slug)
+);
+
 -- Ingredients the user already has at home. Kept across plans, since spices and staples
 -- last longer than a week; ticked off the grocery list without being "bought".
 create table if not exists app.pantry_items (
@@ -256,7 +275,7 @@ begin
       t
     );
   end loop;
-  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'password_resets', 'meal_checkins', 'food_entries', 'custom_foods', 'household_members', 'pantry_items', 'push_subscriptions', 'reminder_settings', 'reminder_log'] loop
+  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'password_resets', 'meal_checkins', 'food_entries', 'custom_foods', 'household_members', 'pantry_items', 'push_subscriptions', 'reminder_settings', 'reminder_log', 'grocery_extras', 'recipe_favourites'] loop
     execute format('alter table app.%I enable row level security', t);
   end loop;
 end
