@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
-import { BedDouble, LineChart, Moon, Scale } from 'lucide-react';
+import { LineChart, Scale } from 'lucide-react';
 import { Panel, PanelHeader, PageHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { SleepChart } from '@/components/charts/SleepChart';
 import { WaterChart } from '@/components/charts/WaterChart';
 import { WeightChart } from '@/components/charts/WeightChart';
-import { SleepLogger } from '@/components/plan/SleepLogger';
+import { SleepSection } from '@/components/plan/SleepSection';
 import { WeightLogger } from '@/components/plan/WeightLogger';
 import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
-import { addDays, averageBedtime, formatClock, formatSleepDuration, todayKey } from '@/lib/format';
+import { addDays, todayKey } from '@/lib/format';
 import type { ActivePlanResponse, SleepLogsResponse, WaterLogsResponse, WeightLogsResponse } from '@/lib/types';
 
 export const metadata: Metadata = {
@@ -34,13 +33,6 @@ export default async function ProgressPage() {
   const startWeight = user.profile.weightKg;
   const latest = weightLogs.at(-1);
   const change = latest && startWeight ? latest.weightKg - startWeight : null;
-
-  // The last seven nights logged, for the sleep summary.
-  const lastWeek = sleepLogs.slice(-7);
-  const averageSleep = lastWeek.length
-    ? Math.round(lastWeek.reduce((sum, log) => sum + log.durationMinutes, 0) / lastWeek.length)
-    : null;
-  const usualBedtime = averageBedtime(lastWeek.map((log) => log.bedtime));
 
   return (
     <div className="animate-rise">
@@ -100,59 +92,11 @@ export default async function ProgressPage() {
             <WeightChart logs={weightLogs} />
           )}
         </Panel>
-
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-3">
-        <Panel className="lg:col-span-2">
-          <PanelHeader
-            eyebrow="This morning"
-            title="Log last night’s sleep"
-            icon={<BedDouble className="size-[1.125rem] text-sleep" aria-hidden="true" />}
-            description="Bedtime and wake-up time are enough — the hours are worked out for you, even past midnight."
-          />
-          <SleepLogger serverToday={serverToday} logs={sleepLogs} />
-        </Panel>
+      <SleepSection serverToday={serverToday} logs={sleepLogs} />
 
-        <Panel>
-          <PanelHeader eyebrow="Last 7 nights" title="Sleep" />
-          {averageSleep === null ? (
-            <p className="text-sm text-muted">Log a night of sleep to see your average here.</p>
-          ) : (
-            <div>
-              <p className="text-[2rem] font-extrabold leading-none tracking-tight text-ink">
-                {formatSleepDuration(averageSleep)}
-                <span className="ml-1.5 text-sm font-bold text-muted">a night</span>
-              </p>
-              <p className="mt-3 text-sm leading-relaxed text-muted">
-                {usualBedtime ? `Usually in bed by ${formatClock(usualBedtime)}. ` : ''}
-                Most adults need 7–9 hours.
-              </p>
-            </div>
-          )}
-        </Panel>
-      </div>
-
-      <div className="mt-5 space-y-5">
-        <Panel>
-          {sleepLogs.length === 0 ? (
-            <>
-              <PanelHeader
-                eyebrow="Trend"
-                title="Sleep"
-                icon={<Moon className="size-[1.125rem] text-sleep" aria-hidden="true" />}
-              />
-              <EmptyState
-                art="sleep"
-                title="No sleep logged yet"
-                description="Log last night above and each night will appear here as a bar, against the 7–9 hour range."
-              />
-            </>
-          ) : (
-            <SleepChart logs={sleepLogs} />
-          )}
-        </Panel>
-
+      <div className="mt-5">
         <Panel>
           <WaterChart logs={waterLogs} target={waterTarget} />
         </Panel>
