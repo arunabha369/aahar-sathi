@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
+import { sendWhenOnline } from '@/lib/online';
 import type { CheckinStatus, DiaryDay, Macros, PlanSlot } from '@/lib/types';
 
 export type NewEntry =
@@ -108,7 +109,8 @@ export function useDiary(initial: DiaryDay, date: string) {
       setSaving(true);
       const result = queue.current.then(async () => {
         try {
-          const fresh = await request();
+          // Offline, the change is held and sent as soon as there is a connection again.
+          const fresh = await sendWhenOnline(request, (caught) => caught instanceof ApiError);
           // Only the last answer in a burst is shown, so the ring doesn't flicker through steps.
           if (inFlight.current === 1) setDay(fresh);
           if (success) toast.success(success);

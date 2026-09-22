@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import { BottomNav, MobileTopBar, Sidebar } from '@/components/AppNav';
 import { NavigationProgress } from '@/components/NavigationProgress';
+import { OfflineBanner } from '@/components/OfflineBanner';
+import { ServiceWorkerRegistrar } from '@/components/ServiceWorkerRegistrar';
 import { getCurrentUser } from '@/lib/auth';
 import { DISCLAIMER } from '@/lib/constants';
 
@@ -13,10 +15,12 @@ export default async function AppLayout({ children }: LayoutProps<'/'>) {
       <Suspense fallback={null}>
         <NavigationProgress />
       </Suspense>
+      <ServiceWorkerRegistrar />
       <Sidebar user={{ name: user.name, email: user.email }} />
       <MobileTopBar user={{ name: user.name }} />
 
       <div className="lg:pl-[17rem]">
+        <OfflineBanner />
         <main id="main-content" className="mx-auto w-full max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-12 lg:pt-10">
           {children}
         </main>

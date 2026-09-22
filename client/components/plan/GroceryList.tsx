@@ -5,6 +5,7 @@ import { Check, House } from 'lucide-react';
 import { CategoryIcon } from '@/components/illustrations/CategoryIcon';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
+import { sendWhenOnline } from '@/lib/online';
 import type { GroceryGroup, GroceryUpdateResponse, PantryResponse } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -33,7 +34,8 @@ export function GroceryList({ planId, groups, total, checked, atHome, servings }
   const save = (request: () => Promise<unknown>, undo: () => void, message: string) => {
     queue.current = queue.current.then(async () => {
       try {
-        await request();
+        // Offline, the tick stays ticked and is sent as soon as there is a connection again.
+        await sendWhenOnline(request, (error) => error instanceof ApiError);
       } catch (error) {
         undo();
         toast.error(error instanceof ApiError ? error.message : message);

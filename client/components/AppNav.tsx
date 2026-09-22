@@ -10,6 +10,7 @@ import { Mark } from '@/components/illustrations/Mark';
 import { api } from '@/lib/api/client';
 import { usePendingHref } from '@/lib/navigationProgress';
 import { cn } from '@/lib/utils';
+import { clearCachedPages } from '@/lib/appCache';
 
 const DASHBOARD = { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard } as const;
 const DIARY = { href: '/diary', label: 'Food diary', icon: NotebookPen } as const;
@@ -47,6 +48,7 @@ function useSignOut() {
     signOut: () =>
       startTransition(async () => {
         await api.post('/auth/logout');
+        clearCachedPages();
         router.push('/login');
         router.refresh();
       }),

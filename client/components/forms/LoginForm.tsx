@@ -10,6 +10,7 @@ import { DemoButton } from '@/components/DemoButton';
 import { GoogleButton } from '@/components/forms/GoogleButton';
 import { ApiError, api } from '@/lib/api/client';
 import type { UserResponse } from '@/lib/types';
+import { clearCachedPages } from '@/lib/appCache';
 
 interface FormState {
   error?: string;
@@ -42,6 +43,7 @@ export function LoginForm({
       try {
         const { user } = await api.post<UserResponse>('/auth/login', { email, password });
         const destination = next ?? (user.profileComplete ? '/dashboard' : '/onboarding');
+        clearCachedPages();
         router.push(destination);
         router.refresh();
         return {};

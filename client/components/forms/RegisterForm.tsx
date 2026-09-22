@@ -9,6 +9,7 @@ import { PasswordField } from '@/components/ui/PasswordField';
 import { GoogleButton } from '@/components/forms/GoogleButton';
 import { ApiError, api } from '@/lib/api/client';
 import type { UserResponse } from '@/lib/types';
+import { clearCachedPages } from '@/lib/appCache';
 
 interface FormState {
   error?: string;
@@ -36,6 +37,7 @@ export function RegisterForm({ googleEnabled }: { googleEnabled: boolean }) {
 
       try {
         await api.post<UserResponse>('/auth/register', { name, email, password });
+        clearCachedPages();
         router.push('/onboarding');
         router.refresh();
         return {};

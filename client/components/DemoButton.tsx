@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
 import type { UserResponse } from '@/lib/types';
+import { clearCachedPages } from '@/lib/appCache';
 
 export function DemoButton({ className }: { className?: string }) {
   const router = useRouter();
@@ -17,6 +18,7 @@ export function DemoButton({ className }: { className?: string }) {
     startTransition(async () => {
       try {
         await api.post<UserResponse>('/auth/demo');
+        clearCachedPages();
         router.push('/dashboard');
         router.refresh();
       } catch (error) {

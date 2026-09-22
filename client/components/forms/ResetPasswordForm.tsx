@@ -8,6 +8,7 @@ import { PasswordField } from '@/components/ui/PasswordField';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
 import type { UserResponse } from '@/lib/types';
+import { clearCachedPages } from '@/lib/appCache';
 
 interface FormState {
   error?: string;
@@ -31,6 +32,7 @@ export function ResetPasswordForm({ token }: { token: string | undefined }) {
       try {
         const { user } = await api.post<UserResponse>('/auth/reset-password', { token, password });
         toast.success('Password changed — you’re signed in');
+        clearCachedPages();
         router.push(user.profileComplete ? '/dashboard' : '/onboarding');
         router.refresh();
         return {};

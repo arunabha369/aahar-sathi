@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast';
 import { inputShell } from '@/components/ui/Field';
 import { ApiError, api } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
+import { clearCachedPages } from '@/lib/appCache';
 
 export function DangerZone({ email }: { email: string }) {
   const router = useRouter();
@@ -20,6 +21,7 @@ export function DangerZone({ email }: { email: string }) {
   const signOut = () => {
     startSignOut(async () => {
       await api.post('/auth/logout');
+      clearCachedPages();
       router.push('/login');
       router.refresh();
     });
@@ -30,6 +32,7 @@ export function DangerZone({ email }: { email: string }) {
       try {
         await api.delete('/account');
         dialogRef.current?.close();
+        clearCachedPages();
         router.push('/');
         router.refresh();
       } catch (error) {

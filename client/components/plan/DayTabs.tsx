@@ -1,6 +1,6 @@
 'use client';
 
-import { useOptimistic, useState, useTransition } from 'react';
+import { useOptimistic, useState, useTransition, type KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lightbulb } from 'lucide-react';
 import { MealList } from '@/components/plan/MealList';
@@ -65,6 +65,24 @@ export function DayTabs({
   const day = days[activeDay];
   if (!day) return null;
 
+  /** The tab strip behaves the way tabs are expected to: arrows move, Home and End jump. */
+  const onTabKey = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const moves: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 };
+    const step = moves[event.key];
+    const next =
+      step !== undefined
+        ? (activeDay + step + days.length) % days.length
+        : event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? days.length - 1
+            : null;
+    if (next === null) return;
+    event.preventDefault();
+    setActiveDay(next);
+    document.getElementById(`day-tab-${days[next]!.day}`)?.focus();
+  };
+
   return (
     <div>
       <div
@@ -85,6 +103,9 @@ export function DayTabs({
               aria-selected={selected}
               aria-controls={`day-panel-${candidate.day}`}
               onClick={() => setActiveDay(index)}
+              onKeyDown={onTabKey}
+              // Only the selected tab is in the tab order; arrows move between them.
+              tabIndex={selected ? 0 : -1}
               // Keep a keyboard-focused tab fully inside the horizontally scrolling strip.
               onFocus={(event) => event.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' })}
               className={cn(
