@@ -6,7 +6,7 @@ import { ChevronDown, ClipboardCopy, MessageCircle, Printer, Share2, Shuffle } f
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
-import { SLOT_META } from '@/lib/constants';
+import { mealLabel } from '@/lib/meals';
 import { formatItem, litres, weekdayFromKey } from '@/lib/format';
 import { useLocalToday } from '@/lib/useLocalToday';
 import type { Plan, PlanResponse } from '@/lib/types';
@@ -25,9 +25,8 @@ function planAsText(plan: Plan): string {
   for (const day of plan.days) {
     lines.push(`${day.day} — ${day.totals.kcal} kcal`);
     for (const meal of day.meals) {
-      const slot = SLOT_META[meal.slot];
       lines.push(
-        `  ${slot.time} ${slot.label}: ${meal.name} (${meal.items
+        `  ${meal.time} ${mealLabel(meal)}: ${meal.name} (${meal.items
           .map((item) => formatItem(item))
           .join(', ')}) — ${meal.kcal} kcal, ${meal.protein} g protein`,
       );
@@ -42,7 +41,7 @@ function planAsText(plan: Plan): string {
 function todaySummary(plan: Plan, today: string): string {
   const day = plan.days.find((candidate) => candidate.day === today) ?? plan.days[0];
   const meals = day
-    ? day.meals.map((meal) => `${SLOT_META[meal.slot].time} — ${meal.name}`).join('\n')
+    ? day.meals.map((meal) => `${meal.time} — ${meal.name}`).join('\n')
     : '';
 
   return [

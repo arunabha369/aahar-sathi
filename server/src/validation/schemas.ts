@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ACTIVITIES, CUISINES, DIETS, GENDERS, GOALS, PLAN_SLOTS } from '../types.ts';
+import { CITY_KEYS } from '../data/cities.ts';
+import { ACTIVITIES, CUISINES, DIETS, FASTING_MODES, GENDERS, GOALS, PLAN_SLOTS, WEEKDAYS } from '../types.ts';
 
 const uuid = z
   .string()
@@ -208,3 +209,100 @@ export const summaryQuerySchema = z.object({
   days: z.coerce.number().int().min(7).max(90).default(7),
 });
 export type SummaryQuery = z.infer<typeof summaryQuerySchema>;
+
+// ---------- Plan preferences, adjustments, household ----------
+
+export const preferencesSchema = z
+  .object({
+    jain: z.boolean(),
+    fasting: z.enum(FASTING_MODES, { message: 'Choose a fasting mode.' }),
+    vratDays: z.array(z.enum(WEEKDAYS)).max(7).transform((days) => WEEKDAYS.filter((day) => days.includes(day))),
+    city: z.enum(CITY_KEYS, { message: 'Choose a city from the list.' }).nullable(),
+  })
+  .refine((value) => value.fasting !== 'ramadan' || value.city !== null, {
+    message: 'Choose your city so we can work out sehri and iftar times.',
+    path: ['city'],
+  });
+export type PreferencesBody = z.infer<typeof preferencesSchema>;
+
+export const adjustmentSchema = z.object({
+  change: z.union([z.literal(-100), z.literal(100)], { message: 'A change is 100 kcal up or down.' }),
+});
+export type AdjustmentBody = z.infer<typeof adjustmentSchema>;
+
+export const todayQuerySchema = z.object({ today: isoDate.optional() });
+export type TodayQuery = z.infer<typeof todayQuerySchema>;
+
+export const memberSchema = z.object({
+  name: z.string().trim().min(1, 'Give them a name.').max(40, 'Keep the name under 40 characters.'),
+  age: profileSchema.shape.age,
+  gender: profileSchema.shape.gender,
+  weightKg: profileSchema.shape.weightKg,
+  heightCm: profileSchema.shape.heightCm,
+  activity: profileSchema.shape.activity,
+  goal: profileSchema.shape.goal,
+  diet: profileSchema.shape.diet,
+  jain: z.boolean().default(false),
+});
+export type MemberBody = z.infer<typeof memberSchema>;
+
+export const pantrySchema = z.object({
+  item: z.string().trim().min(1).max(120),
+  atHome: z.boolean(),
+});
+export type PantryBody = z.infer<typeof pantrySchema>;
+
+export const fastingQuerySchema = z.object({ city: z.enum(CITY_KEYS).optional(), today: isoDate.optional() });
+export type FastingQuery = z.infer<typeof fastingQuerySchema>;
+
+export const recipeParamsSchema = z.object({ slug: z.string().regex(/^[a-z0-9-]{1,80}$/, 'That recipe does not exist.') });
+export type RecipeParams = z.infer<typeof recipeParamsSchema>;
+
+// ---------- Reminders ----------
+
+const isTimeZone = (value: string) => {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const reminderSettingsSchema = z.object({
+  timezone: z.string().min(1).max(64).refine(isTimeZone, 'That timezone is not recognised.'),
+  water: z
+    .object({
+      enabled: z.boolean(),
+      everyMinutes: z.union([z.literal(60), z.literal(90), z.literal(120), z.literal(180)]),
+      from: clockTime('Start time'),
+      to: clockTime('End time'),
+    })
+    .refine((water) => water.from < water.to, { message: 'Water reminders must end after they start.', path: ['to'] }),
+  meals: z.object({
+    enabled: z.boolean(),
+    minutesBefore: z.union([z.literal(0), z.literal(15), z.literal(30)]),
+  }),
+  weighIn: z.object({
+    enabled: z.boolean(),
+    time: clockTime('Weigh-in time'),
+    days: z.array(z.enum(WEEKDAYS)).min(1, 'Pick at least one day.').max(7),
+  }),
+  bedtime: z.object({
+    enabled: z.boolean(),
+    time: clockTime('Bedtime'),
+  }),
+});
+export type ReminderSettingsBody = z.infer<typeof reminderSettingsSchema>;
+
+export const pushSubscriptionSchema = z.object({
+  endpoint: z.string().url('That push endpoint is not valid.').max(1000).startsWith('https://', 'Push endpoints use https.'),
+  keys: z.object({
+    p256dh: z.string().min(1).max(200),
+    auth: z.string().min(1).max(100),
+  }),
+});
+export type PushSubscriptionBody = z.infer<typeof pushSubscriptionSchema>;
+
+export const unsubscribeSchema = z.object({ endpoint: z.string().url().max(1000) });
+export type UnsubscribeBody = z.infer<typeof unsubscribeSchema>;

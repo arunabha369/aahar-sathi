@@ -10,6 +10,7 @@ import { ActivatePlanButton } from '@/components/plan/ActivatePlanButton';
 import { CalculationPanel } from '@/components/plan/CalculationPanel';
 import { DayTabs } from '@/components/plan/DayTabs';
 import { StatCards } from '@/components/plan/StatCards';
+import { cityName } from '@/lib/api/cities';
 import { ServerApiError, serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
 import { formatDate, todayKey } from '@/lib/format';
@@ -31,6 +32,8 @@ export default async function PlanDetailPage(props: PageProps<'/plans/[id]'>) {
     if (error instanceof ServerApiError && (error.status === 404 || error.status === 400)) notFound();
     throw error;
   }
+
+  const city = await cityName(plan.inputs.preferences?.city);
 
   return (
     <div className="animate-rise">
@@ -72,6 +75,7 @@ export default async function PlanDetailPage(props: PageProps<'/plans/[id]'>) {
               targets={plan.targets}
               diet={plan.inputs.diet}
               serverToday={todayKey()}
+              cityName={city}
               readOnly
             />
           </Panel>

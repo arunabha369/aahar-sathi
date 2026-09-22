@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { ArrowLeft, Minus, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { SLOT_META } from '@/lib/constants';
 import type { NewEntry } from '@/lib/useDiary';
 import type { Macros, PlanSlot } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -24,7 +23,7 @@ interface AddFoodSheetProps {
   open: boolean;
   onClose: () => void;
   /** Set when the food replaces a planned meal ("Other"). */
-  replacing: { slot: PlanSlot; mealName: string } | null;
+  replacing: { slot: PlanSlot; mealName: string; label: string } | null;
   onAdd: (entry: NewEntry) => Promise<boolean>;
 }
 
@@ -196,7 +195,7 @@ function AmountStep({
       </dl>
 
       <Button fullWidth size="lg" className="mt-5" pending={pending} disabled={!canAdd || pending} onClick={confirm}>
-        {replacing ? `Add instead of ${SLOT_META[replacing.slot].label.toLowerCase()}` : 'Add to diary'}
+        {replacing ? `Add instead of ${replacing.label.toLowerCase()}` : 'Add to diary'}
       </Button>
     </div>
   );

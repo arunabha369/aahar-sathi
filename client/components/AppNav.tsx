@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
-import { CalendarRange, LayoutDashboard, LogOut, NotebookPen, Settings, ShoppingBasket, TrendingUp } from 'lucide-react';
+import { BookOpen, CalendarRange, LayoutDashboard, LogOut, NotebookPen, Settings, ShoppingBasket, TrendingUp } from 'lucide-react';
 import { InstallAppButton } from '@/components/InstallApp';
 import { Logo } from '@/components/ui/Logo';
 import { Mark } from '@/components/illustrations/Mark';
@@ -19,11 +19,17 @@ const LINKS = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ] as const;
 
-/** The desktop rail has room for the food diary too (on phones it opens from the dashboard). */
+/**
+ * The desktop rail has room for the food diary and recipes too (on phones the diary opens
+ * from the dashboard, and recipes from the top bar and every meal).
+ */
 const SIDEBAR_LINKS = [
   LINKS[0],
   { href: '/diary', label: 'Food diary', icon: NotebookPen },
-  ...LINKS.slice(1),
+  LINKS[1],
+  LINKS[2],
+  { href: '/recipes', label: 'Recipes', icon: BookOpen },
+  ...LINKS.slice(3),
 ] as const;
 
 function useIsActive() {
@@ -128,6 +134,13 @@ export function MobileTopBar({ user }: { user: { name: string } }) {
       </Link>
       <div className="flex items-center gap-1">
         <InstallAppButton compact />
+        <Link
+          href="/recipes"
+          className="grid size-11 place-items-center rounded-xl text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
+          aria-label="Recipes"
+        >
+          <BookOpen className="size-5" aria-hidden="true" />
+        </Link>
         <Link
           href="/settings"
           className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-[0.8125rem] font-semibold text-ink-soft transition-colors hover:bg-surface-2"

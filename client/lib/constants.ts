@@ -1,4 +1,4 @@
-import type { Activity, BmiCategory, Cuisine, Diet, Gender, Goal, PlanSlot } from '@/lib/types';
+import type { Activity, BmiCategory, Cuisine, Diet, FastingMode, Gender, Goal, PlanSlot } from '@/lib/types';
 
 export interface Option<T extends string> {
   value: T;
@@ -110,14 +110,24 @@ export const CHART_COLORS = {
 } as const;
 
 /** Easy add-ons shown when a day falls short on protein. */
+/** `vrat`: allowed on a fast day (no grains, pulses, eggs or meat). */
 export const PROTEIN_BOOSTERS = [
-  { label: '1 cup curd', protein: 7, diets: ['veg', 'egg', 'nonveg'] as Diet[] },
-  { label: '1 glass milk', protein: 7, diets: ['veg', 'egg', 'nonveg'] as Diet[] },
-  { label: '30 g roasted chana', protein: 6, diets: ['veg', 'egg', 'nonveg'] as Diet[] },
-  { label: '30 g soya chunks', protein: 15, diets: ['veg', 'egg', 'nonveg'] as Diet[] },
-  { label: '2 boiled eggs', protein: 12, diets: ['egg', 'nonveg'] as Diet[] },
-  { label: '100 g grilled chicken', protein: 31, diets: ['nonveg'] as Diet[] },
+  { label: '1 cup curd', protein: 7, diets: ['veg', 'egg', 'nonveg'] as Diet[], vrat: true },
+  { label: '1 glass milk', protein: 7, diets: ['veg', 'egg', 'nonveg'] as Diet[], vrat: true },
+  { label: '50 g paneer', protein: 9, diets: ['veg', 'egg', 'nonveg'] as Diet[], vrat: true },
+  { label: '30 g roasted chana', protein: 6, diets: ['veg', 'egg', 'nonveg'] as Diet[], vrat: false },
+  { label: '30 g soya chunks', protein: 15, diets: ['veg', 'egg', 'nonveg'] as Diet[], vrat: false },
+  { label: '2 boiled eggs', protein: 12, diets: ['egg', 'nonveg'] as Diet[], vrat: false },
+  { label: '100 g grilled chicken', protein: 31, diets: ['nonveg'] as Diet[], vrat: false },
 ];
 
 export const DISCLAIMER =
   'Aahar Sathi gives general guidance, not medical advice. If you are pregnant, breastfeeding, or managing diabetes, thyroid, kidney or heart conditions, please consult a doctor or dietitian before changing your diet.';
+
+/** How a plan's fasting mode reads in a summary line; no fasting says nothing. */
+export const FASTING_LABELS: Record<FastingMode, string | null> = {
+  none: null,
+  navratri: 'Navratri',
+  ekadashi: 'Ekadashi',
+  ramadan: 'Ramadan',
+};

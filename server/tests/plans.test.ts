@@ -203,7 +203,7 @@ describe('grocery list', () => {
     expect(list.checked).toEqual([]);
     expect(list.groups.some((group: { category: string }) => group.category === 'Spices & Others')).toBe(true);
 
-    const firstItem = list.groups[0].items[0];
+    const firstItem = list.groups[0].items[0].name;
     const checked = (
       await agent.patch(`/api/plans/${plan.id}/grocery`).send({ item: firstItem, checked: true }).expect(200)
     ).body;

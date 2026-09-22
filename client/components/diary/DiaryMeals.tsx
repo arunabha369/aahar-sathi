@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { SLOT_META } from '@/lib/constants';
 import { formatQuantity } from '@/lib/format';
+import { mealLabel } from '@/lib/meals';
 import type { useDiary } from '@/lib/useDiary';
 import type { FoodEntry, PlanSlot } from '@/lib/types';
 import { AddFoodSheet } from './AddFoodSheet';
@@ -42,7 +42,10 @@ function EntryRow({ entry, onRemove }: { entry: FoodEntry; onRemove: () => void 
  */
 export function DiaryMeals({ diary, canLog }: { diary: Diary; canLog: boolean }) {
   const { day } = diary;
-  const [sheet, setSheet] = useState<{ open: boolean; replacing: { slot: PlanSlot; mealName: string } | null }>({
+  const [sheet, setSheet] = useState<{
+    open: boolean;
+    replacing: { slot: PlanSlot; mealName: string; label: string } | null;
+  }>({
     open: false,
     replacing: null,
   });
@@ -59,7 +62,7 @@ export function DiaryMeals({ diary, canLog }: { diary: Diary; canLog: boolean })
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="min-w-0">
                     <span className="block text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-muted">
-                      {SLOT_META[meal.slot].label} · {meal.time}
+                      {mealLabel(meal)} · {meal.time}
                     </span>
                     <span className={meal.status === 'swapped' || meal.status === 'skipped' ? 'block truncate text-sm font-semibold text-muted line-through decoration-1' : 'block truncate text-sm font-semibold text-ink'}>
                       {meal.name}
@@ -75,7 +78,9 @@ export function DiaryMeals({ diary, canLog }: { diary: Diary; canLog: boolean })
                       onEaten={() => diary.checkIn(meal.slot, 'eaten')}
                       onSkipped={() => diary.checkIn(meal.slot, 'skipped')}
                       onClear={() => diary.clearCheckIn(meal.slot)}
-                      onOther={() => setSheet({ open: true, replacing: { slot: meal.slot, mealName: meal.name } })}
+                      onOther={() =>
+                        setSheet({ open: true, replacing: { slot: meal.slot, mealName: meal.name, label: mealLabel(meal) } })
+                      }
                     />
                   </div>
                 ) : null}

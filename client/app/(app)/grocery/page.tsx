@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { GeneratePlanButton } from '@/components/plan/GeneratePlanButton';
 import { GroceryList } from '@/components/plan/GroceryList';
+import { GroceryTabs } from '@/components/plan/GroceryTabs';
 import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
 import type { ActivePlanResponse, GroceryResponse } from '@/lib/types';
@@ -37,9 +38,17 @@ export default async function GroceryPage() {
       <PageHeader
         eyebrow="Shopping"
         title="Grocery list"
-        description="Everything this week's meals need, de-duplicated and grouped by aisle. Your ticks are saved as you shop."
+        description="Everything this week's meals need, in amounts, grouped by aisle. Your ticks are saved as you shop."
       />
-      <GroceryList planId={plan.id} groups={grocery.groups} total={grocery.total} checked={grocery.checked} />
+      <GroceryTabs current="/grocery" />
+      <GroceryList
+        planId={plan.id}
+        groups={grocery.groups}
+        total={grocery.total}
+        checked={grocery.checked}
+        atHome={grocery.atHome}
+        servings={grocery.servings}
+      />
     </div>
   );
 }

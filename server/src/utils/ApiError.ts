@@ -8,6 +8,8 @@ export type ApiErrorCode =
   | 'TOO_MANY_REQUESTS'
   /** A service this API depends on (e.g. Open Food Facts) failed. */
   | 'UPSTREAM_ERROR'
+  /** A feature this server has not been configured for (e.g. reminders without VAPID keys). */
+  | 'SERVICE_UNAVAILABLE'
   | 'INTERNAL_ERROR';
 
 export class ApiError extends Error {

@@ -80,7 +80,15 @@ const round1 = (value: number): number => Math.round(value * 10) / 10;
  * Turns a profile into the daily targets a plan is built from.
  * Everything is computed at full precision and rounded once, at the end.
  */
-export function calculateTargets(profile: Profile): Targets {
+export interface TargetOptions {
+  /** kcal from an accepted weight-trend suggestion, applied before the safety floor. */
+  calorieAdjustment?: number;
+}
+
+/** Suggestions never move the target more than this far from the calculated one. */
+export const MAX_CALORIE_ADJUSTMENT = 500;
+
+export function calculateTargets(profile: Profile, { calorieAdjustment = 0 }: TargetOptions = {}): Targets {
   const { age, gender, weightKg, heightCm, activity, goal } = profile;
   const notes: string[] = [];
 
@@ -100,6 +108,14 @@ export function calculateTargets(profile: Profile): Targets {
   }
 
   let calories = tdee + GOAL_ADJUSTMENT[effectiveGoal];
+
+  const adjustment = Math.max(-MAX_CALORIE_ADJUSTMENT, Math.min(MAX_CALORIE_ADJUSTMENT, Math.round(calorieAdjustment)));
+  if (adjustment !== 0) {
+    calories += adjustment;
+    notes.push(
+      `Adjusted by ${adjustment > 0 ? '+' : '−'}${Math.abs(adjustment)} kcal a day from your weight trend. You can reset this in Settings.`,
+    );
+  }
 
   const floor = CALORIE_FLOOR[gender];
   if (calories < floor) {

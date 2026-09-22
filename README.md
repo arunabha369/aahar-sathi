@@ -5,6 +5,16 @@ plan with calorie and macro targets, a grocery list, a water tracker and progres
 what you actually ate: tick off planned meals, log anything else by search, your own dishes or a
 barcode, and watch your streak and weekly adherence.
 
+It cooks the way Indian homes do:
+
+- **Recipes for every dish** (105 of them), step by step, scaled to your portion, with a Jain version
+- **Fasting modes** — Navratri, Ekadashi (worked out from the moon), weekly vrat days, and Ramadan with
+  sehri and iftar times calculated for your city
+- **Household mode** — one menu for the family, each person's own portions, one combined grocery list
+- **Grocery amounts** in kg, g and pieces, a "have it at home" pantry tick, and a **Sunday prep** plan
+- **Targets that adjust** — when your weight trend stalls for 2–3 weeks, a ±100 kcal suggestion
+- **Reminders** by web push for water, meal times, weigh-ins and bedtime
+
 The maths is real (Mifflin–St Jeor, Asian-Indian BMI cut-offs, goal-based macro splits) and the food is
 home-style Indian cooking — poha, rajma chawal, idli sambar, ghugni, egg curry, tandoori chicken — across
 North, South, East and West India.
@@ -46,7 +56,7 @@ aahar-sathi/
 │   ├── src/controllers/
 │   ├── src/middleware/      requireAuth, validate, errorHandler, rateLimit
 │   ├── src/services/        nutrition.ts, planGenerator.ts, grocery.ts, planService.ts
-│   ├── src/data/meals.ts    82 meals, the seed source
+│   ├── src/data/meals.ts    105 meals, the seed source (recipes in src/data/recipes/)
 │   ├── src/seed.ts          idempotent seed + demo account
 │   └── tests/               nutrition, meal data, plan generator, auth API, plan API, log API
 └── package.json             workspace scripts
@@ -113,7 +123,7 @@ npm run seed
 The tables live in a private `app` schema with row level security switched on, so Supabase's public
 REST API (and its anon key) cannot reach them — only this server's own connection can.
 
-The seed upserts all 82 meals by slug (so it is safe to re-run) and creates a demo account:
+The seed upserts all 105 meals by slug (so it is safe to re-run) and creates a demo account:
 
 > **demo@aaharsathi.in** / **Demo@1234** — complete profile, an active 7-day plan, and 30 days of weight
 > and water logs so the charts have something to draw.
@@ -139,9 +149,10 @@ Run these from the repo root:
 | `npm start`       | Serve that build                                                  |
 | `npm run dev:api` | The API on its own (Express on :5001), if you ever need it        |
 | `npm run lint`    | Server typecheck + ESLint on the client                           |
-| `npm test`        | The full Vitest suite (126 tests)                                 |
+| `npm test`        | The full Vitest suite (169 tests)                                 |
 | `npm run seed`    | Seed meals and the demo account                                   |
 | `npm run db:migrate` | Create or update the database tables                           |
+| `npm run reminders:schedule -w server` | Register the every-5-minutes reminder job (pg_cron) |
 
 Workspace-only variants work too, e.g. `npm run dev -w server` or `npm test -w server`.
 
@@ -198,17 +209,41 @@ zod-validated and scoped to the signed-in user.
 | `POST`           | `/api/diary/:date/entries`     | A dish (`meal`), own food (`custom`) or `barcode`, with `servings` and optional `slot` (= a swap) |
 | `DELETE`         | `/api/diary/:date/entries/:id` | Removing the last swap food reopens the meal     |
 | `GET`            | `/api/diary/summary?to=&days=` | Calories eaten per day, logging streak, last-7-days adherence |
-| `GET`            | `/api/foods/search?q=`         | The 82 dishes and your own foods                 |
+| `GET`            | `/api/foods/search?q=`         | The 105 dishes and your own foods                |
 | `GET`/`POST`/`DELETE` | `/api/foods/custom`, `/api/foods/custom/:id` | Your saved dishes, per serving  |
 | `GET`            | `/api/foods/barcode/:code`     | A packaged product from Open Food Facts          |
+| `GET`            | `/api/recipes`, `/api/recipes/:slug` | Every dish's recipe: ingredients for one serving, steps, prep-ahead jobs |
+| `GET`            | `/api/plans/:id/prep`          | The week's Sunday prep, Wednesday top-up and night-before jobs |
+| `GET`/`PUT`/`DELETE` | `/api/pantry`              | "Have it at home" items, kept across plans (`{ item, atHome }`) |
+| `GET`/`PUT`      | `/api/profile/preferences`     | `{ jain, fasting, vratDays, city }` — shapes future plans |
+| `GET`/`POST`/`DELETE` | `/api/profile/adjustment` | Weight-trend suggestion; `POST { change }` accepts it and makes a new plan; `DELETE` resets |
+| `POST`           | `/api/profile/adjustment/dismiss` | "Not now" — quiet for a week                  |
+| `GET`/`POST`/`PUT`/`DELETE` | `/api/household`, `/api/household/:id` | Family members (adults, up to 8) |
+| `GET`            | `/api/fasting/week?city=`, `/api/fasting/cities` | Ekadashi days and sehri/iftar times |
+| `GET`/`PUT`      | `/api/reminders/settings`      | What to send and when, in the user's timezone    |
+| `POST`/`DELETE`  | `/api/reminders/subscriptions` | This browser's web-push subscription             |
+| `POST`           | `/api/reminders/test`          | Sends a test notification                        |
+| `POST`           | `/api/reminders/run`           | The scheduler's tick — `Authorization: Bearer $CRON_SECRET` |
 
 Dates are `YYYY-MM-DD` and come from the **client's** local calendar day, so "today" matches the user's
 timezone.
 
 **The food diary.** A check-in keeps a snapshot of the planned meal's numbers, so reshuffling the plan
 later never rewrites what the diary says was eaten. Calories eaten = eaten planned meals + every logged
-food; a skipped or swapped meal counts nothing by itself. A day is *fully tracked* when all five planned
-meals have a check-in, and *on target* when such a day is within 10% of the calorie target.
+food; a skipped or swapped meal counts nothing by itself. A day is *fully tracked* when every meal planned
+for it (five, or three or four on a Ramadan day) has a check-in, and *on target* when such a day is within 10% of the calorie target.
+
+**Recipes and grocery amounts.** Each recipe is written for one serving at the size the plan calls
+1×, and its ingredients add up to within 15% of the dish's calories (a test checks every one). The
+grocery list multiplies each recipe by every portion planned — yours and each household member's —
+and rounds up to what you would buy. Jain weeks leave out onion, garlic and ginger (swapped for hing
+and dry ginger); vrat days use sendha namak.
+
+**Fasting.** Vrat days use only vrat-friendly dishes, worked out from each recipe's ingredients, and are
+balanced to up to 35% of calories from fat (vrat staples are richer). Ekadashi is the day whose sunrise
+falls in the eleventh tithi, from Meeus's sun and moon positions; the dates are shown as suggestions,
+since some calendars (ISKCON's) sometimes fast a day later. Sehri ends at Fajr (sun 18° below the
+horizon) and iftar is at sunset, recalculated for each real date.
 
 **Barcodes.** Chrome on Android reads barcodes natively; elsewhere (Safari on iPhone) a WebAssembly
 build of ZXing is used, loaded only when scanning and served from this site (`client/public/wasm`, copied
@@ -281,7 +316,18 @@ point `TEST_DATABASE_URL` elsewhere if yours is not on `localhost:5432`.
   `secure` cookies. Each function instance keeps at most 2 database connections and closes idle ones
   before it sleeps (`@vercel/functions` `attachDatabasePool`)
 - Create the tables and load the meals once, from your machine: `npm run db:migrate && npm run seed`
-  with `server/.env` pointing at the same database
+  with `server/.env` pointing at the same database. **Migrate before deploying** new code, and seed
+  (which loads new dishes) **after** it is live
+
+**Reminders → web push + Supabase pg_cron**
+
+- Generate keys with `npx web-push generate-vapid-keys` and set `VAPID_PUBLIC_KEY`,
+  `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` in Vercel, plus `CRON_SECRET` (`openssl rand -base64 32`)
+- Once deployed, run `npm run reminders:schedule -w server` with `server/.env` holding the production
+  `DATABASE_URL`, `APP_URL=https://aaharsathi.in` and the same `CRON_SECRET`. It creates a pg_cron job
+  that calls `/api/reminders/run` every five minutes through pg_net (turn both extensions on under
+  Database → Extensions if the script can't). `-- --off` removes it
+- iPhone users get reminders once the app is added to the Home Screen (iOS 16.4+)
 
 **Password reset emails → Resend**
 

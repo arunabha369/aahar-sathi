@@ -11,6 +11,10 @@ process.env.APP_URL = 'http://localhost:3000';
 process.env.GOOGLE_CLIENT_ID = 'test-client-id.apps.googleusercontent.com';
 process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
 delete process.env.RESEND_API_KEY;
+// Reminders are on in tests; web-push itself is mocked wherever a test would send one.
+process.env.VAPID_PUBLIC_KEY = 'BExamplePublicKeyForTestsOnly';
+process.env.VAPID_PRIVATE_KEY = 'example-private-key-for-tests';
+process.env.CRON_SECRET = 'test-cron-secret-that-is-long-enough';
 
 // A local Postgres; override with TEST_DATABASE_URL (never point it at real data —
 // every table is emptied after each test).

@@ -5,6 +5,7 @@ import {
   deletePlan,
   getActivePlan,
   getGroceryList,
+  getPrepPlan,
   getPlan,
   listPlans,
   shufflePlan,
@@ -30,3 +31,4 @@ planRouter.post('/:id/swap', validate({ params: idParamSchema, body: swapSchema 
 planRouter.post('/:id/shuffle', planLimiter, validate({ params: idParamSchema }), shufflePlan);
 planRouter.get('/:id/grocery', validate({ params: idParamSchema }), getGroceryList);
 planRouter.patch('/:id/grocery', validate({ params: idParamSchema, body: grocerySchema }), updateGroceryItem);
+planRouter.get('/:id/prep', validate({ params: idParamSchema }), getPrepPlan);

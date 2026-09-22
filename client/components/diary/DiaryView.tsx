@@ -7,6 +7,7 @@ import { addDays, formatDayLong, todayKey } from '@/lib/format';
 import { useDiary } from '@/lib/useDiary';
 import { useLocalToday } from '@/lib/useLocalToday';
 import type { DiaryDay } from '@/lib/types';
+import { FastDayNote } from '@/components/plan/FastDayNote';
 import { DiaryMeals } from './DiaryMeals';
 import { EatenSummary } from './EatenSummary';
 
@@ -59,6 +60,7 @@ export function DiaryView({ initial, requestedDate, serverToday }: { initial: Di
         {!isToday && day.planned.length > 0 ? (
           <p className="-mt-2 mb-4 text-sm text-muted">These are the meals your current plan has for a {day.weekday}.</p>
         ) : null}
+        <FastDayNote kind={day.kind} fastTimes={day.fastTimes} />
         <DiaryMeals diary={diary} canLog />
       </Panel>
     </div>

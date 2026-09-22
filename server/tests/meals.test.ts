@@ -70,7 +70,9 @@ describe('meal database', () => {
 
   it('keeps calories in a sensible band for each slot', () => {
     for (const meal of MEALS) {
-      const [min, max] = meal.slot === 'snack' ? [120, 320] : [250, 700];
+      // Iftar is the meal that breaks the fast, so it is sized as more than a snack.
+      const iftar = meal.tags?.includes('iftar') ?? false;
+      const [min, max] = meal.slot === 'snack' ? [120, iftar ? 400 : 320] : [250, 700];
       expect(meal.kcal, meal.slug).toBeGreaterThanOrEqual(min);
       expect(meal.kcal, meal.slug).toBeLessThanOrEqual(max);
     }

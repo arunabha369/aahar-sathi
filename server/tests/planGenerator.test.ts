@@ -346,12 +346,13 @@ describe('grocery list', () => {
     const { days } = plan(baseProfile, 31);
     const list = buildGroceryList(days);
 
-    const names = list.groups.flatMap((group) => group.items);
+    const names = list.groups.flatMap((group) => group.items.map((item) => item.name));
     expect(new Set(names).size).toBe(names.length);
     expect(list.total).toBe(names.length);
     expect(list.groups.length).toBeGreaterThan(4);
     for (const group of list.groups) {
-      expect(group.items).toEqual([...group.items].sort((a, b) => a.localeCompare(b)));
+      const groupNames = group.items.map((item) => item.name);
+      expect(groupNames).toEqual([...groupNames].sort((a, b) => a.localeCompare(b)));
     }
     expect(names).toContain('Salt');
   });

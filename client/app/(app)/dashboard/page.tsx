@@ -4,6 +4,7 @@ import { Panel, PanelHeader, PageHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { MacroDonut, MacroLegend } from '@/components/charts/MacroDonut';
 import { WeekCaloriesChart } from '@/components/charts/WeekCaloriesChart';
+import { AdaptiveTargetCard } from '@/components/plan/AdaptiveTargetCard';
 import { CalculationPanel } from '@/components/plan/CalculationPanel';
 import { DayTabs } from '@/components/plan/DayTabs';
 import { GeneratePlanButton } from '@/components/plan/GeneratePlanButton';
@@ -12,11 +13,12 @@ import { PrintGrocery } from '@/components/plan/PrintGrocery';
 import { StatCards } from '@/components/plan/StatCards';
 import { TodayCard } from '@/components/plan/TodayCard';
 import { WaterTracker } from '@/components/plan/WaterTracker';
+import { cityName } from '@/lib/api/cities';
 import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
-import { DIET_OPTIONS, GOAL_OPTIONS } from '@/lib/constants';
+import { DIET_OPTIONS, FASTING_LABELS, GOAL_OPTIONS } from '@/lib/constants';
 import { addDays, todayKey } from '@/lib/format';
-import type { ActivePlanResponse, DiaryDay, DiarySummary, GroceryResponse, WaterLogsResponse } from '@/lib/types';
+import type { ActivePlanResponse, AdjustmentResponse, DiaryDay, DiarySummary, GroceryResponse, WaterLogsResponse } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -46,7 +48,7 @@ export default async function DashboardPage() {
   }
 
   const serverToday = todayKey();
-  const [{ logs: waterLogs }, grocery, diary, summary] = await Promise.all([
+  const [{ logs: waterLogs }, grocery, diary, summary, { suggestion }, city] = await Promise.all([
     serverFetch<WaterLogsResponse>(
       `/logs/water?from=${todayKey(addDays(new Date(), -14))}&to=${todayKey(addDays(new Date(), 1))}`,
     ),
@@ -54,19 +56,30 @@ export default async function DashboardPage() {
     serverFetch<GroceryResponse>(`/plans/${plan.id}/grocery`),
     serverFetch<DiaryDay>(`/diary/${serverToday}`),
     serverFetch<DiarySummary>(`/diary/summary?to=${serverToday}`),
+    serverFetch<AdjustmentResponse>(`/profile/adjustment?today=${serverToday}`),
+    cityName(plan.inputs.preferences?.city),
   ]);
 
   const goal = GOAL_OPTIONS.find((option) => option.value === plan.inputs.goal);
   const diet = DIET_OPTIONS.find((option) => option.value === plan.inputs.diet);
+  const modes = [
+    plan.inputs.preferences?.jain ? 'Jain' : null,
+    FASTING_LABELS[plan.inputs.preferences?.fasting ?? 'none'],
+    plan.inputs.household?.length ? `Household of ${plan.inputs.household.length + 1}` : null,
+  ].filter(Boolean);
 
   return (
     <div className="animate-rise">
       <PageHeader
-        eyebrow={`${goal?.label ?? ''} · ${diet?.label ?? ''}`}
+        eyebrow={[goal?.label, diet?.label, ...modes].filter(Boolean).join(' · ')}
         title={`Namaste, ${user.name.split(' ')[0]}`}
         description="Here is your plan for this week."
         actions={<PlanActions plan={plan} serverToday={serverToday} />}
       />
+
+      <div className="mb-5 empty:hidden">
+        <AdaptiveTargetCard suggestion={suggestion} calories={plan.targets.calories} today={serverToday} compact />
+      </div>
 
       {/* What matters right now: the next meal and today's water. */}
       <div className="grid gap-5 xl:grid-cols-3">
@@ -108,6 +121,7 @@ export default async function DashboardPage() {
               targets={plan.targets}
               diet={plan.inputs.diet}
               serverToday={serverToday}
+              cityName={city}
             />
           </Panel>
 

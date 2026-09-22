@@ -1,11 +1,13 @@
 'use client';
 
-import { RefreshCw, Repeat2 } from 'lucide-react';
+import Link from 'next/link';
+import { BookOpen, RefreshCw, Repeat2 } from 'lucide-react';
+import { FastDayNote } from '@/components/plan/FastDayNote';
 import { ProteinBoost } from '@/components/plan/ProteinBoost';
 import { MacroLine } from '@/components/plan/MacroLine';
 import { MealPhoto } from '@/components/plan/MealPhoto';
-import { SLOT_META } from '@/lib/constants';
 import { formatItem } from '@/lib/format';
+import { mealLabel, recipeHref } from '@/lib/meals';
 import type { Diet, PlanDay, PlanSlot, Targets } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -15,18 +17,20 @@ interface MealListProps {
   diet: Diet;
   onSwap?: (slot: PlanSlot) => void;
   swappingSlots?: PlanSlot[];
+  /** For the Ramadan note: where the sehri and iftar times were calculated for. */
+  cityName?: string | null;
 }
 
-
-export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: MealListProps) {
+export function MealList({ day, targets, diet, onSwap, swappingSlots = [], cityName }: MealListProps) {
   const drift = day.totals.kcal - targets.calories;
   const withinTarget = Math.abs(drift) <= targets.calories * 0.1;
 
   return (
     <div>
+      <FastDayNote kind={day.kind} fastTimes={day.fastTimes} cityName={cityName} />
       <ol className="overflow-hidden rounded-2xl border border-line bg-surface" data-print="card">
         {day.meals.map((meal, index) => {
-          const slot = SLOT_META[meal.slot];
+          const label = mealLabel(meal);
           const swapping = swappingSlots.includes(meal.slot);
 
           return (
@@ -46,13 +50,38 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
               </div>
 
               <div className="col-span-2 col-start-2 row-start-1 min-w-0 sm:col-span-1">
-                <p className="eyebrow">{slot.label}</p>
+                <p className="eyebrow">{label}</p>
                 <h4 className="mt-0.5 text-[0.9375rem] font-bold leading-snug text-ink">
-                  {swapping ? 'Finding another dish…' : meal.name}
+                  {swapping ? (
+                    'Finding another dish…'
+                  ) : (
+                    <Link
+                      href={recipeHref(meal)}
+                      className="group/recipe -my-3 inline-block rounded-sm py-3 decoration-accent decoration-2 underline-offset-4 hover:underline"
+                    >
+                      {meal.name}
+                      <BookOpen
+                        className="ml-1.5 inline size-3.5 align-[-0.1em] text-muted transition-colors group-hover/recipe:text-accent"
+                        aria-hidden="true"
+                      />
+                      <span className="sr-only"> — recipe</span>
+                    </Link>
+                  )}
                 </h4>
                 <p className="mt-1 text-[0.8125rem] leading-relaxed text-muted">
                   {meal.items.map((item) => formatItem(item)).join(' · ')}
                 </p>
+                {meal.portions?.length ? (
+                  <ul className="mt-1.5 space-y-0.5 text-[0.75rem] leading-relaxed text-muted">
+                    {meal.portions.map((portion) => (
+                      <li key={portion.memberId}>
+                        <span className="font-semibold text-ink-soft">{portion.name}:</span>{' '}
+                        {portion.items.map((item) => formatItem(item)).join(' · ')}{' '}
+                        <span className="tabular-nums">({portion.kcal} kcal)</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
 
               <MacroLine
@@ -67,7 +96,7 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
                   disabled={swapping}
                   data-print="hide"
                   className="col-start-3 row-start-2 inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 self-center rounded-xl px-3 text-[0.8125rem] font-semibold text-ink-soft ring-1 ring-line transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60 sm:row-[1/3]"
-                  aria-label={`Swap ${slot.label.toLowerCase()} on ${day.day}`}
+                  aria-label={`Swap ${label.toLowerCase()} on ${day.day}`}
                 >
                   {swapping ? (
                     <RefreshCw className="size-4 animate-spin" aria-hidden="true" />
@@ -105,7 +134,12 @@ export function MealList({ day, targets, diet, onSwap, swappingSlots = [] }: Mea
       </div>
 
       <div className="mt-3">
-        <ProteinBoost dayProtein={day.totals.protein} targetProtein={targets.protein} diet={diet} />
+        <ProteinBoost
+          dayProtein={day.totals.protein}
+          targetProtein={targets.protein}
+          diet={diet}
+          vrat={day.kind === 'vrat'}
+        />
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import type { MealData } from '../types.ts';
 
 export async function listMeals(): Promise<PlannerMeal[]> {
   const { rows } = await pool.query<PlannerMeal>(
-    `select id, slug, name, slot, diet, region, items, kcal, protein, carbs, fat, ingredients
+    `select id, slug, name, slot, diet, region, items, kcal, protein, carbs, fat, ingredients, tags
      from app.meals
      order by slug`,
   );
@@ -17,11 +17,12 @@ export async function listMeals(): Promise<PlannerMeal[]> {
  */
 export async function syncMeals(meals: MealData[]): Promise<{ added: number; updated: number; removed: number }> {
   const { rows } = await pool.query<{ inserted: boolean }>(
-    `insert into app.meals (slug, name, slot, diet, region, items, ingredients, kcal, protein, carbs, fat)
-     select m.slug, m.name, m.slot, m.diet, m.region, m.items, m.ingredients, m.kcal, m.protein, m.carbs, m.fat
+    `insert into app.meals (slug, name, slot, diet, region, items, ingredients, kcal, protein, carbs, fat, tags)
+     select m.slug, m.name, m.slot, m.diet, m.region, m.items, m.ingredients, m.kcal, m.protein, m.carbs, m.fat,
+       coalesce(m.tags, '{}')
      from jsonb_to_recordset($1::jsonb) as m(
        slug text, name text, slot text, diet text, region text, items jsonb, ingredients jsonb,
-       kcal double precision, protein double precision, carbs double precision, fat double precision
+       kcal double precision, protein double precision, carbs double precision, fat double precision, tags text[]
      )
      on conflict (slug) do update set
        name = excluded.name,
@@ -33,7 +34,8 @@ export async function syncMeals(meals: MealData[]): Promise<{ added: number; upd
        kcal = excluded.kcal,
        protein = excluded.protein,
        carbs = excluded.carbs,
-       fat = excluded.fat
+       fat = excluded.fat,
+       tags = excluded.tags
      returning (xmax = 0) as inserted`,
     [JSON.stringify(meals)],
   );

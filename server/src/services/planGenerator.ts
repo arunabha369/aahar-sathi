@@ -1,16 +1,20 @@
 import {
+  DEFAULT_PREFERENCES,
   PLAN_SLOTS,
   SLOT_META,
   WEEKDAYS,
+  type DayKind,
   type Diet,
   type MealData,
   type MealItem,
   type MealSlot,
   type PlanDay,
   type PlanMeal,
+  type PlanPreferences,
   type PlanSlot,
   type Profile,
   type Targets,
+  type Weekday,
 } from '../types.ts';
 import { pickOne } from '../utils/random.ts';
 
@@ -71,8 +75,118 @@ export function dietAllows(userDiet: Diet, mealDiet: Diet): boolean {
   return mealDiet === 'veg';
 }
 
-export function slotTargetKcal(calories: number, slot: PlanSlot): number {
-  return calories * SLOT_META[slot].share;
+/**
+ * A Ramadan day is three meals: sehri before dawn (the breakfast slot), iftar at sunset
+ * (the evening-snack slot) and dinner. Sehri is made large enough to carry the fast.
+ */
+export const RAMADAN_SLOTS = ['breakfast', 'eveningSnack', 'dinner'] as const satisfies readonly PlanSlot[];
+/**
+ * Above this many calories three meals would need portions past MAX_FACTOR, so the day
+ * gets a fourth: a late snack after the evening prayers (it uses the mid-morning slot,
+ * and is listed last, in eating order).
+ */
+export const RAMADAN_LATE_SNACK_FROM_KCAL = 2400;
+/** Past this, even four dishes at their largest portions fall short, so the fourth becomes a full meal (a lunch dish). */
+export const RAMADAN_LATE_MEAL_FROM_KCAL = 3200;
+
+interface RamadanShape {
+  slots: readonly PlanSlot[];
+  shares: Partial<Record<PlanSlot, number>>;
+}
+
+const RAMADAN_SHAPES: { from: number; shape: RamadanShape }[] = [
+  {
+    from: RAMADAN_LATE_MEAL_FROM_KCAL,
+    shape: {
+      slots: ['breakfast', 'eveningSnack', 'dinner', 'lunch'],
+      shares: { breakfast: 0.3, eveningSnack: 0.18, dinner: 0.3, lunch: 0.22 },
+    },
+  },
+  {
+    from: RAMADAN_LATE_SNACK_FROM_KCAL,
+    shape: {
+      slots: ['breakfast', 'eveningSnack', 'dinner', 'midMorning'],
+      shares: { breakfast: 0.32, eveningSnack: 0.22, dinner: 0.34, midMorning: 0.12 },
+    },
+  },
+  { from: 0, shape: { slots: RAMADAN_SLOTS, shares: { breakfast: 0.35, eveningSnack: 0.25, dinner: 0.4 } } },
+];
+
+/** Every slot a Ramadan day can use, whatever its size. */
+const RAMADAN_ALL_SLOTS: readonly PlanSlot[] = ['breakfast', 'eveningSnack', 'dinner', 'midMorning', 'lunch'];
+
+const ramadanShape = (calories: number): RamadanShape =>
+  RAMADAN_SHAPES.find((candidate) => calories >= candidate.from)!.shape;
+
+export const RAMADAN_LABELS: Partial<Record<PlanSlot, string>> = {
+  breakfast: 'Sehri',
+  eveningSnack: 'Iftar',
+  dinner: 'Dinner',
+  midMorning: 'Late snack',
+  lunch: 'Late meal',
+};
+/** Used when no city is set, so there are no calculated times to go by. */
+const RAMADAN_DEFAULT_TIMES: Partial<Record<PlanSlot, string>> = {
+  breakfast: '4:30 AM',
+  eveningSnack: '6:30 PM',
+  dinner: '8:30 PM',
+  midMorning: '10:30 PM',
+  lunch: '10:30 PM',
+};
+
+export function slotsFor(kind: DayKind, calories = 0): readonly PlanSlot[] {
+  return kind === 'ramadan' ? ramadanShape(calories).slots : PLAN_SLOTS;
+}
+
+export function slotShare(slot: PlanSlot, kind: DayKind = 'normal', calories = 0): number {
+  return kind === 'ramadan' ? (ramadanShape(calories).shares[slot] ?? 0) : SLOT_META[slot].share;
+}
+
+export function slotTargetKcal(calories: number, slot: PlanSlot, kind: DayKind = 'normal'): number {
+  return calories * slotShare(slot, kind, calories);
+}
+
+/**
+ * Which kind of day each weekday is. Navratri and Ramadan cover the whole week; otherwise
+ * the fast days are the user's weekly vrat days (plus, in Ekadashi mode, that week's
+ * Ekadashi, which the plan service adds before generating).
+ */
+export function dayKindFor(weekday: Weekday, preferences: PlanPreferences): DayKind {
+  if (preferences.fasting === 'navratri') return 'vrat';
+  if (preferences.fasting === 'ramadan') return 'ramadan';
+  return preferences.vratDays.includes(weekday) ? 'vrat' : 'normal';
+}
+
+/**
+ * Vrat staples (paneer, curd, peanuts, ghee) put even lean fast-day dishes at 30–40% of
+ * calories from fat, so fast days are balanced against the top of the healthy 20–35% range
+ * instead of the everyday 25%.
+ */
+export const VRAT_FAT_SHARE = 0.35;
+
+export function dayTargetsFor(targets: DayTargets, kind: DayKind): DayTargets {
+  if (kind !== 'vrat') return targets;
+  return { ...targets, fat: Math.max(targets.fat, Math.round((targets.calories * VRAT_FAT_SHARE) / 9)) };
+}
+
+/** Vrat and Jain food is always vegetarian, whatever the profile says. */
+export function effectiveDiet(diet: Diet, kind: DayKind, preferences: Pick<PlanPreferences, 'jain'>): Diet {
+  return kind === 'vrat' || preferences.jain ? 'veg' : diet;
+}
+
+const hasTag = (meal: MealData, tag: NonNullable<MealData['tags']>[number]) => meal.tags?.includes(tag) ?? false;
+
+/** Whether a dish belongs in a given slot on a given kind of day. */
+export function fitsDay(meal: MealData, slot: PlanSlot, kind: DayKind, jain: boolean): boolean {
+  if (meal.slot !== mealSlotFor(slot)) return false;
+  if (jain && !hasTag(meal, 'jain')) return false;
+  if (kind === 'vrat') return hasTag(meal, 'vrat');
+  if (kind === 'ramadan') {
+    if (slot === 'breakfast') return hasTag(meal, 'sehri');
+    if (slot === 'eveningSnack') return hasTag(meal, 'iftar');
+  }
+  // Fast-day staples and iftar platters stay out of ordinary slots.
+  return !hasTag(meal, 'fastOnly') && !hasTag(meal, 'iftar');
 }
 
 const QUARTER_FACTORS: number[] = Array.from(
@@ -126,10 +240,26 @@ export function scaleQuantity(item: MealItem, factor: number): number {
   return Math.max(0.25, Number(quartered.toFixed(2)));
 }
 
-export function scaleMeal(meal: PlannerMeal, slot: PlanSlot, factor: number): PlanMeal {
+export interface SlotDisplay {
+  time: string;
+  label?: string;
+}
+
+/** The time and name a slot shows on a given kind of day. */
+export function slotDisplay(slot: PlanSlot, kind: DayKind = 'normal', times?: Partial<Record<PlanSlot, string>>): SlotDisplay {
+  if (kind !== 'ramadan') return { time: SLOT_META[slot].time };
+  return {
+    time: times?.[slot] ?? RAMADAN_DEFAULT_TIMES[slot] ?? SLOT_META[slot].time,
+    ...(RAMADAN_LABELS[slot] ? { label: RAMADAN_LABELS[slot] } : {}),
+  };
+}
+
+export function scaleMeal(meal: PlannerMeal, slot: PlanSlot, factor: number, display?: SlotDisplay): PlanMeal {
+  const { time, label } = display ?? slotDisplay(slot);
   return {
     slot,
-    time: SLOT_META[slot].time,
+    time,
+    ...(label ? { label } : {}),
     mealId: meal.id,
     slug: meal.slug,
     name: meal.name,
@@ -450,49 +580,107 @@ function improveDay(
   return current;
 }
 
+/** Ramadan days: the calculated sehri and iftar times for the date each weekday falls on. */
+export type FastTimes = NonNullable<PlanDay['fastTimes']>;
+
 export interface GeneratePlanInput {
   profile: Profile;
   targets: Targets;
   meals: PlannerMeal[];
+  preferences?: PlanPreferences;
+  fastTimes?: Partial<Record<Weekday, FastTimes>>;
   random?: () => number;
 }
 
-function poolsByPlanSlot(meals: PlannerMeal[], diet: Diet): Record<PlanSlot, PlannerMeal[]> {
-  const allowed = meals.filter((meal) => dietAllows(diet, meal.diet));
-  return PLAN_SLOTS.reduce(
-    (pools, slot) => {
-      pools[slot] = allowed.filter((meal) => meal.slot === mealSlotFor(slot));
-      return pools;
-    },
-    {} as Record<PlanSlot, PlannerMeal[]>,
-  );
+type Pools = Partial<Record<PlanSlot, PlannerMeal[]>>;
+
+function poolsFor(meals: PlannerMeal[], diet: Diet, kind: DayKind, preferences: PlanPreferences): Pools {
+  const allowedDiet = effectiveDiet(diet, kind, preferences);
+  const allowed = meals.filter((meal) => dietAllows(allowedDiet, meal.diet));
+  const pools: Pools = {};
+  for (const slot of kind === 'ramadan' ? RAMADAN_ALL_SLOTS : PLAN_SLOTS) {
+    pools[slot] = allowed.filter((meal) => fitsDay(meal, slot, kind, preferences.jain));
+  }
+  return pools;
+}
+
+const KIND_NAMES: Record<DayKind, string> = { normal: '', vrat: 'vrat ', ramadan: 'Ramadan ' };
+
+function checkPools(pools: Pools, kind: DayKind, diet: Diet, calories: number): void {
+  for (const slot of slotsFor(kind, calories)) {
+    if ((pools[slot] ?? []).length === 0) {
+      throw new Error(`No ${KIND_NAMES[kind]}${mealSlotFor(slot)} meals available for a ${diet} diet.`);
+    }
+  }
 }
 
 /** Which slot has to carry the day's egg or meat dish. */
-function requirementPlan(diet: Diet, pools: Record<PlanSlot, PlannerMeal[]>, random: () => number): {
-  slot: PlanSlot | null;
-  requirement: Requirement;
-} {
+function requirementPlan(
+  diet: Diet,
+  pools: Pools,
+  slots: readonly PlanSlot[],
+  random: () => number,
+): { slot: PlanSlot | null; requirement: Requirement } {
   if (diet === 'egg') {
-    const options = PLAN_SLOTS.filter((slot) => pools[slot].some((meal) => meal.diet === 'egg'));
+    const options = slots.filter((slot) => (pools[slot] ?? []).some((meal) => meal.diet === 'egg'));
     return options.length > 0 ? { slot: pickOne(options, random), requirement: 'egg' } : { slot: null, requirement: null };
   }
   if (diet === 'nonveg') {
-    const options = (['lunch', 'dinner'] as const).filter((slot) =>
-      pools[slot].some((meal) => meal.diet === 'nonveg'),
+    const options = slots.filter(
+      (slot) => (slot === 'lunch' || slot === 'dinner') && (pools[slot] ?? []).some((meal) => meal.diet === 'nonveg'),
     );
     return options.length > 0 ? { slot: pickOne(options, random), requirement: 'meat' } : { slot: null, requirement: null };
   }
   return { slot: null, requirement: null };
 }
 
-export function generatePlanDays({ profile, targets, meals, random = Math.random }: GeneratePlanInput): PlanDay[] {
-  const pools = poolsByPlanSlot(meals, profile.diet);
-  for (const slot of PLAN_SLOTS) {
-    if (pools[slot].length === 0) {
-      throw new Error(`No ${mealSlotFor(slot)} meals available for a ${profile.diet} diet.`);
+/** Clock times ("4:52 AM") for a Ramadan day's slots, from the calculated sehri and iftar. */
+export function ramadanMealTimes(times: FastTimes | undefined): Partial<Record<PlanSlot, string>> | undefined {
+  if (!times) return undefined;
+  const toMinutes = (hhmm: string) => {
+    const [hours, minutes] = hhmm.split(':').map(Number);
+    return hours! * 60 + minutes!;
+  };
+  // Rounded to 5 minutes, but never the unsafe way: sehri earlier, iftar later.
+  const clock = (total: number, round: (value: number) => number = Math.round) => {
+    const minutes = ((round(total / 5) * 5) % 1440 + 1440) % 1440;
+    const hours = Math.floor(minutes / 60);
+    const suffix = hours < 12 ? 'AM' : 'PM';
+    return `${hours % 12 === 0 ? 12 : hours % 12}:${String(minutes % 60).padStart(2, '0')} ${suffix}`;
+  };
+
+  const sehriEnds = toMinutes(times.sehriEnds);
+  const iftar = toMinutes(times.iftar);
+  return {
+    // Eat sehri in good time before it ends; dinner comes after the evening prayers.
+    breakfast: clock(sehriEnds - 40, Math.floor),
+    eveningSnack: clock(iftar, Math.ceil),
+    dinner: clock(iftar + 120),
+    midMorning: clock(iftar + 240),
+    lunch: clock(iftar + 240),
+  };
+}
+
+export function generatePlanDays({
+  profile,
+  targets,
+  meals,
+  preferences = DEFAULT_PREFERENCES,
+  fastTimes = {},
+  random = Math.random,
+}: GeneratePlanInput): PlanDay[] {
+  const poolsByKind = new Map<DayKind, Pools>();
+  const poolsOf = (kind: DayKind): Pools => {
+    let pools = poolsByKind.get(kind);
+    if (!pools) {
+      pools = poolsFor(meals, profile.diet, kind, preferences);
+      checkPools(pools, kind, effectiveDiet(profile.diet, kind, preferences), targets.calories);
+      poolsByKind.set(kind, pools);
     }
-  }
+    return pools;
+  };
+  // Fail before building anything if a day of the week could not be filled.
+  for (const weekday of WEEKDAYS) poolsOf(dayKindFor(weekday, preferences));
 
   const weeklyUse: Record<PlanSlot, Map<string, number>> = PLAN_SLOTS.reduce(
     (acc, slot) => {
@@ -504,19 +692,24 @@ export function generatePlanDays({ profile, targets, meals, random = Math.random
 
   const days: PlanDay[] = [];
   let yesterdaySlugs = new Set<string>();
-  const fatShare = (targets.fat * 9) / targets.calories;
 
   for (const weekday of WEEKDAYS) {
+    const kind = dayKindFor(weekday, preferences);
+    const dayTargets = dayTargetsFor(targets, kind);
+    const fatShare = (dayTargets.fat * 9) / targets.calories;
+    const pools = poolsOf(kind);
+    const slots = slotsFor(kind, targets.calories);
+    const diet = effectiveDiet(profile.diet, kind, preferences);
     const todaySlugs = new Set<string>();
-    const { slot: requiredSlot, requirement } = requirementPlan(profile.diet, pools, random);
+    const { slot: requiredSlot, requirement } = requirementPlan(diet, pools, slots, random);
     const dayPicks: ChosenMeal[] = [];
     const contexts: PickContext[] = [];
 
-    for (const slot of PLAN_SLOTS) {
-      const slotKcal = slotTargetKcal(targets.calories, slot);
+    for (const slot of slots) {
+      const slotKcal = slotTargetKcal(targets.calories, slot, kind);
       const context: PickContext = {
         slot,
-        pool: pools[slot],
+        pool: pools[slot] ?? [],
         slotKcal,
         cuisine: profile.cuisine,
         preferCuisine: random() < CUISINE_PREFERENCE,
@@ -538,15 +731,25 @@ export function generatePlanDays({ profile, targets, meals, random = Math.random
 
     const dayRequirement: DayRequirement = {
       requirement,
-      slots: requirement === 'meat' ? (['lunch', 'dinner'] as const) : PLAN_SLOTS,
+      slots: requirement === 'meat' ? slots.filter((slot) => slot === 'lunch' || slot === 'dinner') : slots,
     };
-    const finalPicks = improveDay(dayPicks, contexts, targets, dayRequirement);
+    const finalPicks = improveDay(dayPicks, contexts, dayTargets, dayRequirement);
     for (const pick of finalPicks) {
       weeklyUse[pick.slot].set(pick.meal.slug, (weeklyUse[pick.slot].get(pick.meal.slug) ?? 0) + 1);
     }
 
-    const dayMeals = finalPicks.map((pick) => scaleMeal(pick.meal, pick.slot, pick.factor));
-    days.push({ day: weekday, meals: dayMeals, totals: dayTotals(dayMeals) });
+    const times = kind === 'ramadan' ? fastTimes[weekday] : undefined;
+    const clock = ramadanMealTimes(times);
+    const dayMeals = finalPicks.map((pick) =>
+      scaleMeal(pick.meal, pick.slot, pick.factor, slotDisplay(pick.slot, kind, clock)),
+    );
+    days.push({
+      day: weekday,
+      meals: dayMeals,
+      totals: dayTotals(dayMeals),
+      ...(kind !== 'normal' ? { kind } : {}),
+      ...(times ? { fastTimes: times } : {}),
+    });
     yesterdaySlugs = new Set(finalPicks.map((pick) => pick.meal.slug));
   }
 
@@ -560,6 +763,7 @@ export interface SwapMealInput {
   profile: Profile;
   targets: Targets;
   meals: PlannerMeal[];
+  preferences?: PlanPreferences;
   random?: () => number;
 }
 
@@ -571,13 +775,15 @@ export function swapMealInDays({
   profile,
   targets,
   meals,
+  preferences = DEFAULT_PREFERENCES,
   random = Math.random,
 }: SwapMealInput): PlanDay[] {
   const day = days[dayIndex];
   if (!day) throw new Error(`Day ${dayIndex} is not part of this plan.`);
 
-  const pools = poolsByPlanSlot(meals, profile.diet);
-  const pool = pools[slot];
+  const kind: DayKind = day.kind ?? 'normal';
+  const diet = effectiveDiet(profile.diet, kind, preferences);
+  const pool = poolsFor(meals, profile.diet, kind, preferences)[slot] ?? [];
   const current = day.meals.find((meal) => meal.slot === slot);
   if (!current) throw new Error(`This plan has no ${slot} on ${day.day}.`);
 
@@ -602,10 +808,10 @@ export function swapMealInDays({
     (meal) => meal.slot !== slot && meal.diet === 'nonveg' && (meal.slot === 'lunch' || meal.slot === 'dinner'),
   );
   let requirement: Requirement = null;
-  if (profile.diet === 'egg' && !dayHasEgg && pool.some((meal) => meal.diet === 'egg')) {
+  if (diet === 'egg' && !dayHasEgg && pool.some((meal) => meal.diet === 'egg')) {
     requirement = 'egg';
   } else if (
-    profile.diet === 'nonveg' &&
+    diet === 'nonveg' &&
     !dayHasMeat &&
     (slot === 'lunch' || slot === 'dinner') &&
     pool.some((meal) => meal.diet === 'nonveg')
@@ -613,7 +819,8 @@ export function swapMealInDays({
     requirement = 'meat';
   }
 
-  const slotKcal = slotTargetKcal(targets.calories, slot);
+  const slotKcal = slotTargetKcal(targets.calories, slot, kind);
+  const dayTargets = dayTargetsFor(targets, kind);
   const candidates = eligibleMeals({
     slot,
     pool,
@@ -625,7 +832,7 @@ export function swapMealInDays({
     yesterdaySlugs: neighbourSlugs,
     todaySlugs,
     excludeSlugs: new Set([current.slug]),
-    fatShare: (targets.fat * 9) / targets.calories,
+    fatShare: (dayTargets.fat * 9) / targets.calories,
     random,
   });
   if (candidates.length === 0) throw new Error('There is no other dish available for this slot.');
@@ -636,14 +843,18 @@ export function swapMealInDays({
   const ranked = candidates
     .map((meal) => {
       const best = portionFactors(meal)
-        .map((factor) => ({ factor, score: dayScore([...others, { meal, factor }], targets) }))
+        .map((factor) => ({ factor, score: dayScore([...others, { meal, factor }], dayTargets) }))
         .reduce((a, b) => (b.score < a.score - 1e-9 ? b : a));
       return { meal, ...best };
     })
     .sort((a, b) => a.score - b.score || a.meal.slug.localeCompare(b.meal.slug));
   const chosen = pickOne(ranked.slice(0, Math.min(SHORTLIST_SIZE, ranked.length)), random);
 
-  const replacement = scaleMeal(chosen.meal, slot, chosen.factor);
+  // The slot keeps its time and name (a Ramadan iftar stays at sunset).
+  const replacement = scaleMeal(chosen.meal, slot, chosen.factor, {
+    time: current.time,
+    ...(current.label ? { label: current.label } : {}),
+  });
   const updatedMeals = day.meals.map((meal) => (meal.slot === slot ? replacement : meal));
 
   return days.map((existing, index) =>

@@ -2,10 +2,11 @@ import type { Request, Response } from 'express';
 import * as diary from '../db/diary.ts';
 import { pool } from '../db/pool.ts';
 import { findActivePlan } from '../db/plans.ts';
-import { findUserById } from '../db/users.ts';
+import { findPreferences, findUserById } from '../db/users.ts';
 import { currentUserId } from '../middleware/requireAuth.ts';
 import { validBody, validParams, validQuery } from '../middleware/validate.ts';
 import { calculateTargets } from '../services/nutrition.ts';
+import { onDate } from '../services/fastTimes.ts';
 import { lookupBarcode } from '../services/openFoodFacts.ts';
 import { ApiError } from '../utils/ApiError.ts';
 import { addDays, toDateKey } from '../utils/date.ts';
@@ -49,11 +50,19 @@ function assertDiaryDate(date: string): void {
 async function targetsFor(userId: string): Promise<{ targets: Targets | null; planDay: (date: string) => PlanDay | null }> {
   const plan = await findActivePlan(userId);
   if (plan) {
-    return { targets: plan.targets, planDay: (date) => plan.days.find((day) => day.day === weekdayOf(date)) ?? null };
+    return {
+      targets: plan.targets,
+      planDay: (date) => {
+        const day = plan.days.find((candidate) => candidate.day === weekdayOf(date));
+        return day ? onDate(day, date, plan.inputs) : null;
+      },
+    };
   }
-  const user = await findUserById(userId);
+  const [user, preferences] = await Promise.all([findUserById(userId), findPreferences(userId)]);
   return {
-    targets: user?.profileComplete ? calculateTargets(user.profile as Profile) : null,
+    targets: user?.profileComplete
+      ? calculateTargets(user.profile as Profile, { calorieAdjustment: preferences.calorieAdjustment })
+      : null,
     planDay: () => null,
   };
 }
@@ -83,6 +92,7 @@ async function buildDay(userId: string, date: string) {
   const planned = (day?.meals ?? []).map((meal) => ({
     slot: meal.slot,
     time: meal.time,
+    ...(meal.label ? { label: meal.label } : {}),
     slug: meal.slug,
     name: meal.name,
     items: meal.items,
@@ -94,7 +104,17 @@ async function buildDay(userId: string, date: string) {
   }));
 
   const eaten = sumMacros([...checkins.filter((checkin) => checkin.status === 'eaten'), ...entries]);
-  return { date, weekday: weekdayOf(date), planned, checkins, entries, eaten, targets };
+  return {
+    date,
+    weekday: weekdayOf(date),
+    kind: day?.kind ?? 'normal',
+    ...(day?.fastTimes ? { fastTimes: day.fastTimes } : {}),
+    planned,
+    checkins,
+    entries,
+    eaten,
+    targets,
+  };
 }
 
 export async function getDay(req: Request, res: Response): Promise<void> {
@@ -231,14 +251,18 @@ export async function getSummary(req: Request, res: Response): Promise<void> {
   const userId = currentUserId(req);
   const from = toDateKey(addDays(new Date(`${to}T00:00:00`), -(days - 1)));
 
-  const [summaries, streak, { targets }] = await Promise.all([
+  const [summaries, streak, { targets, planDay }] = await Promise.all([
     diary.daySummaries(userId, from, to),
     loggingStreak(userId, to),
     targetsFor(userId),
   ]);
 
+  // Fast days plan fewer meals (a Ramadan day has three or four), so count each day's own.
+  const mealsPlanned = (date: string) => planDay(date)?.meals.length ?? PLAN_SLOTS.length;
   const week = summaries.slice(-7);
-  const tracked = week.filter((day) => day.eatenMeals + day.skippedMeals + day.swappedMeals === PLAN_SLOTS.length);
+  const tracked = week.filter(
+    (day) => day.eatenMeals + day.skippedMeals + day.swappedMeals >= mealsPlanned(day.date),
+  );
   const onTarget = targets
     ? tracked.filter((day) => Math.abs(day.kcal - targets.calories) / targets.calories <= ON_TARGET).length
     : 0;
@@ -250,7 +274,7 @@ export async function getSummary(req: Request, res: Response): Promise<void> {
     days: summaries,
     streak,
     week: {
-      plannedMeals: week.length * PLAN_SLOTS.length,
+      plannedMeals: week.reduce((sum, day) => sum + mealsPlanned(day.date), 0),
       eatenAsPlanned: week.reduce((sum, day) => sum + day.eatenMeals, 0),
       trackedDays: tracked.length,
       onTargetDays: onTarget,

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const APP_ROUTES = ['/dashboard', '/diary', '/onboarding', '/grocery', '/plans', '/progress', '/settings'];
+const APP_ROUTES = ['/dashboard', '/diary', '/onboarding', '/grocery', '/plans', '/progress', '/recipes', '/settings'];
 const AUTH_ROUTES = ['/login', '/register'];
 
 /**

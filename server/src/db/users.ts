@@ -1,5 +1,5 @@
 import { pool, type Queryable } from './pool.ts';
-import type { Profile } from '../types.ts';
+import { DEFAULT_USER_PREFERENCES, type Profile, type UserPreferences } from '../types.ts';
 
 export interface UserRecord {
   id: string;
@@ -109,6 +109,28 @@ export async function saveProfile(id: string, profile: Profile): Promise<UserRec
     [id, JSON.stringify(profile)],
   );
   return rows[0] ?? null;
+}
+
+/** The user's stored preferences over the defaults, so a field added later always has a value. */
+export async function findPreferences(id: string): Promise<UserPreferences> {
+  const { rows } = await pool.query<{ preferences: Partial<UserPreferences> }>(
+    'select preferences from app.users where id = $1',
+    [id],
+  );
+  return { ...DEFAULT_USER_PREFERENCES, ...(rows[0]?.preferences ?? {}) };
+}
+
+/** Merges the given fields into the stored preferences and returns the result. */
+export async function updatePreferences(id: string, patch: Partial<UserPreferences>): Promise<UserPreferences | null> {
+  const { rows } = await pool.query<{ preferences: Partial<UserPreferences> }>(
+    `update app.users set preferences = preferences || $2::jsonb where id = $1 returning preferences`,
+    [id, JSON.stringify(patch)],
+  );
+  return rows[0] ? { ...DEFAULT_USER_PREFERENCES, ...rows[0].preferences } : null;
+}
+
+export async function clearPreferences(id: string): Promise<void> {
+  await pool.query(`update app.users set preferences = '{}'::jsonb where id = $1`, [id]);
 }
 
 /** Plans and logs go with it: every child table cascades on delete. */

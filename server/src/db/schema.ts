@@ -1,7 +1,9 @@
-import { DIETS, MEAL_SLOTS, PLAN_SLOTS, REGIONS } from '../types.ts';
+import { DIETS, MEAL_SLOTS, MEAL_TAGS, PLAN_SLOTS, REGIONS } from '../types.ts';
 
 /** `('a', 'b')` for a CHECK constraint, built from the same constants the API validates with. */
 const oneOf = (values: readonly string[]) => `(${values.map((value) => `'${value}'`).join(', ')})`;
+/** `array['a', 'b']::text[]`, for "only these values" checks on array columns. */
+const textArray = (values: readonly string[]) => `array[${values.map((value) => `'${value}'`).join(', ')}]::text[]`;
 
 /**
  * The whole database schema, as one idempotent script: `npm run db:migrate` runs it
@@ -183,18 +185,78 @@ create table if not exists app.custom_foods (
 );
 create unique index if not exists custom_foods_user_name_idx on app.custom_foods (user_id, lower(name));
 
+-- What a dish suits (vrat, Jain, sehri, iftar…), derived from its recipe when the meals are seeded.
+alter table app.meals add column if not exists tags text[] not null default '{}';
+alter table app.meals drop constraint if exists meals_tags_known;
+alter table app.meals add constraint meals_tags_known check (tags <@ ${textArray(MEAL_TAGS)});
+
+-- How plans are shaped beyond the profile (Jain, fasting mode, fast days, city) and the
+-- calorie adjustment accepted from weight-trend suggestions. Validated by the API.
+alter table app.users add column if not exists preferences jsonb not null default '{}'::jsonb;
+
+-- Household mode: the people the user cooks for. One shared menu is planned for everyone;
+-- each member gets their own portions from their own targets. Adults only (18+).
+create table if not exists app.household_members (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app.users (id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 40),
+  profile jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists household_members_user_idx on app.household_members (user_id, created_at);
+
+-- Ingredients the user already has at home. Kept across plans, since spices and staples
+-- last longer than a week; ticked off the grocery list without being "bought".
+create table if not exists app.pantry_items (
+  user_id uuid not null references app.users (id) on delete cascade,
+  item text not null check (char_length(item) between 1 and 120),
+  created_at timestamptz not null default now(),
+  primary key (user_id, item)
+);
+
+-- Web push: one row per browser or phone the user turned reminders on in.
+create table if not exists app.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app.users (id) on delete cascade,
+  endpoint text not null unique check (char_length(endpoint) <= 1000),
+  p256dh text not null check (char_length(p256dh) <= 200),
+  auth text not null check (char_length(auth) <= 100),
+  created_at timestamptz not null default now(),
+  last_sent_at timestamptz
+);
+create index if not exists push_subscriptions_user_idx on app.push_subscriptions (user_id);
+
+-- Which reminders to send and when, in the user's own timezone.
+create table if not exists app.reminder_settings (
+  user_id uuid primary key references app.users (id) on delete cascade,
+  timezone text not null check (char_length(timezone) between 1 and 64),
+  settings jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Each reminder is sent once: the key names the reminder and the local day it is for.
+create table if not exists app.reminder_log (
+  user_id uuid not null references app.users (id) on delete cascade,
+  key text not null check (char_length(key) <= 80),
+  sent_at timestamptz not null default now(),
+  primary key (user_id, key)
+);
+create index if not exists reminder_log_sent_idx on app.reminder_log (sent_at);
+
 do $$
 declare
   t text;
 begin
-  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'meal_checkins', 'custom_foods'] loop
+  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'meal_checkins', 'custom_foods', 'household_members', 'reminder_settings'] loop
     execute format('drop trigger if exists touch_updated_at on app.%I', t);
     execute format(
       'create trigger touch_updated_at before update on app.%I for each row execute function app.touch_updated_at()',
       t
     );
   end loop;
-  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'password_resets', 'meal_checkins', 'food_entries', 'custom_foods'] loop
+  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'password_resets', 'meal_checkins', 'food_entries', 'custom_foods', 'household_members', 'pantry_items', 'push_subscriptions', 'reminder_settings', 'reminder_log'] loop
     execute format('alter table app.%I enable row level security', t);
   end loop;
 end

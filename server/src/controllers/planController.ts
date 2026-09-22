@@ -4,12 +4,14 @@ import { findUserById } from '../db/users.ts';
 import { ApiError } from '../utils/ApiError.ts';
 import { currentUserId } from '../middleware/requireAuth.ts';
 import { validBody, validParams, validQuery } from '../middleware/validate.ts';
-import { buildGroceryList } from '../services/grocery.ts';
+import { listPantry } from '../db/pantry.ts';
+import { buildBatchPlan } from '../services/batchCooking.ts';
+import { buildGroceryList, groceryItemNames } from '../services/grocery.ts';
 import { generatePlanDays, swapMealInDays } from '../services/planGenerator.ts';
-import { createPlanForUser, loadPlannerMeals } from '../services/planService.ts';
+import { createPlanForUser, fastTimesOf, loadPlannerMeals, refreshPortions } from '../services/planService.ts';
 import { toPlanSummary, toPublicPlan } from '../utils/serialize.ts';
 import type { GroceryBody, IdParams, PlansQuery, SwapBody } from '../validation/schemas.ts';
-import type { Profile } from '../types.ts';
+import { DEFAULT_PREFERENCES, type Profile } from '../types.ts';
 
 const planNotFound = () => ApiError.notFound('We could not find that plan.');
 
@@ -80,14 +82,16 @@ export async function swapMeal(req: Request, res: Response): Promise<void> {
   }
 
   const meals = await loadPlannerMeals();
-  const days = swapMealInDays({
+  const swapped = swapMealInDays({
     days: plan.days,
     dayIndex,
     slot,
     profile: plan.inputs,
     targets: plan.targets,
     meals,
+    preferences: plan.inputs.preferences ?? DEFAULT_PREFERENCES,
   });
+  const days = refreshPortions(swapped, plan.inputs, plan.targets.calories, meals);
 
   const updated = await plans.updatePlanDays(plan.id, plan.userId, days);
   if (!updated) throw planNotFound();
@@ -99,10 +103,17 @@ export async function shufflePlan(req: Request, res: Response): Promise<void> {
   const plan = await findOwnedPlan(req, id);
 
   const meals = await loadPlannerMeals();
-  const days = generatePlanDays({ profile: plan.inputs, targets: plan.targets, meals });
+  const generated = generatePlanDays({
+    profile: plan.inputs,
+    targets: plan.targets,
+    meals,
+    preferences: plan.inputs.preferences ?? DEFAULT_PREFERENCES,
+    fastTimes: fastTimesOf(plan.days),
+  });
+  const days = refreshPortions(generated, plan.inputs, plan.targets.calories, meals);
 
   // Ingredients change with the meals, so keep only the ticks that still apply.
-  const stillNeeded = new Set(buildGroceryList(days).groups.flatMap((group) => group.items));
+  const stillNeeded = groceryItemNames(buildGroceryList(days, plan.inputs));
   const groceryChecked = plan.groceryChecked.filter((item) => stillNeeded.has(item));
 
   const updated = await plans.updatePlanDays(plan.id, plan.userId, days, groceryChecked);
@@ -113,14 +124,26 @@ export async function shufflePlan(req: Request, res: Response): Promise<void> {
 export async function getGroceryList(req: Request, res: Response): Promise<void> {
   const { id } = validParams<IdParams>(req);
   const plan = await findOwnedPlan(req, id);
-  const list = buildGroceryList(plan.days);
+  const list = buildGroceryList(plan.days, plan.inputs);
+  const names = groceryItemNames(list);
+  const pantry = await listPantry(currentUserId(req));
 
   res.json({
     planId: plan.id,
     groups: list.groups,
     total: list.total,
     checked: plan.groceryChecked,
+    // Only what this list asks for; the pantry itself can hold more.
+    atHome: pantry.filter((item) => names.has(item)),
+    servings: 1 + (plan.inputs.household?.length ?? 0),
   });
+}
+
+/** The week's batch-cooking plan: what to prepare on Sunday and Wednesday, and when to marinate. */
+export async function getPrepPlan(req: Request, res: Response): Promise<void> {
+  const { id } = validParams<IdParams>(req);
+  const plan = await findOwnedPlan(req, id);
+  res.json({ planId: plan.id, ...buildBatchPlan(plan.days, plan.inputs) });
 }
 
 export async function updateGroceryItem(req: Request, res: Response): Promise<void> {
@@ -128,8 +151,7 @@ export async function updateGroceryItem(req: Request, res: Response): Promise<vo
   const { item, checked } = validBody<GroceryBody>(req);
   const plan = await findOwnedPlan(req, id);
 
-  const known = new Set(buildGroceryList(plan.days).groups.flatMap((group) => group.items));
-  if (!known.has(item)) {
+  if (!groceryItemNames(buildGroceryList(plan.days, plan.inputs)).has(item)) {
     throw ApiError.badRequest('That ingredient is not on this plan’s grocery list.');
   }
 

@@ -24,6 +24,16 @@ const envSchema = z.object({
   // "Continue with Google" appears only when both are set (Google Cloud → Credentials).
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // Reminders (web push). Generate a pair with `npx web-push generate-vapid-keys`; reminders
+  // are offered only when both keys are set. The subject is a contact for the push services.
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().default('mailto:support@aaharsathi.in'),
+  // Shared secret the scheduler sends to /api/reminders/run (as "Authorization: Bearer …").
+  CRON_SECRET: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().min(24, 'CRON_SECRET must be at least 24 characters').optional(),
+  ),
   DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(50).default(process.env.VERCEL ? 2 : 10),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
@@ -58,3 +68,5 @@ export function appUrl(): string {
 }
 
 export const googleSignInEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+
+export const remindersEnabled = Boolean(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY);

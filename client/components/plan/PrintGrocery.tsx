@@ -11,7 +11,10 @@ export function PrintGrocery({ groups, total }: { groups: GroceryGroup[]; total:
             <h3 className="text-sm font-bold text-ink">{group.category}</h3>
             <ul className="mt-1 text-sm text-ink">
               {group.items.map((item) => (
-                <li key={item}>☐ {item}</li>
+                <li key={item.name}>
+                  ☐ {item.name}
+                  {item.amount ? ` — ${item.amount}` : ''}
+                </li>
               ))}
             </ul>
           </div>

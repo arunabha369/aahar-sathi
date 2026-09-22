@@ -1,11 +1,15 @@
 import { env } from './config/env.ts';
 import { MEALS } from './data/meals.ts';
 import { deleteDiaryForUser } from './db/diary.ts';
+import { deleteMembersForUser } from './db/household.ts';
+import { clearPantry } from './db/pantry.ts';
+import { deleteRemindersForUser } from './db/reminders.ts';
+import { buildGroceryList } from './services/grocery.ts';
 import { deleteLogsForUser, insertLogs, type WaterEntry, type WeightEntry } from './db/logs.ts';
 import { syncMeals } from './db/meals.ts';
 import { deletePlansForUser, setGroceryChecked } from './db/plans.ts';
 import { checkDatabase, closeDatabase } from './db/pool.ts';
-import { upsertUserByEmail } from './db/users.ts';
+import { clearPreferences, upsertUserByEmail } from './db/users.ts';
 import { calculateTargets } from './services/nutrition.ts';
 import { createPlanForUser } from './services/planService.ts';
 import { hashPassword } from './utils/auth.ts';
@@ -51,6 +55,10 @@ async function seedDemoUser(): Promise<void> {
   await deletePlansForUser(user.id);
   await deleteLogsForUser(user.id);
   await deleteDiaryForUser(user.id);
+  await clearPreferences(user.id);
+  await deleteMembersForUser(user.id);
+  await clearPantry(user.id);
+  await deleteRemindersForUser(user.id);
 
   const plan = await createPlanForUser({
     userId: user.id,
@@ -59,8 +67,8 @@ async function seedDemoUser(): Promise<void> {
   });
 
   // Mark a handful of staples as already bought so the grocery counter is not at zero.
-  const firstGroup = plan.days[0]?.meals.flatMap((meal) => meal.ingredients.map((i) => i.name)) ?? [];
-  await setGroceryChecked(plan.id, user.id, [...new Set(firstGroup)].slice(0, 5));
+  const staples = buildGroceryList(plan.days, plan.inputs).groups.flatMap((group) => group.items.map((item) => item.name));
+  await setGroceryChecked(plan.id, user.id, staples.slice(0, 5));
 
   const targets = calculateTargets(DEMO_PROFILE);
   const random = createRandom(31337);

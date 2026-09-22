@@ -6,14 +6,16 @@ interface ProteinBoostProps {
   dayProtein: number;
   targetProtein: number;
   diet: Diet;
+  /** Fast days: only suggest what a vrat allows. */
+  vrat?: boolean;
 }
 
 /** Shown when a day lands under 85% of the protein target. */
-export function ProteinBoost({ dayProtein, targetProtein, diet }: ProteinBoostProps) {
+export function ProteinBoost({ dayProtein, targetProtein, diet, vrat = false }: ProteinBoostProps) {
   if (dayProtein >= targetProtein * 0.85) return null;
 
   const gap = Math.max(1, Math.round(targetProtein - dayProtein));
-  const suggestions = PROTEIN_BOOSTERS.filter((booster) => booster.diets.includes(diet))
+  const suggestions = PROTEIN_BOOSTERS.filter((booster) => booster.diets.includes(diet) && (!vrat || booster.vrat))
     .sort((a, b) => Math.abs(a.protein - gap) - Math.abs(b.protein - gap))
     .slice(0, 2);
 

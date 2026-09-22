@@ -19,9 +19,11 @@ interface DayTabsProps {
   diet: Diet;
   serverToday: string;
   readOnly?: boolean;
+  /** Where Ramadan times were calculated for. */
+  cityName?: string | null;
 }
 
-export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = false }: DayTabsProps) {
+export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = false, cityName = null }: DayTabsProps) {
   const router = useRouter();
   const toast = useToast();
   const today = weekdayFromKey(useLocalToday(serverToday));
@@ -87,7 +89,7 @@ export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = f
                   selected ? 'text-accent-ink/75' : 'text-muted',
                 )}
               >
-                {isToday ? 'Today' : `${candidate.totals.kcal} kcal`}
+                {isToday ? 'Today' : candidate.kind === 'vrat' ? 'Vrat' : `${candidate.totals.kcal} kcal`}
               </span>
             </button>
           );
@@ -107,6 +109,7 @@ export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = f
           targets={targets}
           diet={diet}
           swappingSlots={swappingSlots}
+          cityName={cityName}
           {...(readOnly ? {} : { onSwap: swap })}
         />
       </div>
@@ -120,7 +123,7 @@ export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = f
         {days.map((printDay) => (
           <section key={printDay.day} className="mt-6">
             <h3 className="mb-3 text-base font-bold text-ink">{WEEKDAY_LABELS[printDay.day] ?? printDay.day}</h3>
-            <MealList day={printDay} targets={targets} diet={diet} />
+            <MealList day={printDay} targets={targets} diet={diet} cityName={cityName} />
           </section>
         ))}
       </div>

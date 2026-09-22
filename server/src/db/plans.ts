@@ -1,10 +1,10 @@
 import { pool, withTransaction, type Queryable } from './pool.ts';
-import type { PlanDay, Profile, Targets } from '../types.ts';
+import type { PlanDay, PlanInputs, Targets } from '../types.ts';
 
 export interface PlanRecord {
   id: string;
   userId: string;
-  inputs: Profile;
+  inputs: PlanInputs;
   targets: Targets;
   days: PlanDay[];
   groceryChecked: string[];
@@ -58,7 +58,7 @@ export async function listPlans(
 /** Saves a new plan as the user's active one; any previous active plan becomes history. */
 export async function insertActivePlan(input: {
   userId: string;
-  inputs: Profile;
+  inputs: PlanInputs;
   targets: Targets;
   days: PlanDay[];
   groceryChecked?: string[];

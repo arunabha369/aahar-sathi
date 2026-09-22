@@ -1,4 +1,5 @@
-import type { MealData, MealIngredient, MealItem, MealSlot, Diet, Region } from '../types.ts';
+import type { MealData, MealIngredient, MealItem, MealSlot, MealTag, Diet, Region } from '../types.ts';
+import { isJainFriendly, isVratFriendly, recipeFor } from './recipes/index.ts';
 
 /**
  * A single registry of ingredient names, so "Onion" is spelled the same way in
@@ -115,9 +116,20 @@ const ING = {
   honey: { name: 'Honey', category: 'Spices & Others' },
   tea: { name: 'Tea leaves', category: 'Spices & Others' },
   eno: { name: 'Eno fruit salt', category: 'Spices & Others' },
+
+  // Fasting (vrat) staples
+  sabudana: { name: 'Sabudana (sago pearls)', category: 'Grains & Flours' },
+  kuttuFlour: { name: 'Kuttu atta (buckwheat flour)', category: 'Grains & Flours' },
+  samak: { name: 'Samak rice (barnyard millet)', category: 'Grains & Flours' },
+  rajgiraFlour: { name: 'Rajgira atta (amaranth flour)', category: 'Grains & Flours' },
+  singharaFlour: { name: 'Singhara atta (water chestnut flour)', category: 'Grains & Flours' },
+  sweetPotato: { name: 'Sweet potato', category: 'Vegetables & Fruits' },
+  rockSalt: { name: 'Sendha namak (rock salt)', category: 'Spices & Others' },
+  dates: { name: 'Dates (khajoor)', category: 'Vegetables & Fruits' },
+  pumpkin: { name: 'Pumpkin (kaddu)', category: 'Vegetables & Fruits' },
 } as const satisfies Record<string, MealIngredient>;
 
-type IngredientKey = keyof typeof ING;
+export type IngredientKey = keyof typeof ING;
 
 interface MealInput {
   slug: string;
@@ -130,6 +142,8 @@ interface MealInput {
   carbs: number;
   fat: number;
   ingredients: IngredientKey[];
+  /** Tags that can't be read off the recipe: `fastOnly`, `sehri`, `iftar`. */
+  tags?: MealTag[];
 }
 
 const i = (qty: number, unit: string, food: string): MealItem => ({ qty, unit, food });
@@ -147,7 +161,41 @@ const define = (meal: MealInput): MealData => ({
   fat: meal.fat,
   kcal: Math.round(4 * meal.protein + 4 * meal.carbs + 9 * meal.fat),
   ingredients: meal.ingredients.map((key) => ({ ...ING[key] })),
+  tags: tagsFor(meal),
 });
+
+/** Breakfasts that keep you full through a Ramadan fast: fibre, protein, no long batter prep at 4 AM. */
+const SEHRI_BREAKFASTS = new Set([
+  'poha-peanuts',
+  'vegetable-upma',
+  'besan-chilla',
+  'moong-dal-chilla-curd',
+  'methi-thepla-curd',
+  'paneer-paratha-curd',
+  'banana-oats-milk',
+  'vegetable-dalia',
+  'egg-bhurji-roti',
+  'boiled-eggs-toast',
+  'masala-omelette-roti',
+  'chicken-keema-paratha',
+]);
+
+/** Vrat and Jain suitability come from the recipe, so they can never drift from what is cooked. */
+function tagsFor(meal: MealInput): MealTag[] {
+  const tags = new Set<MealTag>(meal.tags ?? []);
+  const recipe = recipeFor(meal.slug);
+  if (recipe && meal.diet === 'veg') {
+    if (isVratFriendly(recipe)) tags.add('vrat');
+    if (isJainFriendly(recipe)) tags.add('jain');
+  }
+  if (meal.slot === 'breakfast' && SEHRI_BREAKFASTS.has(meal.slug)) tags.add('sehri');
+  return [...tags].sort();
+}
+
+/** Name and shop category for an ingredient key. */
+export function ingredientInfo(key: IngredientKey): MealIngredient {
+  return { ...ING[key] };
+}
 
 export const INGREDIENT_REGISTRY: Record<string, MealIngredient> = Object.fromEntries(
   Object.values(ING).map((ingredient) => [ingredient.name, { ...ingredient }]),
@@ -1215,7 +1263,7 @@ const snacks: MealData[] = [
     region: 'west',
     items: [
       i(1, 'glass', 'Masala chaas'),
-      i(2, 'tbsp', 'Roasted peanuts'),
+      i(1.5, 'tbsp', 'Roasted peanuts'),
     ],
     protein: 8,
     carbs: 8,
@@ -1232,9 +1280,9 @@ const snacks: MealData[] = [
       i(1, 'piece', 'Banana'),
       i(8, 'pieces', 'Almonds'),
     ],
-    protein: 6,
-    carbs: 30,
-    fat: 9,
+    protein: 3,
+    carbs: 29,
+    fat: 5,
     ingredients: ['banana', 'almonds'],
   }),
   define({
@@ -1434,7 +1482,310 @@ const snacks: MealData[] = [
   }),
 ];
 
-export const MEALS: MealData[] = [...breakfasts, ...lunches, ...dinners, ...snacks];
+/* ------------------------------------------------------------------ *
+ * Fast days — vrat dishes (Navratri, Ekadashi) and iftar for Ramadan.
+ * Macros are summed from each recipe's ingredients.
+ * ------------------------------------------------------------------ */
+const fastingMeals: MealData[] = [
+  define({
+    slug: 'sabudana-khichdi',
+    name: 'Sabudana khichdi with curd',
+    slot: 'breakfast',
+    diet: 'veg',
+    region: 'west',
+    items: [i(1.5, 'bowl', 'Sabudana khichdi with peanuts'), i(1, 'cup', 'Curd')],
+    protein: 12,
+    carbs: 78,
+    fat: 21,
+    ingredients: ['sabudana', 'peanuts', 'potato', 'ghee', 'cumin', 'greenChilli', 'curryLeaves', 'lemon', 'coriander', 'curd', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'rajgira-paratha-curd',
+    name: 'Rajgira paratha with curd',
+    slot: 'breakfast',
+    diet: 'veg',
+    region: 'north',
+    items: [i(2, 'paratha', 'Rajgira paratha'), i(0.75, 'cup', 'Curd')],
+    protein: 16,
+    carbs: 57,
+    fat: 17,
+    ingredients: ['rajgiraFlour', 'potato', 'ghee', 'cumin', 'greenChilli', 'coriander', 'curd', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'kuttu-cheela-paneer',
+    name: 'Kuttu cheela with paneer filling',
+    slot: 'breakfast',
+    diet: 'veg',
+    region: 'north',
+    items: [i(2, 'chilla', 'Kuttu cheela'), i(50, 'g', 'Paneer and tomato filling')],
+    protein: 14,
+    carbs: 39,
+    fat: 15,
+    ingredients: ['kuttuFlour', 'paneer', 'tomato', 'greenChilli', 'ginger', 'coriander', 'ghee', 'pepper', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'samak-upma',
+    name: 'Samak rice upma with peanuts',
+    slot: 'breakfast',
+    diet: 'veg',
+    region: 'west',
+    items: [i(1.5, 'bowl', 'Samak upma with peanuts'), i(0.75, 'cup', 'Curd')],
+    protein: 14,
+    carbs: 57,
+    fat: 21,
+    ingredients: ['samak', 'peanuts', 'potato', 'tomato', 'ghee', 'cumin', 'greenChilli', 'curryLeaves', 'coriander', 'curd', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'samak-pulao-raita',
+    name: 'Samak pulao with cucumber raita',
+    slot: 'lunch',
+    diet: 'veg',
+    region: 'north',
+    items: [i(1.5, 'bowl', 'Samak pulao with potato'), i(1, 'cup', 'Cucumber raita')],
+    protein: 15,
+    carbs: 73,
+    fat: 21,
+    ingredients: ['samak', 'potato', 'peanuts', 'ghee', 'cumin', 'greenChilli', 'curd', 'cucumber', 'coriander', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'kuttu-roti-aloo-sabzi',
+    name: 'Kuttu roti with vrat aloo sabzi',
+    slot: 'lunch',
+    diet: 'veg',
+    region: 'north',
+    items: [i(2, 'roti', 'Kuttu roti'), i(1, 'bowl', 'Aloo tamatar sabzi'), i(0.5, 'cup', 'Curd')],
+    protein: 16,
+    carbs: 82,
+    fat: 16,
+    ingredients: ['kuttuFlour', 'potato', 'tomato', 'ghee', 'cumin', 'ginger', 'greenChilli', 'coriander', 'curd', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'rajgira-roti-paneer-sabzi',
+    name: 'Rajgira roti with paneer capsicum sabzi',
+    slot: 'lunch',
+    diet: 'veg',
+    region: 'north',
+    items: [i(2, 'roti', 'Rajgira roti'), i(1, 'bowl', 'Paneer capsicum sabzi')],
+    protein: 21,
+    carbs: 52,
+    fat: 22,
+    ingredients: ['rajgiraFlour', 'potato', 'paneer', 'tomato', 'capsicum', 'ghee', 'cumin', 'ginger', 'coriander', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'vrat-kadhi-samak',
+    name: 'Vrat kadhi with samak rice',
+    slot: 'lunch',
+    diet: 'veg',
+    region: 'north',
+    items: [i(1, 'bowl', 'Singhara kadhi'), i(1.25, 'bowl', 'Samak rice')],
+    protein: 12,
+    carbs: 64,
+    fat: 16,
+    ingredients: ['singharaFlour', 'curd', 'samak', 'ghee', 'cumin', 'ginger', 'greenChilli', 'curryLeaves', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'kuttu-paratha-lauki-raita',
+    name: 'Kuttu paratha with lauki raita',
+    slot: 'dinner',
+    diet: 'veg',
+    region: 'north',
+    items: [i(2, 'paratha', 'Kuttu paratha'), i(1, 'cup', 'Lauki raita')],
+    protein: 16,
+    carbs: 66,
+    fat: 16,
+    ingredients: ['kuttuFlour', 'potato', 'ghee', 'lauki', 'curd', 'cumin', 'greenChilli', 'coriander', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'samak-khichdi',
+    name: 'Samak khichdi with curd',
+    slot: 'dinner',
+    diet: 'veg',
+    region: 'west',
+    items: [i(1.5, 'bowl', 'Samak khichdi'), i(0.5, 'cup', 'Curd')],
+    protein: 12,
+    carbs: 59,
+    fat: 18,
+    ingredients: ['samak', 'potato', 'peanuts', 'ghee', 'cumin', 'ginger', 'greenChilli', 'curd', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'singhara-roti-paneer',
+    name: 'Singhara roti with palak paneer',
+    slot: 'dinner',
+    diet: 'veg',
+    region: 'north',
+    items: [i(2, 'roti', 'Singhara roti'), i(1, 'bowl', 'Vrat palak paneer')],
+    protein: 20,
+    carbs: 60,
+    fat: 19,
+    ingredients: ['singharaFlour', 'potato', 'paneer', 'spinach', 'tomato', 'ghee', 'cumin', 'ginger', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'sweet-potato-chaat-paneer',
+    name: 'Shakarkandi chaat with paneer and curd',
+    slot: 'dinner',
+    diet: 'veg',
+    region: 'north',
+    items: [i(1.5, 'bowl', 'Sweet potato and paneer chaat'), i(0.5, 'cup', 'Curd')],
+    protein: 18,
+    carbs: 51,
+    fat: 20,
+    ingredients: ['sweetPotato', 'paneer', 'curd', 'ghee', 'lemon', 'cumin', 'pepper', 'coriander', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'pumpkin-sabzi-rajgira-roti',
+    name: 'Kaddu sabzi with rajgira roti',
+    slot: 'dinner',
+    diet: 'veg',
+    region: 'north',
+    items: [i(2, 'roti', 'Rajgira roti'), i(1, 'bowl', 'Khatta-meetha kaddu'), i(0.75, 'cup', 'Curd')],
+    protein: 17,
+    carbs: 67,
+    fat: 18,
+    ingredients: ['pumpkin', 'rajgiraFlour', 'potato', 'ghee', 'cumin', 'ginger', 'greenChilli', 'curd', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'roasted-makhana',
+    name: 'Roasted makhana with pepper',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'pan',
+    items: [i(30, 'g', 'Ghee-roasted makhana')],
+    protein: 3,
+    carbs: 24,
+    fat: 5,
+    ingredients: ['makhana', 'ghee', 'pepper', 'rockSalt'],
+  }),
+  define({
+    slug: 'dates-almonds',
+    name: 'Dates with almonds',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'pan',
+    items: [i(3, 'pieces', 'Dates'), i(8, 'pieces', 'Almonds')],
+    protein: 2,
+    carbs: 20,
+    fat: 5,
+    ingredients: ['dates', 'almonds'],
+  }),
+  define({
+    slug: 'vrat-fruit-chaat',
+    name: 'Fruit chaat with peanuts',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'pan',
+    items: [i(1.5, 'cup', 'Papaya, apple and banana'), i(2, 'tsp', 'Roasted peanuts')],
+    protein: 4,
+    carbs: 39,
+    fat: 6,
+    ingredients: ['papaya', 'apple', 'banana', 'peanuts', 'lemon', 'cumin', 'pepper', 'rockSalt'],
+  }),
+  define({
+    slug: 'sweet-potato-chaat',
+    name: 'Shakarkandi chaat',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'north',
+    items: [i(1, 'bowl', 'Sweet potato chaat')],
+    protein: 3,
+    carbs: 33,
+    fat: 0,
+    ingredients: ['sweetPotato', 'lemon', 'cumin', 'greenChilli', 'coriander', 'rockSalt'],
+    tags: ['fastOnly'],
+  }),
+  define({
+    slug: 'iftar-dates-fruit-chaat',
+    name: 'Dates with fruit chaat and curd',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'pan',
+    items: [i(3, 'pieces', 'Dates'), i(1.5, 'cup', 'Fruit chaat'), i(0.5, 'cup', 'Curd')],
+    protein: 5,
+    carbs: 60,
+    fat: 5,
+    ingredients: ['dates', 'papaya', 'apple', 'banana', 'curd', 'lemon', 'chaatMasala'],
+    tags: ['iftar'],
+  }),
+  define({
+    slug: 'iftar-chana-chaat-dates',
+    name: 'Dates with chana chaat',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'pan',
+    items: [i(3, 'pieces', 'Dates'), i(1, 'bowl', 'Chana chaat')],
+    protein: 10,
+    carbs: 51,
+    fat: 3,
+    ingredients: ['dates', 'kabuliChana', 'onion', 'tomato', 'cucumber', 'coriander', 'lemon', 'chaatMasala', 'salt'],
+    tags: ['iftar'],
+  }),
+  define({
+    slug: 'iftar-dates-milk-almonds',
+    name: 'Dates and almond milkshake',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'pan',
+    items: [i(3, 'pieces', 'Dates'), i(1, 'glass', 'Milk with banana and almonds')],
+    protein: 11,
+    carbs: 46,
+    fat: 13,
+    ingredients: ['dates', 'milk', 'almonds', 'banana'],
+    tags: ['iftar'],
+  }),
+  define({
+    slug: 'iftar-sprouts-chaat-dates',
+    name: 'Dates with sprouts chaat',
+    slot: 'snack',
+    diet: 'veg',
+    region: 'pan',
+    items: [i(3, 'pieces', 'Dates'), i(1, 'bowl', 'Moong sprouts chaat')],
+    protein: 13,
+    carbs: 51,
+    fat: 6,
+    ingredients: ['dates', 'sprouts', 'onion', 'tomato', 'peanuts', 'lemon', 'chaatMasala', 'coriander', 'salt'],
+    tags: ['iftar'],
+  }),
+  define({
+    slug: 'iftar-egg-chaat-dates',
+    name: 'Dates with egg chaat',
+    slot: 'snack',
+    diet: 'egg',
+    region: 'pan',
+    items: [i(3, 'pieces', 'Dates'), i(2, 'egg', 'Boiled egg chaat')],
+    protein: 15,
+    carbs: 27,
+    fat: 10,
+    ingredients: ['dates', 'eggs', 'onion', 'tomato', 'coriander', 'lemon', 'chaatMasala', 'pepper'],
+    tags: ['iftar'],
+  }),
+  define({
+    slug: 'iftar-chicken-shorba-dates',
+    name: 'Dates with chicken shorba',
+    slot: 'snack',
+    diet: 'nonveg',
+    region: 'pan',
+    items: [i(3, 'pieces', 'Dates'), i(1.5, 'bowl', 'Chicken shorba')],
+    protein: 20,
+    carbs: 30,
+    fat: 8,
+    ingredients: ['dates', 'chicken', 'onion', 'tomato', 'ginger', 'garlic', 'cumin', 'pepper', 'ghee', 'coriander', 'lemon', 'salt'],
+    tags: ['iftar'],
+  }),
+];
+
+export const MEALS: MealData[] = [...breakfasts, ...lunches, ...dinners, ...snacks, ...fastingMeals];
 
 export function mealsBySlot(slot: MealData['slot']): MealData[] {
   return MEALS.filter((meal) => meal.slot === slot);

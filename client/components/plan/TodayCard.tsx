@@ -7,8 +7,8 @@ import { EatenSummary } from '@/components/diary/EatenSummary';
 import { MacroLine } from '@/components/plan/MacroLine';
 import { MealPhoto } from '@/components/plan/MealPhoto';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { SLOT_META } from '@/lib/constants';
-import { formatDayLong, formatItem, minutesFromTime, weekdayFromKey } from '@/lib/format';
+import { formatClock, formatDayLong, formatItem, minutesFromTime, weekdayFromKey } from '@/lib/format';
+import { mealLabel, recipeHref } from '@/lib/meals';
 import { useDiary } from '@/lib/useDiary';
 import { useLocalToday } from '@/lib/useLocalToday';
 import { useMinutesNow } from '@/lib/useNow';
@@ -36,7 +36,11 @@ export function TodayCard({ days, targets, serverToday, diary: initialDiary, str
     0,
     days.findIndex((day) => day.day === weekdayFromKey(todayKey)),
   );
-  const today = days[dayIndex]!;
+  const planToday = days[dayIndex]!;
+  // The diary has today's real sehri/iftar-based times; a plan keeps the week it was made in.
+  const liveTimes = new Map(diary.day.planned.map((meal) => [meal.slot, meal.time]));
+  const today = { ...planToday, meals: planToday.meals.map((meal) => ({ ...meal, time: liveTimes.get(meal.slot) ?? meal.time })) };
+  const fastTimes = diary.day.fastTimes ?? planToday.fastTimes;
   const tomorrow = days[(dayIndex + 1) % days.length]!;
 
   const upcomingIndex =
@@ -53,6 +57,13 @@ export function TodayCard({ days, targets, serverToday, diary: initialDiary, str
           <h2 id="today-heading" className="mt-1 text-lg font-bold text-ink sm:text-xl">
             {formatDayLong(todayKey)}
           </h2>
+          {today.kind === 'vrat' ? (
+            <p className="mt-1 text-[0.8125rem] font-semibold text-saffron-800">Vrat day</p>
+          ) : today.kind === 'ramadan' && fastTimes ? (
+            <p className="mt-1 text-[0.8125rem] font-semibold text-water-700">
+              Sehri ends {formatClock(fastTimes.sehriEnds)} · Iftar {formatClock(fastTimes.iftar)}
+            </p>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           {streak > 0 ? (
@@ -92,12 +103,20 @@ export function TodayCard({ days, targets, serverToday, diary: initialDiary, str
                 isNow ? 'bg-accent text-accent-ink' : 'bg-brand-50 text-brand-800',
               )}
             >
-              {allDone ? 'Tomorrow' : isNow ? 'Now' : 'Up next'} · {SLOT_META[featured.slot].label} · {featured.time}
+              {allDone ? 'Tomorrow' : isNow ? 'Now' : 'Up next'} · {mealLabel(featured)} · {featured.time}
             </p>
             <div className="mt-3 flex gap-4">
               <MealPhoto slug={featured.slug} slot={featured.slot} className="size-20 sm:size-24" sizes="96px" eager />
               <div className="min-w-0">
-                <h3 className="text-base font-bold leading-snug text-ink sm:text-lg">{featured.name}</h3>
+                <h3 className="text-base font-bold leading-snug text-ink sm:text-lg">
+                  <Link
+                    href={recipeHref(featured)}
+                    className="-my-3 inline-block rounded-sm py-3 decoration-accent decoration-2 underline-offset-4 hover:underline"
+                  >
+                    {featured.name}
+                    <span className="sr-only"> — recipe</span>
+                  </Link>
+                </h3>
                 <p className="mt-0.5 text-[0.8125rem] leading-relaxed text-muted">
                   {featured.items.map((item) => formatItem(item)).join(' · ')}
                 </p>
