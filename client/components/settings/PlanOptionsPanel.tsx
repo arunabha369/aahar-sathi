@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Leaf, Moon, RefreshCw, Save, Sparkles, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { Panel, PanelHeader } from '@/components/ui/Card';
 import { OptionCard } from '@/components/ui/OptionCard';
 import { SelectField } from '@/components/ui/SelectField';
@@ -78,7 +79,7 @@ export function PlanOptionsPanel({ initial, cities }: { initial: PlanPreferences
   const makePlan = () =>
     startMaking(async () => {
       try {
-        await api.post<PlanResponse>('/plans');
+        await withBuildingScreen(api.post<PlanResponse>('/plans'));
         toast.success('New plan ready');
         router.push('/dashboard');
         router.refresh();
@@ -99,6 +100,7 @@ export function PlanOptionsPanel({ initial, cities }: { initial: PlanPreferences
 
   return (
     <Panel>
+      <PlanBuildingOverlay show={making} />
       <PanelHeader
         eyebrow="Plan options"
         title="Fasting and Jain food"

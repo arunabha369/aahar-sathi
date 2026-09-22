@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ClipboardCopy, MessageCircle, Printer, Share2, Shuffle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
 import { mealLabel } from '@/lib/meals';
@@ -65,7 +66,7 @@ export function PlanActions({ plan, serverToday }: { plan: Plan; serverToday: st
   const shuffle = () => {
     startTransition(async () => {
       try {
-        await api.post<PlanResponse>(`/plans/${plan.id}/shuffle`);
+        await withBuildingScreen(api.post<PlanResponse>(`/plans/${plan.id}/shuffle`));
         router.refresh();
         toast.success('Fresh meals for the week');
       } catch (error) {
@@ -85,6 +86,7 @@ export function PlanActions({ plan, serverToday }: { plan: Plan; serverToday: st
 
   return (
     <div data-print="hide" className="no-print flex w-full items-center gap-2 sm:w-auto">
+      <PlanBuildingOverlay show={pending} title="Shuffling your week" />
       <Button onClick={shuffle} pending={pending} variant="secondary" size="sm" className="flex-1 sm:flex-none">
         <Shuffle className="size-4 text-muted" aria-hidden="true" />
         Shuffle week

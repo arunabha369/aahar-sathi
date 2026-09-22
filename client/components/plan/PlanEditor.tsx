@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { Field } from '@/components/ui/Field';
 import { OptionCard } from '@/components/ui/OptionCard';
 import { SelectField } from '@/components/ui/SelectField';
@@ -185,12 +186,12 @@ export function PlanEditor({ target, open, onClose }: PlanEditorProps) {
     try {
       const body = { profile: draft, preferences: prefs };
       if (editId) {
-        await api.put<PlanResponse>(`/plans/${editId}`, body);
+        await withBuildingScreen(api.put<PlanResponse>(`/plans/${editId}`, body));
         toast.success('Plan updated with a fresh week of meals');
         onClose();
         router.refresh();
       } else {
-        await api.post<PlanResponse>('/plans', body);
+        await withBuildingScreen(api.post<PlanResponse>('/plans', body));
         toast.success('Your new plan is ready');
         onClose();
         router.push('/dashboard');
@@ -208,208 +209,211 @@ export function PlanEditor({ target, open, onClose }: PlanEditorProps) {
   const ready = loaded !== null && profile !== null;
 
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby={titleId}
-      onClose={close}
-      onCancel={(event) => {
-        if (saving) event.preventDefault();
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) close();
-      }}
-      className="m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-hidden rounded-t-3xl border border-line bg-surface p-0 text-ink shadow-[var(--shadow-lg)] backdrop:bg-black/70 open:animate-rise sm:m-auto sm:max-w-2xl sm:rounded-3xl"
-    >
-      <div className="flex max-h-[92dvh] flex-col">
-        <div className="flex items-start justify-between gap-3 border-b border-line px-5 pb-3 pt-4">
-          <div className="min-w-0">
-            <h2 id={titleId} tabIndex={-1} className="text-lg font-bold text-ink outline-none">
-              {editId ? 'Edit this plan' : 'Make a new plan'}
-            </h2>
-            <p className="text-sm text-muted">
-              {editId
-                ? 'Change anything below and the plan is rebuilt with a fresh week of meals.'
-                : 'Check your details and options — change anything, or keep them for a fresh week of meals.'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close"
-            className="-mr-2 grid size-11 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface-2 hover:text-ink"
-          >
-            <X className="size-5" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="overflow-y-auto px-5 pb-5 pt-4">
-          {loadError ? (
-            <p className="text-sm font-semibold text-chilli-600" role="alert">
-              {loadError}
-            </p>
-          ) : !ready ? (
-            <div className="space-y-3" aria-hidden="true">
-              <Skeleton className="h-16 rounded-2xl" />
-              <Skeleton className="h-40 rounded-2xl" />
-              <Skeleton className="h-40 rounded-2xl" />
-            </div>
-          ) : (
-            <div className="space-y-5">
-              <div className="rounded-2xl bg-surface-2 p-4 ring-1 ring-line" aria-live="polite">
-                <p className="text-xs font-semibold text-muted">Daily target</p>
-                <p className="mt-0.5 text-2xl font-extrabold text-ink tabular-nums">
-                  {preview ? preview.calories.toLocaleString('en-IN') : '—'} kcal
-                  {change !== 0 ? (
-                    <span className={cn('ml-2 text-sm font-bold', change > 0 ? 'text-saffron-700' : 'text-brand-800')}>
-                      {change > 0 ? '+' : '−'}
-                      {Math.abs(change).toLocaleString('en-IN')} from now
-                    </span>
-                  ) : null}
-                </p>
-                {preview ? (
-                  <p className="mt-0.5 text-[0.8125rem] text-muted tabular-nums">
-                    Protein {preview.protein} g · Carbs {preview.carbs} g · Fat {preview.fat} g · BMI {preview.bmi.toFixed(1)}
-                  </p>
-                ) : null}
-              </div>
-
-              <fieldset>
-                <legend className="mb-2 text-[0.8125rem] font-semibold text-ink-soft">Goal</legend>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {GOAL_OPTIONS.map((option) => (
-                    <OptionCard
-                      key={option.value}
-                      compact
-                      selected={profile.goal === option.value}
-                      onSelect={() => set('goal', option.value)}
-                      label={option.label}
-                      icon={<GoalIcon goal={option.value} className="size-5 text-saffron-700" />}
-                    />
-                  ))}
-                </div>
-              </fieldset>
-
-              <fieldset>
-                <legend className="mb-2 text-[0.8125rem] font-semibold text-ink-soft">Diet</legend>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  {DIET_OPTIONS.map((option) => (
-                    <OptionCard
-                      key={option.value}
-                      compact
-                      selected={profile.diet === option.value}
-                      onSelect={() => set('diet', option.value)}
-                      label={option.label}
-                      icon={<DietIcon diet={option.value} className="size-5" />}
-                    />
-                  ))}
-                </div>
-                {loaded.people > 1 ? (
-                  <p className="mt-2 text-xs text-muted">
-                    You cook for {loaded.people} people: the shared menu follows the strictest diet at the table.
-                  </p>
-                ) : null}
-              </fieldset>
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                <SelectField
-                  label="Cuisine"
-                  value={profile.cuisine}
-                  onChange={(event) => set('cuisine', event.target.value as Cuisine)}
-                  options={CUISINE_OPTIONS}
-                />
-                <SelectField
-                  label="Activity"
-                  value={profile.activity}
-                  onChange={(event) => set('activity', event.target.value as Activity)}
-                  options={ACTIVITY_OPTIONS}
-                />
-                <Field
-                  label="Weight today"
-                  inputMode="decimal"
-                  value={weight}
-                  onChange={(event) => setWeight(event.target.value)}
-                  error={weightError}
-                  suffix="kg"
-                />
-              </div>
-
-              <div className="border-t border-line pt-5">
-                <Switch
-                  checked={prefs.jain}
-                  onChange={(jain) => setPref({ jain })}
-                  label="Jain food"
-                  description="No onion, garlic, root vegetables, eggs or meat"
-                />
-                <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                  <SelectField
-                    label="Fasting"
-                    value={prefs.fasting}
-                    onChange={(event) => setPref({ fasting: event.target.value as FastingMode })}
-                    options={FASTING_OPTIONS}
-                  />
-                  {prefs.fasting === 'ramadan' || prefs.fasting === 'ekadashi' ? (
-                    <SelectField
-                      label="Your city"
-                      value={prefs.city ?? ''}
-                      onChange={(event) => setPref({ city: event.target.value === '' ? null : event.target.value })}
-                      options={[{ value: '', label: 'Not set' }, ...cities.map((city) => ({ value: city.key, label: city.name }))]}
-                      error={cityError}
-                    />
-                  ) : null}
-                </div>
-                {prefs.fasting === 'none' || prefs.fasting === 'ekadashi' ? (
-                  <fieldset className="mt-4">
-                    <legend className="mb-1.5 text-[0.8125rem] font-semibold text-ink-soft">Weekly vrat days</legend>
-                    <div className="flex flex-wrap gap-1.5">
-                      {WEEKDAYS.map((day) => (
-                        <button
-                          key={day}
-                          type="button"
-                          aria-pressed={prefs.vratDays.includes(day)}
-                          aria-label={WEEKDAY_LABELS[day]}
-                          onClick={() => toggleDay(day)}
-                          className={cn(
-                            'min-h-11 min-w-12 rounded-xl px-3 text-[0.8125rem] font-bold transition-colors',
-                            prefs.vratDays.includes(day)
-                              ? 'bg-accent text-accent-ink'
-                              : 'bg-surface-2 text-ink-soft ring-1 ring-line hover:bg-surface-3 hover:text-ink',
-                          )}
-                        >
-                          {day}
-                        </button>
-                      ))}
-                    </div>
-                  </fieldset>
-                ) : null}
-              </div>
-
-              <p className="rounded-xl bg-surface-2 px-3.5 py-2.5 text-xs leading-relaxed text-muted ring-1 ring-line">
+    <>
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={titleId}
+        onClose={close}
+        onCancel={(event) => {
+          if (saving) event.preventDefault();
+        }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) close();
+        }}
+        className="m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-hidden rounded-t-3xl border border-line bg-surface p-0 text-ink shadow-[var(--shadow-lg)] backdrop:bg-black/70 open:animate-rise sm:m-auto sm:max-w-2xl sm:rounded-3xl"
+      >
+        <div className="flex max-h-[92dvh] flex-col">
+          <div className="flex items-start justify-between gap-3 border-b border-line px-5 pb-3 pt-4">
+            <div className="min-w-0">
+              <h2 id={titleId} tabIndex={-1} className="text-lg font-bold text-ink outline-none">
+                {editId ? 'Edit this plan' : 'Make a new plan'}
+              </h2>
+              <p className="text-sm text-muted">
                 {editId
-                  ? loaded.savesToProfile
-                    ? 'This is your active plan, so these become your settings too. Meals you swapped are replaced by the new week.'
-                    : 'Only this saved plan changes — your profile and active plan stay as they are.'
-                  : 'These become your settings, and the new plan becomes your active one. Your current plan stays in your history.'}
+                  ? 'Change anything below and the plan is rebuilt with a fresh week of meals.'
+                  : 'Check your details and options — change anything, or keep them for a fresh week of meals.'}
               </p>
             </div>
-          )}
-        </div>
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close"
+              className="-mr-2 grid size-11 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface-2 hover:text-ink"
+            >
+              <X className="size-5" aria-hidden="true" />
+            </button>
+          </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3">
-          {error ? (
-            <p className="mr-auto text-sm font-semibold text-chilli-600" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <Button variant="ghost" onClick={close} disabled={saving}>
-            Cancel
-          </Button>
-          <Button onClick={submit} pending={saving} disabled={!ready || saving}>
-            {editId ? <Pencil className="size-4" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}
-            {saving ? 'Building…' : editId ? 'Save and rebuild' : 'Make my plan'}
-          </Button>
+          <div className="overflow-y-auto px-5 pb-5 pt-4">
+            {loadError ? (
+              <p className="text-sm font-semibold text-chilli-600" role="alert">
+                {loadError}
+              </p>
+            ) : !ready ? (
+              <div className="space-y-3" aria-hidden="true">
+                <Skeleton className="h-16 rounded-2xl" />
+                <Skeleton className="h-40 rounded-2xl" />
+                <Skeleton className="h-40 rounded-2xl" />
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="rounded-2xl bg-surface-2 p-4 ring-1 ring-line" aria-live="polite">
+                  <p className="text-xs font-semibold text-muted">Daily target</p>
+                  <p className="mt-0.5 text-2xl font-extrabold text-ink tabular-nums">
+                    {preview ? preview.calories.toLocaleString('en-IN') : '—'} kcal
+                    {change !== 0 ? (
+                      <span className={cn('ml-2 text-sm font-bold', change > 0 ? 'text-saffron-700' : 'text-brand-800')}>
+                        {change > 0 ? '+' : '−'}
+                        {Math.abs(change).toLocaleString('en-IN')} from now
+                      </span>
+                    ) : null}
+                  </p>
+                  {preview ? (
+                    <p className="mt-0.5 text-[0.8125rem] text-muted tabular-nums">
+                      Protein {preview.protein} g · Carbs {preview.carbs} g · Fat {preview.fat} g · BMI {preview.bmi.toFixed(1)}
+                    </p>
+                  ) : null}
+                </div>
+
+                <fieldset>
+                  <legend className="mb-2 text-[0.8125rem] font-semibold text-ink-soft">Goal</legend>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {GOAL_OPTIONS.map((option) => (
+                      <OptionCard
+                        key={option.value}
+                        compact
+                        selected={profile.goal === option.value}
+                        onSelect={() => set('goal', option.value)}
+                        label={option.label}
+                        icon={<GoalIcon goal={option.value} className="size-5 text-saffron-700" />}
+                      />
+                    ))}
+                  </div>
+                </fieldset>
+
+                <fieldset>
+                  <legend className="mb-2 text-[0.8125rem] font-semibold text-ink-soft">Diet</legend>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {DIET_OPTIONS.map((option) => (
+                      <OptionCard
+                        key={option.value}
+                        compact
+                        selected={profile.diet === option.value}
+                        onSelect={() => set('diet', option.value)}
+                        label={option.label}
+                        icon={<DietIcon diet={option.value} className="size-5" />}
+                      />
+                    ))}
+                  </div>
+                  {loaded.people > 1 ? (
+                    <p className="mt-2 text-xs text-muted">
+                      You cook for {loaded.people} people: the shared menu follows the strictest diet at the table.
+                    </p>
+                  ) : null}
+                </fieldset>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <SelectField
+                    label="Cuisine"
+                    value={profile.cuisine}
+                    onChange={(event) => set('cuisine', event.target.value as Cuisine)}
+                    options={CUISINE_OPTIONS}
+                  />
+                  <SelectField
+                    label="Activity"
+                    value={profile.activity}
+                    onChange={(event) => set('activity', event.target.value as Activity)}
+                    options={ACTIVITY_OPTIONS}
+                  />
+                  <Field
+                    label="Weight today"
+                    inputMode="decimal"
+                    value={weight}
+                    onChange={(event) => setWeight(event.target.value)}
+                    error={weightError}
+                    suffix="kg"
+                  />
+                </div>
+
+                <div className="border-t border-line pt-5">
+                  <Switch
+                    checked={prefs.jain}
+                    onChange={(jain) => setPref({ jain })}
+                    label="Jain food"
+                    description="No onion, garlic, root vegetables, eggs or meat"
+                  />
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <SelectField
+                      label="Fasting"
+                      value={prefs.fasting}
+                      onChange={(event) => setPref({ fasting: event.target.value as FastingMode })}
+                      options={FASTING_OPTIONS}
+                    />
+                    {prefs.fasting === 'ramadan' || prefs.fasting === 'ekadashi' ? (
+                      <SelectField
+                        label="Your city"
+                        value={prefs.city ?? ''}
+                        onChange={(event) => setPref({ city: event.target.value === '' ? null : event.target.value })}
+                        options={[{ value: '', label: 'Not set' }, ...cities.map((city) => ({ value: city.key, label: city.name }))]}
+                        error={cityError}
+                      />
+                    ) : null}
+                  </div>
+                  {prefs.fasting === 'none' || prefs.fasting === 'ekadashi' ? (
+                    <fieldset className="mt-4">
+                      <legend className="mb-1.5 text-[0.8125rem] font-semibold text-ink-soft">Weekly vrat days</legend>
+                      <div className="flex flex-wrap gap-1.5">
+                        {WEEKDAYS.map((day) => (
+                          <button
+                            key={day}
+                            type="button"
+                            aria-pressed={prefs.vratDays.includes(day)}
+                            aria-label={WEEKDAY_LABELS[day]}
+                            onClick={() => toggleDay(day)}
+                            className={cn(
+                              'min-h-11 min-w-12 rounded-xl px-3 text-[0.8125rem] font-bold transition-colors',
+                              prefs.vratDays.includes(day)
+                                ? 'bg-accent text-accent-ink'
+                                : 'bg-surface-2 text-ink-soft ring-1 ring-line hover:bg-surface-3 hover:text-ink',
+                            )}
+                          >
+                            {day}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  ) : null}
+                </div>
+
+                <p className="rounded-xl bg-surface-2 px-3.5 py-2.5 text-xs leading-relaxed text-muted ring-1 ring-line">
+                  {editId
+                    ? loaded.savesToProfile
+                      ? 'This is your active plan, so these become your settings too. Meals you swapped are replaced by the new week.'
+                      : 'Only this saved plan changes — your profile and active plan stay as they are.'
+                    : 'These become your settings, and the new plan becomes your active one. Your current plan stays in your history.'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3">
+            {error ? (
+              <p className="mr-auto text-sm font-semibold text-chilli-600" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <Button variant="ghost" onClick={close} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={submit} pending={saving} disabled={!ready || saving}>
+              {editId ? <Pencil className="size-4" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}
+              {saving ? 'Building…' : editId ? 'Save and rebuild' : 'Make my plan'}
+            </Button>
+          </div>
         </div>
-      </div>
-    </dialog>
+      </dialog>
+      <PlanBuildingOverlay show={saving} title={editId ? 'Rebuilding your plan' : 'Building your plan'} />
+    </>
   );
 }
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, RefreshCw, Trash2, UserPlus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { Panel, PanelHeader } from '@/components/ui/Card';
 import { Field } from '@/components/ui/Field';
 import { SelectField } from '@/components/ui/SelectField';
@@ -133,7 +134,7 @@ export function HouseholdPanel({ initial, planHousehold }: { initial: HouseholdR
   const makePlan = () =>
     startMaking(async () => {
       try {
-        await api.post<PlanResponse>('/plans');
+        await withBuildingScreen(api.post<PlanResponse>('/plans'));
         toast.success('New household plan ready');
         router.push('/dashboard');
         router.refresh();
@@ -146,6 +147,7 @@ export function HouseholdPanel({ initial, planHousehold }: { initial: HouseholdR
 
   return (
     <Panel>
+      <PlanBuildingOverlay show={making} />
       <PanelHeader
         eyebrow="Household"
         title="Cooking for the family"

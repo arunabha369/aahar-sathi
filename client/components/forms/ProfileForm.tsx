@@ -4,6 +4,7 @@ import { useRef, useState, useTransition, type FocusEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw, Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { Panel, PanelHeader } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { ActivitySection, BodySection, GoalSection } from '@/components/forms/ProfileFields';
@@ -68,7 +69,7 @@ export function ProfileForm({ profile, currentTargets }: ProfileFormProps) {
   const regenerate = () => {
     startRegenerating(async () => {
       try {
-        await api.post<PlanResponse>('/plans');
+        await withBuildingScreen(api.post<PlanResponse>('/plans'));
         toast.success('New plan generated');
         router.push('/dashboard');
         router.refresh();
@@ -127,6 +128,7 @@ export function ProfileForm({ profile, currentTargets }: ProfileFormProps) {
               <p className="flex-1 text-sm font-semibold text-brand-800">
                 Your targets changed. Build a new 7-day plan to match them?
               </p>
+              <PlanBuildingOverlay show={regenerating} />
               <Button onClick={regenerate} pending={regenerating}>
                 <RefreshCw className="size-4" aria-hidden="true" />
                 Regenerate my plan

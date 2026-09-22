@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Target, TrendingDown, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
 import { formatDate } from '@/lib/format';
@@ -26,13 +27,14 @@ export function AdaptiveTargetCard({ suggestion, calories, today, compact = fals
   const toast = useToast();
   const [hidden, setHidden] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [applying, startApplying] = useTransition();
 
   if (hidden || (compact && suggestion.status !== 'suggest')) return null;
 
   const apply = () =>
-    startTransition(async () => {
+    startApplying(async () => {
       try {
-        await api.post(`/profile/adjustment?today=${today}`, { change: suggestion.change });
+        await withBuildingScreen(api.post(`/profile/adjustment?today=${today}`, { change: suggestion.change }));
         toast.success('Target updated and a new plan made');
         router.refresh();
       } catch (caught) {
@@ -90,10 +92,11 @@ export function AdaptiveTargetCard({ suggestion, calories, today, compact = fals
           ) : null}
           {suggestion.status === 'suggest' ? (
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button size="sm" onClick={apply} pending={pending}>
+              <PlanBuildingOverlay show={applying} title="Updating your target and plan" />
+              <Button size="sm" onClick={apply} pending={applying} disabled={pending}>
                 Use {calories + (suggestion.change ?? 0)} kcal
               </Button>
-              <Button size="sm" variant="ghost" onClick={dismiss} disabled={pending}>
+              <Button size="sm" variant="ghost" onClick={dismiss} disabled={pending || applying}>
                 Not now
               </Button>
             </div>

@@ -4,6 +4,7 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Target } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { Panel, PanelHeader } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { ApiError, api } from '@/lib/api/client';
@@ -17,7 +18,7 @@ export function CalorieAdjustmentPanel({ adjustment }: { adjustment: number }) {
   const reset = () =>
     startTransition(async () => {
       try {
-        await api.delete('/profile/adjustment');
+        await withBuildingScreen(api.delete('/profile/adjustment'));
         toast.success('Back to your calculated target, with a new plan');
         router.refresh();
       } catch (caught) {
@@ -27,6 +28,7 @@ export function CalorieAdjustmentPanel({ adjustment }: { adjustment: number }) {
 
   return (
     <Panel>
+      <PlanBuildingOverlay show={pending} />
       <PanelHeader
         eyebrow="Targets"
         title="Adjusting to your progress"

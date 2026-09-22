@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PlanBuildingOverlay, withBuildingScreen } from '@/components/plan/PlanBuildingOverlay';
 import { Panel } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { ActivitySection, BodySection, GoalSection } from '@/components/forms/ProfileFields';
@@ -70,7 +71,7 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
     startTransition(async () => {
       try {
         await api.put<ProfileUpdateResponse>('/profile', profile);
-        await api.post<PlanResponse>('/plans');
+        await withBuildingScreen(api.post<PlanResponse>('/plans'));
         router.push('/dashboard');
         router.refresh();
       } catch (error) {
@@ -104,6 +105,7 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
 
   return (
     <div className="mx-auto max-w-2xl">
+      <PlanBuildingOverlay show={pending} title="Building your first plan" />
       {/* Stepper */}
       <div className="mb-3 flex items-center justify-between gap-3" aria-live="polite">
         <p className="eyebrow">
