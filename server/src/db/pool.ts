@@ -41,7 +41,36 @@ export const pool = new pg.Pool({
   connectionTimeoutMillis: 10_000,
   // On Vercel an instance stays awake until its idle connections close, so close them sooner.
   idleTimeoutMillis: process.env.VERCEL ? 5_000 : 30_000,
+  // TCP keep-alives stop routers and the pooler from silently dropping idle connections.
+  keepAlive: true,
 });
+
+/**
+ * A pooled connection can still die between uses (the network or Supabase's pooler resets
+ * it). A read that fails that way is simply retried once on a fresh connection. Writes are
+ * never retried automatically: the first attempt may have been applied, and running it
+ * twice could, say, log the same food twice — the caller sees the error instead.
+ */
+const CONNECTION_ERROR_CODES = new Set(['ECONNRESET', 'EPIPE', 'ETIMEDOUT', 'ECONNREFUSED']);
+function isConnectionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const { code } = error as { code?: unknown };
+  return (
+    (typeof code === 'string' && CONNECTION_ERROR_CODES.has(code)) ||
+    /Connection terminated|terminating connection|Client has encountered a connection error/i.test(error.message)
+  );
+}
+const isReadOnly = (text: unknown) => typeof text === 'string' && /^\s*(select|with)\b/i.test(text) && !/\b(insert|update|delete)\b/i.test(text);
+
+const queryOnce = pool.query.bind(pool) as (...args: unknown[]) => Promise<unknown>;
+pool.query = (async (...args: unknown[]) => {
+  try {
+    return await queryOnce(...args);
+  } catch (error) {
+    if (isConnectionError(error) && isReadOnly(args[0])) return queryOnce(...args);
+    throw error;
+  }
+}) as typeof pool.query;
 
 // On Vercel: lets idle connections close before an instance is suspended, instead of leaking
 // them on Supabase's pooler. Does nothing anywhere else.

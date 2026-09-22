@@ -34,7 +34,7 @@ await pool.query(SCHEMA_SQL);
 afterEach(async () => {
   const { devOutbox } = await import('../src/services/email.ts');
   devOutbox.length = 0;
-  await pool.query('truncate app.users, app.meals, app.plans, app.water_logs, app.weight_logs, app.sleep_logs, app.password_resets cascade');
+  await pool.query('truncate app.users, app.meals, app.plans, app.water_logs, app.weight_logs, app.sleep_logs, app.password_resets, app.meal_checkins, app.food_entries, app.custom_foods cascade');
 });
 
 afterAll(async () => {

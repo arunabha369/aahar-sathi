@@ -4,6 +4,8 @@ export default function ProgressLoading() {
   return (
     <LoadingRegion label="your progress">
       <HeaderSkeleton />
+      <PanelSkeleton lines={2} />
+      <Skeleton className="mb-5 mt-5 h-80 rounded-2xl" />
       <div className="grid gap-5 lg:grid-cols-3">
         <PanelSkeleton lines={2} className="lg:col-span-2" />
         <PanelSkeleton lines={2} />

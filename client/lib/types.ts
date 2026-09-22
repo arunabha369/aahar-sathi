@@ -213,3 +213,91 @@ export interface SleepLogsResponse {
 export interface OkResponse {
   ok: true;
 }
+
+// ---------- Food diary ----------
+
+export type CheckinStatus = 'eaten' | 'skipped' | 'swapped';
+export type FoodSource = 'meal' | 'custom' | 'barcode';
+
+export interface Macros {
+  kcal: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+/** A planned meal on a diary day, with what happened to it. */
+export interface DiaryPlannedMeal extends Macros {
+  slot: PlanSlot;
+  time: string;
+  slug: string;
+  name: string;
+  items: MealItem[];
+  status: CheckinStatus | null;
+}
+
+export interface DiaryCheckin extends Macros {
+  slot: PlanSlot;
+  status: CheckinStatus;
+  mealName: string;
+}
+
+export interface FoodEntry extends Macros {
+  id: string;
+  slot: PlanSlot | null;
+  source: FoodSource;
+  ref: string | null;
+  name: string;
+  servingLabel: string;
+  servings: number;
+  createdAt: string;
+}
+
+export interface DiaryDay {
+  date: string;
+  weekday: string;
+  planned: DiaryPlannedMeal[];
+  checkins: DiaryCheckin[];
+  entries: FoodEntry[];
+  eaten: Macros;
+  targets: Targets | null;
+}
+
+export interface CustomFood extends Macros {
+  id: string;
+  name: string;
+  servingLabel: string;
+}
+
+export interface FoodSearchResponse {
+  meals: (Macros & { slug: string; name: string; servingLabel: string })[];
+  custom: CustomFood[];
+}
+
+export interface BarcodeProduct {
+  barcode: string;
+  name: string;
+  brand: string | null;
+  per100: Macros | null;
+  perServing: Macros | null;
+  servingLabel: string | null;
+  servingGrams: number | null;
+  liquid: boolean;
+}
+
+export interface DiaryDaySummary extends Macros {
+  date: string;
+  eatenMeals: number;
+  skippedMeals: number;
+  swappedMeals: number;
+  entries: number;
+}
+
+export interface DiarySummary {
+  from: string;
+  to: string;
+  target: Pick<Targets, 'calories' | 'protein' | 'carbs' | 'fat'> | null;
+  days: DiaryDaySummary[];
+  streak: number;
+  week: { plannedMeals: number; eatenAsPlanned: number; trackedDays: number; onTargetDays: number };
+}

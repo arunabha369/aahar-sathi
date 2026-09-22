@@ -140,3 +140,71 @@ export const sleepSchema = z
     { message: 'That is not a night of sleep — it should be between 1 and 16 hours.', path: ['wakeTime'] },
   );
 export type SleepBody = z.infer<typeof sleepSchema>;
+
+// ---------- Food diary ----------
+
+export const diaryDateSchema = z.object({ date: isoDate });
+
+export const checkinParamsSchema = z.object({ date: isoDate, slot: z.enum(PLAN_SLOTS) });
+export type CheckinParams = z.infer<typeof checkinParamsSchema>;
+
+/** "Something else" is recorded by logging the food with a slot, so only these two are set directly. */
+export const checkinSchema = z.object({ status: z.enum(['eaten', 'skipped']) });
+export type CheckinBody = z.infer<typeof checkinSchema>;
+
+export const entryParamsSchema = z.object({ date: isoDate, id: z.string().uuid('That entry id is not valid.') });
+export type EntryParams = z.infer<typeof entryParamsSchema>;
+
+const servings = z
+  .number({ message: 'Servings are required.' })
+  .gt(0, 'Servings must be more than 0.')
+  .max(20, 'That is more than 20 servings.');
+const macro = (label: string, max: number) =>
+  z.number({ message: `${label} is required.` }).min(0, `${label} cannot be negative.`).max(max, `${label} looks too high.`);
+
+/**
+ * A food eaten outside the plan. Dishes and the user's own foods are looked up on the server
+ * by reference; a barcode product carries the label's per-unit numbers from the lookup.
+ */
+export const entrySchema = z.discriminatedUnion('source', [
+  z.object({ source: z.literal('meal'), ref: z.string().min(1).max(80), servings, slot: z.enum(PLAN_SLOTS).nullish() }),
+  z.object({ source: z.literal('custom'), ref: z.string().uuid(), servings, slot: z.enum(PLAN_SLOTS).nullish() }),
+  z.object({
+    source: z.literal('barcode'),
+    ref: z.string().regex(/^\d{8,14}$/, 'That barcode is not valid.'),
+    servings,
+    slot: z.enum(PLAN_SLOTS).nullish(),
+    name: z.string().trim().min(1).max(120),
+    servingLabel: z.string().trim().min(1).max(60),
+    // Numbers for ONE of `servingLabel`; the server multiplies by servings.
+    kcal: macro('Calories', 5000),
+    protein: macro('Protein', 500),
+    carbs: macro('Carbs', 500),
+    fat: macro('Fat', 500),
+  }),
+]);
+export type EntryBody = z.infer<typeof entrySchema>;
+
+export const customFoodSchema = z.object({
+  name: z.string().trim().min(1, 'Give the dish a name.').max(80, 'Keep the name under 80 characters.'),
+  servingLabel: z.string().trim().min(1, 'Say what one serving is, e.g. “1 bowl”.').max(40),
+  kcal: macro('Calories', 5000),
+  protein: macro('Protein', 500),
+  carbs: macro('Carbs', 500),
+  fat: macro('Fat', 500),
+});
+export type CustomFoodBody = z.infer<typeof customFoodSchema>;
+
+export const foodIdParamsSchema = z.object({ id: z.string().uuid('That id is not valid.') });
+
+export const foodSearchSchema = z.object({ q: z.string().trim().min(1, 'Type something to search for.').max(60) });
+export type FoodSearchQuery = z.infer<typeof foodSearchSchema>;
+
+export const barcodeParamsSchema = z.object({ code: z.string().regex(/^\d{8,14}$/, 'A barcode is 8 to 14 digits.') });
+export type BarcodeParams = z.infer<typeof barcodeParamsSchema>;
+
+export const summaryQuerySchema = z.object({
+  to: isoDate,
+  days: z.coerce.number().int().min(7).max(90).default(7),
+});
+export type SummaryQuery = z.infer<typeof summaryQuerySchema>;

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authRouter } from './authRoutes.ts';
+import { diaryRouter, foodRouter } from './diaryRoutes.ts';
 import { logRouter } from './logRoutes.ts';
 import { planRouter } from './planRoutes.ts';
 import { profileRouter } from './profileRoutes.ts';
@@ -12,4 +13,6 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use('/profile', profileRouter);
 apiRouter.use('/plans', planRouter);
 apiRouter.use('/logs', logRouter);
+apiRouter.use('/diary', diaryRouter);
+apiRouter.use('/foods', foodRouter);
 apiRouter.delete('/account', requireAuth, deleteAccount);

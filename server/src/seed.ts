@@ -1,5 +1,6 @@
 import { env } from './config/env.ts';
 import { MEALS } from './data/meals.ts';
+import { deleteDiaryForUser } from './db/diary.ts';
 import { deleteLogsForUser, insertLogs, type WaterEntry, type WeightEntry } from './db/logs.ts';
 import { syncMeals } from './db/meals.ts';
 import { deletePlansForUser, setGroceryChecked } from './db/plans.ts';
@@ -49,6 +50,7 @@ async function seedDemoUser(): Promise<void> {
   // Rebuild the demo data from scratch every time so the charts always look right.
   await deletePlansForUser(user.id);
   await deleteLogsForUser(user.id);
+  await deleteDiaryForUser(user.id);
 
   const plan = await createPlanForUser({
     userId: user.id,

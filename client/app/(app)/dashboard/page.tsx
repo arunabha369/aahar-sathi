@@ -16,7 +16,7 @@ import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
 import { DIET_OPTIONS, GOAL_OPTIONS } from '@/lib/constants';
 import { addDays, todayKey } from '@/lib/format';
-import type { ActivePlanResponse, GroceryResponse, WaterLogsResponse } from '@/lib/types';
+import type { ActivePlanResponse, DiaryDay, DiarySummary, GroceryResponse, WaterLogsResponse } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -46,12 +46,14 @@ export default async function DashboardPage() {
   }
 
   const serverToday = todayKey();
-  const [{ logs: waterLogs }, grocery] = await Promise.all([
+  const [{ logs: waterLogs }, grocery, diary, summary] = await Promise.all([
     serverFetch<WaterLogsResponse>(
       `/logs/water?from=${todayKey(addDays(new Date(), -14))}&to=${todayKey(addDays(new Date(), 1))}`,
     ),
     // Printing the plan should hand you the shopping list with it.
     serverFetch<GroceryResponse>(`/plans/${plan.id}/grocery`),
+    serverFetch<DiaryDay>(`/diary/${serverToday}`),
+    serverFetch<DiarySummary>(`/diary/summary?to=${serverToday}`),
   ]);
 
   const goal = GOAL_OPTIONS.find((option) => option.value === plan.inputs.goal);
@@ -69,7 +71,13 @@ export default async function DashboardPage() {
       {/* What matters right now: the next meal and today's water. */}
       <div className="grid gap-5 xl:grid-cols-3">
         <div className="min-w-0 xl:col-span-2">
-          <TodayCard days={plan.days} targets={plan.targets} serverToday={serverToday} />
+          <TodayCard
+            days={plan.days}
+            targets={plan.targets}
+            serverToday={serverToday}
+            diary={diary}
+            streak={summary.streak}
+          />
         </div>
         <Panel className="no-print">
           <PanelHeader

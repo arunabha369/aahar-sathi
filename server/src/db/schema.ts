@@ -1,4 +1,4 @@
-import { DIETS, MEAL_SLOTS, REGIONS } from '../types.ts';
+import { DIETS, MEAL_SLOTS, PLAN_SLOTS, REGIONS } from '../types.ts';
 
 /** `('a', 'b')` for a CHECK constraint, built from the same constants the API validates with. */
 const oneOf = (values: readonly string[]) => `(${values.map((value) => `'${value}'`).join(', ')})`;
@@ -129,18 +129,72 @@ create table if not exists app.password_resets (
 );
 create index if not exists password_resets_user_idx on app.password_resets (user_id, created_at desc);
 
+-- What was actually eaten. A check-in records each planned meal as eaten, skipped or
+-- swapped (eaten something else instead), with a snapshot of the planned meal's numbers,
+-- so reshuffling the plan later never rewrites what the diary says was eaten.
+create table if not exists app.meal_checkins (
+  user_id uuid not null references app.users (id) on delete cascade,
+  date date not null,
+  slot text not null check (slot in ${oneOf(PLAN_SLOTS)}),
+  status text not null check (status in ('eaten', 'skipped', 'swapped')),
+  meal_name text not null,
+  kcal double precision not null check (kcal >= 0),
+  protein double precision not null check (protein >= 0),
+  carbs double precision not null check (carbs >= 0),
+  fat double precision not null check (fat >= 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, date, slot)
+);
+
+-- Food eaten outside the plan: a dish from the meal list, one of the user's own foods, or a
+-- packaged product found by barcode. Numbers are stored for the amount eaten (already
+-- multiplied by servings). "slot" is set when it replaced a planned meal.
+create table if not exists app.food_entries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app.users (id) on delete cascade,
+  date date not null,
+  slot text check (slot in ${oneOf(PLAN_SLOTS)}),
+  source text not null check (source in ('meal', 'custom', 'barcode')),
+  ref text,
+  name text not null check (char_length(name) between 1 and 120),
+  serving_label text not null check (char_length(serving_label) between 1 and 60),
+  servings double precision not null check (servings > 0 and servings <= 20),
+  kcal double precision not null check (kcal between 0 and 10000),
+  protein double precision not null check (protein between 0 and 1000),
+  carbs double precision not null check (carbs between 0 and 1000),
+  fat double precision not null check (fat between 0 and 1000),
+  created_at timestamptz not null default now()
+);
+create index if not exists food_entries_user_date_idx on app.food_entries (user_id, date);
+
+-- The user's own dishes, saved once and logged by the serving.
+create table if not exists app.custom_foods (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references app.users (id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 80),
+  serving_label text not null check (char_length(serving_label) between 1 and 40),
+  kcal double precision not null check (kcal between 0 and 5000),
+  protein double precision not null check (protein between 0 and 500),
+  carbs double precision not null check (carbs between 0 and 500),
+  fat double precision not null check (fat between 0 and 500),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists custom_foods_user_name_idx on app.custom_foods (user_id, lower(name));
+
 do $$
 declare
   t text;
 begin
-  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs'] loop
+  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'meal_checkins', 'custom_foods'] loop
     execute format('drop trigger if exists touch_updated_at on app.%I', t);
     execute format(
       'create trigger touch_updated_at before update on app.%I for each row execute function app.touch_updated_at()',
       t
     );
   end loop;
-  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'password_resets'] loop
+  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'password_resets', 'meal_checkins', 'food_entries', 'custom_foods'] loop
     execute format('alter table app.%I enable row level security', t);
   end loop;
 end

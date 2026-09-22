@@ -3,19 +3,27 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
-import { CalendarRange, LayoutDashboard, LogOut, Settings, ShoppingBasket, TrendingUp } from 'lucide-react';
+import { CalendarRange, LayoutDashboard, LogOut, NotebookPen, Settings, ShoppingBasket, TrendingUp } from 'lucide-react';
 import { InstallAppButton } from '@/components/InstallApp';
 import { Logo } from '@/components/ui/Logo';
 import { Mark } from '@/components/illustrations/Mark';
 import { api } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 
+/** The phone tab bar: five destinations at most, with Plans raised in the middle. */
 const LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/grocery', label: 'Grocery', icon: ShoppingBasket },
   { href: '/plans', label: 'Plans', icon: CalendarRange },
   { href: '/progress', label: 'Progress', icon: TrendingUp },
   { href: '/settings', label: 'Settings', icon: Settings },
+] as const;
+
+/** The desktop rail has room for the food diary too (on phones it opens from the dashboard). */
+const SIDEBAR_LINKS = [
+  LINKS[0],
+  { href: '/diary', label: 'Food diary', icon: NotebookPen },
+  ...LINKS.slice(1),
 ] as const;
 
 function useIsActive() {
@@ -52,7 +60,7 @@ export function Sidebar({ user }: { user: { name: string; email: string } }) {
 
       <nav aria-label="Main" className="flex-1 px-3">
         <ul className="space-y-1">
-          {LINKS.map((link) => {
+          {SIDEBAR_LINKS.map((link) => {
             const active = isActive(link.href);
             return (
               <li key={link.href}>

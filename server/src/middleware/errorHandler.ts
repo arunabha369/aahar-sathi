@@ -38,7 +38,11 @@ export function errorHandler(
   } else if (isPostgresError(error) && error.code === '23505') {
     // unique_violation — in practice, two sign-ups racing for the same email.
     apiError = ApiError.conflict(
-      error.constraint === 'users_email_key' ? 'An account with this email already exists.' : 'That already exists.',
+      error.constraint === 'users_email_key'
+        ? 'An account with this email already exists.'
+        : error.constraint === 'custom_foods_user_name_idx'
+          ? 'You already have a food with that name — pick it from your list, or use another name.'
+          : 'That already exists.',
     );
   } else if (isPostgresError(error) && error.code === '22P02') {
     // invalid_text_representation — a malformed id that slipped past validation.

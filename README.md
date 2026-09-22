@@ -1,7 +1,9 @@
 # 🍛 Aahar Sathi
 
 **Your Indian diet companion.** Sign up, enter your details, and get a personalised 7-day Indian meal
-plan with calorie and macro targets, a grocery list, a water tracker and progress charts.
+plan with calorie and macro targets, a grocery list, a water tracker and progress charts — then track
+what you actually ate: tick off planned meals, log anything else by search, your own dishes or a
+barcode, and watch your streak and weekly adherence.
 
 The maths is real (Mifflin–St Jeor, Asian-Indian BMI cut-offs, goal-based macro splits) and the food is
 home-style Indian cooking — poha, rajma chawal, idli sambar, ghugni, egg curry, tandoori chicken — across
@@ -137,7 +139,7 @@ Run these from the repo root:
 | `npm start`       | Serve that build                                                  |
 | `npm run dev:api` | The API on its own (Express on :5001), if you ever need it        |
 | `npm run lint`    | Server typecheck + ESLint on the client                           |
-| `npm test`        | The full Vitest suite (89 tests)                                  |
+| `npm test`        | The full Vitest suite (126 tests)                                 |
 | `npm run seed`    | Seed meals and the demo account                                   |
 | `npm run db:migrate` | Create or update the database tables                           |
 
@@ -190,9 +192,28 @@ zod-validated and scoped to the signed-in user.
 | `GET`/`PATCH`    | `/api/plans/:id/grocery`       | `PATCH` takes `{ item, checked }`                |
 | `GET`/`PUT`      | `/api/logs/water`, `/api/logs/water/:date`   | `{ glasses }`                      |
 | `GET`/`PUT`/`DELETE` | `/api/logs/weight`, `/api/logs/weight/:date` | `{ weightKg }`                 |
+| `GET`/`PUT`/`DELETE` | `/api/logs/sleep`, `/api/logs/sleep/:date` | `{ bedtime, wakeTime }` (`HH:MM`) |
+| `GET`            | `/api/diary/:date`             | Planned meals + check-ins, foods logged, totals eaten |
+| `PUT`/`DELETE`   | `/api/diary/:date/checkins/:slot` | `{ status: 'eaten' \| 'skipped' }`            |
+| `POST`           | `/api/diary/:date/entries`     | A dish (`meal`), own food (`custom`) or `barcode`, with `servings` and optional `slot` (= a swap) |
+| `DELETE`         | `/api/diary/:date/entries/:id` | Removing the last swap food reopens the meal     |
+| `GET`            | `/api/diary/summary?to=&days=` | Calories eaten per day, logging streak, last-7-days adherence |
+| `GET`            | `/api/foods/search?q=`         | The 82 dishes and your own foods                 |
+| `GET`/`POST`/`DELETE` | `/api/foods/custom`, `/api/foods/custom/:id` | Your saved dishes, per serving  |
+| `GET`            | `/api/foods/barcode/:code`     | A packaged product from Open Food Facts          |
 
 Dates are `YYYY-MM-DD` and come from the **client's** local calendar day, so "today" matches the user's
 timezone.
+
+**The food diary.** A check-in keeps a snapshot of the planned meal's numbers, so reshuffling the plan
+later never rewrites what the diary says was eaten. Calories eaten = eaten planned meals + every logged
+food; a skipped or swapped meal counts nothing by itself. A day is *fully tracked* when all five planned
+meals have a check-in, and *on target* when such a day is within 10% of the calorie target.
+
+**Barcodes.** Chrome on Android reads barcodes natively; elsewhere (Safari on iPhone) a WebAssembly
+build of ZXing is used, loaded only when scanning and served from this site (`client/public/wasm`, copied
+from `zxing-wasm` before every `dev` and `build`). Product data comes from
+[Open Food Facts](https://world.openfoodfacts.org) under the Open Database License, cached for a day.
 
 ---
 
@@ -226,7 +247,7 @@ week in the same slot, and takes an injectable random function so tests are dete
 npm test
 ```
 
-89 tests covering:
+126 tests covering:
 
 - `nutrition.test.ts` — the worked examples, the calorie floor, the underweight guard, macro consistency
 - `meals.test.ts` — every meal's macros within 10% of its kcal, per-slot diet coverage, ingredient categories
@@ -247,6 +268,9 @@ point `TEST_DATABASE_URL` elsewhere if yours is not on `localhost:5432`.
 
 - Root directory `client`, framework preset Next.js. Leave **"Include files outside the root
   directory"** on (the default): the build needs `../server`
+- `client/vercel.json` runs the functions in **Tokyo (`hnd1`)**, next to the Supabase database
+  (`ap-northeast-1`). Every request makes several database round trips, so keeping the two in the same
+  region matters; change both together if you ever move the database
 - Environment variables:
   - `DATABASE_URL` — the Supabase pooler string with port **6543** (transaction mode, made for
     serverless)

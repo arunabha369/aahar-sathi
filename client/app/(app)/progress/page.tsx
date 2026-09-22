@@ -4,12 +4,14 @@ import { Panel, PanelHeader, PageHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WaterChart } from '@/components/charts/WaterChart';
 import { WeightChart } from '@/components/charts/WeightChart';
+import { AdherenceCard } from '@/components/diary/AdherenceCard';
+import { EatenChart } from '@/components/charts/EatenChart';
 import { SleepSection } from '@/components/plan/SleepSection';
 import { WeightLogger } from '@/components/plan/WeightLogger';
 import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
 import { addDays, todayKey } from '@/lib/format';
-import type { ActivePlanResponse, SleepLogsResponse, WaterLogsResponse, WeightLogsResponse } from '@/lib/types';
+import type { ActivePlanResponse, DiarySummary, SleepLogsResponse, WaterLogsResponse, WeightLogsResponse } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Progress',
@@ -22,11 +24,12 @@ export default async function ProgressPage() {
   const from = todayKey(addDays(new Date(), -120));
   const to = todayKey(addDays(new Date(), 1));
 
-  const [{ logs: weightLogs }, { logs: waterLogs }, { logs: sleepLogs }, { plan }] = await Promise.all([
+  const [{ logs: weightLogs }, { logs: waterLogs }, { logs: sleepLogs }, { plan }, diary] = await Promise.all([
     serverFetch<WeightLogsResponse>(`/logs/weight?from=${from}&to=${to}`),
     serverFetch<WaterLogsResponse>(`/logs/water?from=${from}&to=${to}`),
     serverFetch<SleepLogsResponse>(`/logs/sleep?from=${from}&to=${to}`),
     serverFetch<ActivePlanResponse>('/plans/active'),
+    serverFetch<DiarySummary>(`/diary/summary?to=${serverToday}&days=90`),
   ]);
 
   const waterTarget = plan?.targets.waterGlasses ?? 8;
@@ -41,6 +44,16 @@ export default async function ProgressPage() {
         title="Progress"
         description="Log your weight and last night’s sleep each morning — first thing is the most consistent time."
       />
+
+      {/* What was actually eaten, from the food diary */}
+      <div className="mb-5 space-y-5">
+        <AdherenceCard summary={diary} />
+        {diary.target ? (
+          <Panel>
+            <EatenChart days={diary.days} target={diary.target.calories} />
+          </Panel>
+        ) : null}
+      </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
         <Panel className="lg:col-span-2">
