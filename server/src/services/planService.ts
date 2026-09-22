@@ -15,6 +15,7 @@ import {
   type PlanInputs,
   type PlanPreferences,
   type Profile,
+  type Targets,
   type Weekday,
 } from '../types.ts';
 
@@ -65,19 +66,28 @@ export function resolvePreferences(preferences: PlanPreferences, jain: boolean, 
   };
 }
 
-export interface CreatePlanOptions {
+export interface BuildPlanOptions {
   userId: string;
   profile: Profile;
+  /** Settings to build with instead of the saved ones (editing an old plan). */
+  preferences?: PlanPreferences;
   random?: () => number;
   /** For tests: the date the plan week starts. */
   today?: string;
 }
 
-/** Generates a fresh 7-day plan (for the household, if there is one) and makes it the active one. */
-export async function createPlanForUser({ userId, profile, random, today = todayInIndia() }: CreatePlanOptions): Promise<PlanRecord> {
+export interface BuiltPlan {
+  inputs: PlanInputs;
+  targets: Targets;
+  days: PlanDay[];
+}
+
+/** Works out a week of meals (for the household, if there is one) without saving it. */
+export async function buildPlan({ userId, profile, preferences: override, random, today = todayInIndia() }: BuildPlanOptions): Promise<BuiltPlan> {
   const [meals, stored, members] = await Promise.all([loadPlannerMeals(), findPreferences(userId), listMembers(userId)]);
-  const household = householdShape(profile, stored, members);
-  const preferences = resolvePreferences(stored, household.jain, today);
+  const chosen = override ?? stored;
+  const household = householdShape(profile, chosen, members);
+  const preferences = resolvePreferences(chosen, household.jain, today);
   const targets = calculateTargets(profile, { calorieAdjustment: stored.calorieAdjustment });
   const planProfile: Profile = { ...profile, diet: household.diet };
 
@@ -102,10 +112,17 @@ export async function createPlanForUser({ userId, profile, random, today = today
   const inputs: PlanInputs = {
     ...planProfile,
     preferences,
+    chosenPreferences: { jain: chosen.jain, fasting: chosen.fasting, vratDays: chosen.vratDays, city: chosen.city },
     calorieAdjustment: stored.calorieAdjustment,
     ...(household.members.length > 0 ? { household: household.members } : {}),
   };
-  return insertActivePlan({ userId, inputs, targets, days });
+  return { inputs, targets, days };
+}
+
+/** Generates a fresh 7-day plan and makes it the active one. */
+export async function createPlanForUser(options: BuildPlanOptions): Promise<PlanRecord> {
+  const built = await buildPlan(options);
+  return insertActivePlan({ userId: options.userId, ...built });
 }
 
 /** Re-applies a plan's household portions after its meals changed (swap, shuffle). */

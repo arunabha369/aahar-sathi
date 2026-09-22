@@ -9,6 +9,7 @@ import { CalculationPanel } from '@/components/plan/CalculationPanel';
 import { DayTabs } from '@/components/plan/DayTabs';
 import { GeneratePlanButton } from '@/components/plan/GeneratePlanButton';
 import { PlanActions } from '@/components/plan/PlanActions';
+import { PlanEditorButton } from '@/components/plan/PlanEditor';
 import { PrintGrocery } from '@/components/plan/PrintGrocery';
 import { StatCards } from '@/components/plan/StatCards';
 import { TodayCard } from '@/components/plan/TodayCard';
@@ -74,7 +75,17 @@ export default async function DashboardPage() {
         eyebrow={[goal?.label, diet?.label, ...modes].filter(Boolean).join(' · ')}
         title={`Namaste, ${user.name.split(' ')[0]}`}
         description="Here is your plan for this week."
-        actions={<PlanActions plan={plan} serverToday={serverToday} />}
+        actions={
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+            <PlanEditorButton
+              target={{ kind: 'edit', planId: plan.id }}
+              label="Edit plan"
+              size="sm"
+              className="no-print flex-1 sm:flex-none"
+            />
+            <PlanActions plan={plan} serverToday={serverToday} />
+          </div>
+        }
       />
 
       <div className="mb-5 empty:hidden">

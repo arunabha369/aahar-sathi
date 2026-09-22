@@ -147,3 +147,14 @@ export function averageBedtime(bedtimes: string[]): string | null {
   const mean = Math.round(shifted.reduce((sum, value) => sum + value, 0) / shifted.length) % 1440;
   return `${String(Math.floor(mean / 60)).padStart(2, '0')}:${String(mean % 60).padStart(2, '0')}`;
 }
+
+/**
+ * "22 Sept 2026 · 4:05 PM" for a timestamp, in India time. Worked out by hand rather than with
+ * Intl, so the server and the browser always print the same thing.
+ */
+export function formatPlanMoment(iso: string): string {
+  const ist = new Date(Date.parse(iso) + 330 * 60_000);
+  const date = ist.toISOString().slice(0, 10);
+  const time = `${String(ist.getUTCHours()).padStart(2, '0')}:${String(ist.getUTCMinutes()).padStart(2, '0')}`;
+  return `${formatDate(date)} · ${formatClock(time)}`;
+}

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import * as plans from '../db/plans.ts';
-import { findUserById } from '../db/users.ts';
+import { findPreferences, findUserById, saveProfile, updatePreferences } from '../db/users.ts';
 import { ApiError } from '../utils/ApiError.ts';
 import { currentUserId } from '../middleware/requireAuth.ts';
 import { validBody, validParams, validQuery } from '../middleware/validate.ts';
@@ -8,9 +8,17 @@ import { listPantry } from '../db/pantry.ts';
 import { buildBatchPlan } from '../services/batchCooking.ts';
 import { buildGroceryList, groceryItemNames } from '../services/grocery.ts';
 import { generatePlanDays, swapMealInDays } from '../services/planGenerator.ts';
-import { createPlanForUser, fastTimesOf, loadPlannerMeals, refreshPortions } from '../services/planService.ts';
+import { calculateTargets } from '../services/nutrition.ts';
+import { buildPlan, createPlanForUser, fastTimesOf, loadPlannerMeals, refreshPortions } from '../services/planService.ts';
 import { toPlanSummary, toPublicPlan } from '../utils/serialize.ts';
-import type { GroceryBody, IdParams, PlansQuery, SwapBody } from '../validation/schemas.ts';
+import type {
+  GroceryBody,
+  IdParams,
+  PlanRequestBody,
+  PlansQuery,
+  SwapBody,
+  TargetsPreviewBody,
+} from '../validation/schemas.ts';
 import { DEFAULT_PREFERENCES, type Profile } from '../types.ts';
 
 const planNotFound = () => ApiError.notFound('We could not find that plan.');
@@ -22,16 +30,61 @@ async function findOwnedPlan(req: Request, id: string) {
   return plan;
 }
 
+/**
+ * Makes a new active plan. The request may carry changed settings (profile and plan options),
+ * which are saved as the user's own first, so the plan and Settings always agree.
+ */
 export async function createPlan(req: Request, res: Response): Promise<void> {
   const userId = currentUserId(req);
+  const body = validBody<PlanRequestBody>(req);
   const user = await findUserById(userId);
   if (!user) throw ApiError.unauthorized();
-  if (!user.profileComplete) {
+  if (!user.profileComplete && !body.profile) {
     throw ApiError.badRequest('Please finish your profile before generating a plan.');
   }
 
-  const plan = await createPlanForUser({ userId, profile: user.profile as Profile });
+  const profile = body.profile ? (await saveProfile(userId, body.profile))!.profile : user.profile;
+  if (body.preferences) await updatePreferences(userId, body.preferences);
+
+  const plan = await createPlanForUser({ userId, profile: profile as Profile });
   res.status(201).json({ plan: toPublicPlan(plan) });
+}
+
+/**
+ * Edits a plan in place: new settings, new targets and a fresh week of meals, same plan.
+ * Editing the active plan saves the settings as the user's own too; an old plan changes alone.
+ */
+export async function updatePlan(req: Request, res: Response): Promise<void> {
+  const { id } = validParams<IdParams>(req);
+  const body = validBody<PlanRequestBody>(req);
+  const userId = currentUserId(req);
+  const plan = await findOwnedPlan(req, id);
+
+  const { preferences: _built, chosenPreferences, household: _household, calorieAdjustment: _adjustment, ...planProfile } =
+    plan.inputs;
+  const profile: Profile = body.profile ?? planProfile;
+  const preferences = body.preferences ?? chosenPreferences ?? plan.inputs.preferences ?? DEFAULT_PREFERENCES;
+
+  if (plan.isActive) {
+    if (body.profile) await saveProfile(userId, body.profile);
+    if (body.preferences) await updatePreferences(userId, body.preferences);
+  }
+
+  const built = await buildPlan({ userId, profile, preferences });
+  const stillNeeded = groceryItemNames(buildGroceryList(built.days, built.inputs));
+  const updated = await plans.replacePlanContent(plan.id, userId, {
+    ...built,
+    groceryChecked: plan.groceryChecked.filter((item) => stillNeeded.has(item)),
+  });
+  if (!updated) throw planNotFound();
+  res.json({ plan: toPublicPlan(updated) });
+}
+
+/** The targets a set of details would give, for the plan editor to show as you change them. */
+export async function previewTargets(req: Request, res: Response): Promise<void> {
+  const { profile } = validBody<TargetsPreviewBody>(req);
+  const { calorieAdjustment } = await findPreferences(currentUserId(req));
+  res.json({ targets: calculateTargets(profile, { calorieAdjustment }) });
 }
 
 export async function listPlans(req: Request, res: Response): Promise<void> {

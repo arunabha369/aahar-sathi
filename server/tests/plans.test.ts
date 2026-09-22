@@ -260,3 +260,67 @@ describe('authentication on plan routes', () => {
     await request(app).post('/api/plans').expect(401);
   });
 });
+
+describe('new and edited plans', () => {
+  it('builds a new plan from changed settings, and saves them as the user’s own', async () => {
+    const { agent } = await signUpWithProfile(app);
+    const first = (await agent.post('/api/plans').expect(201)).body.plan;
+
+    const changed = { ...completeProfile, goal: 'gain', diet: 'egg', weightKg: 70 };
+    const preview = (await agent.post('/api/plans/preview').send({ profile: changed }).expect(200)).body.targets;
+    const second = (
+      await agent
+        .post('/api/plans')
+        .send({ profile: changed, preferences: { jain: false, fasting: 'none', vratDays: ['Mon'], city: null } })
+        .expect(201)
+    ).body.plan;
+
+    expect(second.id).not.toBe(first.id);
+    expect(second.targets.calories).toBe(preview.calories);
+    expect(second.targets.calories).not.toBe(first.targets.calories);
+    expect(second.inputs).toMatchObject({ goal: 'gain', diet: 'egg', weightKg: 70 });
+    expect(second.days.find((day: { day: string }) => day.day === 'Mon').kind).toBe('vrat');
+    const { profile } = (await agent.get('/api/profile').expect(200)).body;
+    expect(profile).toMatchObject({ goal: 'gain', diet: 'egg', weightKg: 70 });
+    expect((await agent.get('/api/profile/preferences').expect(200)).body.preferences.vratDays).toEqual(['Mon']);
+
+    // The list tells the two apart.
+    const { plans: list } = (await agent.get('/api/plans').expect(200)).body;
+    expect(list[0]).toMatchObject({ goal: 'gain', diet: 'egg', people: 1, fasting: 'none' });
+    expect(list[0].dishes.length).toBeGreaterThan(0);
+  });
+
+  it('edits a plan in place, keeping its id; only the active plan updates the profile', async () => {
+    const { agent } = await signUpWithProfile(app);
+    const old = (await agent.post('/api/plans').expect(201)).body.plan;
+    const active = (await agent.post('/api/plans').expect(201)).body.plan;
+
+    const edited = (
+      await agent.put(`/api/plans/${old.id}`).send({ profile: { ...completeProfile, cuisine: 'south', goal: 'maintain' } }).expect(200)
+    ).body.plan;
+    expect(edited.id).toBe(old.id);
+    expect(edited.isActive).toBe(false);
+    expect(edited.inputs).toMatchObject({ cuisine: 'south', goal: 'maintain' });
+    expect((await agent.get('/api/plans').expect(200)).body.total).toBe(2);
+    expect((await agent.get('/api/profile').expect(200)).body.profile.cuisine).toBe(completeProfile.cuisine);
+
+    const activeEdit = (
+      await agent
+        .put(`/api/plans/${active.id}`)
+        .send({ preferences: { jain: true, fasting: 'none', vratDays: [], city: null } })
+        .expect(200)
+    ).body.plan;
+    expect(activeEdit).toMatchObject({ id: active.id, isActive: true });
+    expect(activeEdit.inputs.preferences.jain).toBe(true);
+    expect((await agent.get('/api/profile/preferences').expect(200)).body.preferences.jain).toBe(true);
+  });
+
+  it('refuses bad settings and other people’s plans', async () => {
+    const owner = await signUpWithProfile(app);
+    const other = await signUpWithProfile(app);
+    const plan = (await owner.agent.post('/api/plans').expect(201)).body.plan;
+    await owner.agent.post('/api/plans').send({ profile: { ...completeProfile, age: 12 } }).expect(400);
+    await owner.agent.put(`/api/plans/${plan.id}`).send({ profile: { ...completeProfile, weightKg: 5 } }).expect(400);
+    await other.agent.put(`/api/plans/${plan.id}`).send({}).expect(404);
+  });
+});

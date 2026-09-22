@@ -141,6 +141,22 @@ export async function updatePlanDays(
   return rows[0] ?? null;
 }
 
+/** Rebuilds a plan in place (edited): new settings, targets and meals, same id and active state. */
+export async function replacePlanContent(
+  id: string,
+  userId: string,
+  content: { inputs: PlanInputs; targets: Targets; days: PlanDay[]; groceryChecked: string[] },
+): Promise<PlanRecord | null> {
+  const { rows } = await pool.query<PlanRecord>(
+    `update app.plans
+     set inputs = $3::jsonb, targets = $4::jsonb, days = $5::jsonb, grocery_checked = $6::text[]
+     where id = $1 and user_id = $2
+     returning ${PLAN_COLUMNS}`,
+    [id, userId, JSON.stringify(content.inputs), JSON.stringify(content.targets), JSON.stringify(content.days), content.groceryChecked],
+  );
+  return rows[0] ?? null;
+}
+
 export async function setGroceryChecked(id: string, userId: string, groceryChecked: string[]): Promise<void> {
   await pool.query('update app.plans set grocery_checked = $3::text[] where id = $1 and user_id = $2', [
     id,

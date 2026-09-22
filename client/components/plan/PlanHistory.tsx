@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { DietIcon, GoalIcon } from '@/components/illustrations/OptionIcons';
 import { ApiError, api } from '@/lib/api/client';
-import { DIET_OPTIONS, GOAL_OPTIONS } from '@/lib/constants';
-import { formatDate } from '@/lib/format';
+import { PlanEditorButton } from '@/components/plan/PlanEditor';
+import { CUISINE_OPTIONS, DIET_OPTIONS, FASTING_LABELS, GOAL_OPTIONS } from '@/lib/constants';
+import { formatPlanMoment } from '@/lib/format';
 import type { PlanSummary } from '@/lib/types';
 
 export function PlanHistory({ plans }: { plans: PlanSummary[] }) {
@@ -55,12 +56,19 @@ export function PlanHistory({ plans }: { plans: PlanSummary[] }) {
       {plans.map((plan) => {
         const goal = GOAL_OPTIONS.find((option) => option.value === plan.goal);
         const diet = DIET_OPTIONS.find((option) => option.value === plan.diet);
+        const cuisine = CUISINE_OPTIONS.find((option) => option.value === plan.cuisine);
+        const when = formatPlanMoment(plan.createdAt);
+        const extras = [
+          FASTING_LABELS[plan.fasting],
+          plan.jain ? 'Jain' : null,
+          plan.people > 1 ? `For ${plan.people} people` : null,
+        ].filter((extra): extra is string => Boolean(extra));
 
         return (
           <li key={plan.id} className="surface flex flex-col p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="eyebrow">{formatDate(plan.createdAt.slice(0, 10))}</p>
+                <p className="eyebrow">{when}</p>
                 <h2 className="mt-1 flex items-center gap-2 text-lg font-bold text-ink">
                   {plan.calories.toLocaleString('en-IN')} kcal
                   {plan.isActive ? (
@@ -74,7 +82,7 @@ export function PlanHistory({ plans }: { plans: PlanSummary[] }) {
               <Link
                 href={`/plans/${plan.id}`}
                 className="grid size-11 shrink-0 place-items-center rounded-xl text-muted ring-1 ring-line transition-colors hover:bg-surface-2 hover:text-ink"
-                aria-label={`Open the plan from ${formatDate(plan.createdAt.slice(0, 10))}`}
+                aria-label={`Open the plan from ${when}`}
               >
                 <ArrowUpRight className="size-[1.125rem]" aria-hidden="true" />
               </Link>
@@ -105,9 +113,28 @@ export function PlanHistory({ plans }: { plans: PlanSummary[] }) {
                 <DietIcon diet={plan.diet} className="size-4" />
                 {diet?.label}
               </span>
+              <span aria-hidden="true">·</span>
+              <span>{cuisine?.label}</span>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            {extras.length > 0 ? (
+              <p className="mt-2 flex flex-wrap gap-1.5">
+                {extras.map((extra) => (
+                  <Badge key={extra} size="sm">
+                    {extra}
+                  </Badge>
+                ))}
+              </p>
+            ) : null}
+
+            {plan.dishes.length > 0 ? (
+              <p className="mt-2.5 text-[0.8125rem] leading-relaxed text-muted">
+                <span className="font-semibold text-ink-soft">On the menu:</span> {plan.dishes.join(' · ')}
+              </p>
+            ) : null}
+
+            <div className="mt-auto flex flex-wrap gap-2 pt-5">
+              <PlanEditorButton target={{ kind: 'edit', planId: plan.id }} size="sm" />
               {!plan.isActive ? (
                 <Button size="sm" variant="secondary" onClick={() => activate(plan.id)} pending={busyId === plan.id}>
                   Make active

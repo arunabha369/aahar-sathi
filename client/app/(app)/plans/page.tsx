@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { GeneratePlanButton } from '@/components/plan/GeneratePlanButton';
+import { PlanEditorButton } from '@/components/plan/PlanEditor';
 import { PlanHistory } from '@/components/plan/PlanHistory';
 import { serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
@@ -31,7 +32,7 @@ export default async function PlansPage(props: PageProps<'/plans'>) {
             ? 'Every plan you generate is kept here.'
             : `${total} plan${total === 1 ? '' : 's'} so far. Open any one to read it, or make it active again.`
         }
-        actions={<GeneratePlanButton label="New plan" />}
+        actions={total > 0 ? <PlanEditorButton target={{ kind: 'new' }} size="lg" /> : undefined}
       />
 
       {plans.length === 0 ? (

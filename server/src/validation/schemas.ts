@@ -306,3 +306,15 @@ export type PushSubscriptionBody = z.infer<typeof pushSubscriptionSchema>;
 
 export const unsubscribeSchema = z.object({ endpoint: z.string().url().max(1000) });
 export type UnsubscribeBody = z.infer<typeof unsubscribeSchema>;
+
+/** A new or edited plan: the full profile to build it from and its options, both optional. */
+export const planRequestSchema = z
+  .object({
+    profile: profileSchema.optional(),
+    preferences: preferencesSchema.optional(),
+  })
+  .default({});
+export type PlanRequestBody = z.infer<typeof planRequestSchema>;
+
+export const targetsPreviewSchema = z.object({ profile: profileSchema });
+export type TargetsPreviewBody = z.infer<typeof targetsPreviewSchema>;

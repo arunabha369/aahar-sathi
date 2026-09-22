@@ -209,7 +209,10 @@ export interface HouseholdMemberSnapshot {
 
 /** What a plan was made from: the profile, and (for newer plans) how it was shaped. */
 export interface PlanInputs extends Profile {
+  /** What the plan was built with (this week's Ekadashi days added in). */
   preferences?: PlanPreferences;
+  /** The options as the user chose them, which an edit starts from. */
+  chosenPreferences?: PlanPreferences;
   calorieAdjustment?: number;
   household?: HouseholdMemberSnapshot[];
 }

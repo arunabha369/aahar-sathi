@@ -8,12 +8,13 @@ import { MacroDonut, MacroLegend } from '@/components/charts/MacroDonut';
 import { WeekCaloriesChart } from '@/components/charts/WeekCaloriesChart';
 import { ActivatePlanButton } from '@/components/plan/ActivatePlanButton';
 import { CalculationPanel } from '@/components/plan/CalculationPanel';
+import { PlanEditorButton } from '@/components/plan/PlanEditor';
 import { DayTabs } from '@/components/plan/DayTabs';
 import { StatCards } from '@/components/plan/StatCards';
 import { cityName } from '@/lib/api/cities';
 import { ServerApiError, serverFetch } from '@/lib/api/server';
 import { requireCompleteProfile } from '@/lib/auth';
-import { formatDate, todayKey } from '@/lib/format';
+import { formatPlanMoment, todayKey } from '@/lib/format';
 import type { PlanResponse } from '@/lib/types';
 
 export const metadata: Metadata = {
@@ -49,14 +50,17 @@ export default async function PlanDetailPage(props: PageProps<'/plans/[id]'>) {
         <div>
           <p className="eyebrow mb-1.5">Saved plan</p>
           <h1 className="flex flex-wrap items-center gap-3 text-[1.75rem] font-extrabold leading-tight tracking-tight text-ink sm:text-[2rem]">
-            {formatDate(plan.createdAt.slice(0, 10))}
+            {formatPlanMoment(plan.createdAt)}
             {plan.isActive ? <Badge tone="brand">Active</Badge> : <Badge>Read only</Badge>}
           </h1>
           <p className="mt-1.5 text-[0.9375rem] text-muted">
             {plan.targets.calories.toLocaleString('en-IN')} kcal a day · {plan.targets.protein} g protein
           </p>
         </div>
-        {!plan.isActive ? <ActivatePlanButton planId={plan.id} /> : null}
+        <div className="flex flex-wrap gap-2">
+          <PlanEditorButton target={{ kind: 'edit', planId: plan.id }} label="Edit plan" />
+          {!plan.isActive ? <ActivatePlanButton planId={plan.id} /> : null}
+        </div>
       </header>
 
       <StatCards targets={plan.targets} />
@@ -67,7 +71,11 @@ export default async function PlanDetailPage(props: PageProps<'/plans/[id]'>) {
             <PanelHeader
               eyebrow="This week"
               title="The meals"
-              description="This plan is read-only. Make it active to swap or shuffle its meals."
+              description={
+                plan.isActive
+                  ? 'Your active plan. Swap anything you do not fancy, or edit the plan to change its settings.'
+                  : 'Make this plan active to swap its meals, or edit it to rebuild it with different settings.'
+              }
             />
             <DayTabs
               planId={plan.id}
@@ -76,7 +84,7 @@ export default async function PlanDetailPage(props: PageProps<'/plans/[id]'>) {
               diet={plan.inputs.diet}
               serverToday={todayKey()}
               cityName={city}
-              readOnly
+              readOnly={!plan.isActive}
             />
           </Panel>
           <Panel>

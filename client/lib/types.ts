@@ -139,6 +139,8 @@ export interface HouseholdMemberSnapshot {
 
 export interface PlanInputs extends Profile {
   preferences?: PlanPreferences;
+  /** The options as the user chose them; an edit starts from these. */
+  chosenPreferences?: PlanPreferences;
   calorieAdjustment?: number;
   household?: HouseholdMemberSnapshot[];
 }
@@ -163,8 +165,13 @@ export interface PlanSummary {
   protein: number;
   bmi: number;
   bmiCategory: BmiCategory;
+  fasting: FastingMode;
+  jain: boolean;
+  people: number;
+  dishes: string[];
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface GroceryItem {
