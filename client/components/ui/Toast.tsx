@@ -40,14 +40,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext value={value}>
       {children}
       <div
-        className="no-print pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4"
+        className="no-print pointer-events-none fixed inset-x-0 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 flex flex-col items-center gap-2 px-4"
         aria-live="polite"
       >
         {toasts.map((toast) => (
           <div
             key={toast.id}
             className={cn(
-              'pointer-events-auto flex max-w-md items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-semibold shadow-[var(--shadow-lg)] animate-rise',
+              'pointer-events-auto flex max-w-md items-center gap-2.5 rounded-2xl px-4 py-3 text-sm font-semibold shadow-[var(--shadow-lg)] animate-drop',
               toast.tone === 'success' ? 'bg-surface-3 text-ink ring-1 ring-line-strong' : 'bg-chilli-500 text-accent-ink',
             )}
             role={toast.tone === 'error' ? 'alert' : 'status'}

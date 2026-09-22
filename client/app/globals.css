@@ -85,12 +85,18 @@
   --shadow-brand: 0 8px 24px -8px rgb(158 240 122 / 0.45);
 
   --animate-rise: rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Toasts come down from the top edge */
+  --animate-drop: drop 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade: fade 0.3s ease-out both;
   --animate-shimmer: shimmer 1.8s linear infinite;
   --animate-float: float 6s ease-in-out infinite;
   --animate-marquee: marquee 70s linear infinite;
 }
 
+@keyframes drop {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: none; }
+}
 @keyframes rise {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
