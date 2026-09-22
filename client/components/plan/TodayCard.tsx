@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Flame } from 'lucide-react';
+import { ArrowRight, Flame, NotebookPen } from 'lucide-react';
 import { DiaryMeals } from '@/components/diary/DiaryMeals';
 import { EatenSummary } from '@/components/diary/EatenSummary';
 import { MacroLine } from '@/components/plan/MacroLine';
@@ -41,6 +41,9 @@ export function TodayCard({ days, targets, serverToday, diary: initialDiary, str
   const liveTimes = new Map(diary.day.planned.map((meal) => [meal.slot, meal.time]));
   const today = { ...planToday, meals: planToday.meals.map((meal) => ({ ...meal, time: liveTimes.get(meal.slot) ?? meal.time })) };
   const fastTimes = diary.day.fastTimes ?? planToday.fastTimes;
+  // How much of today has been ticked off, shown on the food diary button.
+  const plannedCount = diary.day.planned.length;
+  const logged = diary.day.planned.filter((meal) => meal.status !== null).length;
   const tomorrow = days[(dayIndex + 1) % days.length]!;
 
   const upcomingIndex =
@@ -74,10 +77,26 @@ export function TodayCard({ days, targets, serverToday, diary: initialDiary, str
           ) : null}
           <Link
             href="/diary"
-            className="inline-flex min-h-11 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-brand-800 hover:bg-surface-2"
+            aria-label={`Food diary — ${logged} of ${plannedCount} meals logged today`}
+            className="group inline-flex min-h-11 items-center gap-2 rounded-xl bg-surface-2 px-3 text-sm font-semibold text-ink ring-1 ring-line transition-colors hover:bg-surface-3 hover:ring-line-strong"
           >
+            <NotebookPen className="size-4 text-brand-700" aria-hidden="true" />
             Food diary
-            <ArrowRight className="size-4" aria-hidden="true" />
+            {plannedCount > 0 ? (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'rounded-md px-1.5 py-0.5 text-[0.6875rem] font-bold tabular-nums',
+                  logged === plannedCount ? 'bg-brand-50 text-brand-800' : 'bg-surface-3 text-muted',
+                )}
+              >
+                {logged}/{plannedCount}
+              </span>
+            ) : null}
+            <ArrowRight
+              className="size-4 text-muted transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+              aria-hidden="true"
+            />
           </Link>
         </div>
       </div>
