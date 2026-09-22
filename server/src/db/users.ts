@@ -27,17 +27,51 @@ export async function findUserByEmail(email: string): Promise<UserRecord | null>
 
 export async function findUserWithPasswordByEmail(
   email: string,
-): Promise<(UserRecord & { passwordHash: string }) | null> {
-  const { rows } = await pool.query<UserRecord & { passwordHash: string }>(
+): Promise<(UserRecord & { passwordHash: string | null }) | null> {
+  const { rows } = await pool.query<UserRecord & { passwordHash: string | null }>(
     `select ${USER_COLUMNS}, password_hash as "passwordHash" from app.users where email = $1`,
     [email.toLowerCase()],
   );
   return rows[0] ?? null;
 }
 
-export async function userExists(id: string): Promise<boolean> {
-  const { rowCount } = await pool.query('select 1 from app.users where id = $1', [id]);
-  return rowCount === 1;
+/** What a session check needs: does the account exist, and when did its password last change? */
+export async function findSessionUser(id: string): Promise<{ passwordChangedAt: Date | null } | null> {
+  const { rows } = await pool.query<{ passwordChangedAt: Date | null }>(
+    'select password_changed_at as "passwordChangedAt" from app.users where id = $1',
+    [id],
+  );
+  return rows[0] ?? null;
+}
+
+export async function findUserByGoogleSub(googleSub: string): Promise<UserRecord | null> {
+  const { rows } = await pool.query<UserRecord>(`select ${USER_COLUMNS} from app.users where google_sub = $1`, [
+    googleSub,
+  ]);
+  return rows[0] ?? null;
+}
+
+/**
+ * Connects a Google account to an existing account with the same (Google-verified) email.
+ * Returns null if that account is already linked to a different Google account.
+ */
+export async function linkGoogleAccount(userId: string, googleSub: string): Promise<UserRecord | null> {
+  const { rows } = await pool.query<UserRecord>(
+    `update app.users set google_sub = $2
+     where id = $1 and (google_sub is null or google_sub = $2)
+     returning ${USER_COLUMNS}`,
+    [userId, googleSub],
+  );
+  return rows[0] ?? null;
+}
+
+/** A new account from Google sign-in: no password until the user chooses to set one. */
+export async function createGoogleUser(input: { name: string; email: string; googleSub: string }): Promise<UserRecord> {
+  const { rows } = await pool.query<UserRecord>(
+    `insert into app.users (name, email, google_sub) values ($1, $2, $3) returning ${USER_COLUMNS}`,
+    [input.name, input.email.toLowerCase(), input.googleSub],
+  );
+  return rows[0]!;
 }
 
 export async function createUser(input: { name: string; email: string; passwordHash: string }): Promise<UserRecord> {

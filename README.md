@@ -81,6 +81,10 @@ Both need the same `DATABASE_URL` and `JWT_SECRET`.
 | `DATABASE_URL`  | yes      | —                                           | Postgres connection string (Supabase Session pooler, or local). The server exits if missing. |
 | `DATABASE_CA_CERT` | no    | —                                           | Supabase's CA certificate (file path or PEM) to verify TLS. Without it, TLS is encrypted but unverified. |
 | `DATABASE_POOL_SIZE` | no  | `10` (`2` on Vercel)                        | Connections each API instance keeps open.                 |
+| `APP_URL`       | no       | `NEXT_PUBLIC_SITE_URL`, then `http://localhost:3000` | Site origin for password-reset links and the Google callback. |
+| `RESEND_API_KEY`| no       | —                                           | Sends password-reset emails via Resend. Without it, dev prints the link to the log. |
+| `EMAIL_FROM`    | no       | `Aahar Sathi <no-reply@aaharsathi.in>`      | Sender for those emails (must be on a domain verified in Resend). |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | no | — | Turn on "Continue with Google". |
 | `JWT_SECRET`    | yes      | —                                           | Signing key, at least 16 characters. The server exits if missing. |
 | `PORT`          | no       | `5001`                                      | Port for the standalone API (`npm run dev:api`) only.     |
 | `NODE_ENV`      | no       | `development`                               | `production` turns on `trust proxy` and secure cookies.   |
@@ -254,6 +258,21 @@ point `TEST_DATABASE_URL` elsewhere if yours is not on `localhost:5432`.
   before it sleeps (`@vercel/functions` `attachDatabasePool`)
 - Create the tables and load the meals once, from your machine: `npm run db:migrate && npm run seed`
   with `server/.env` pointing at the same database
+
+**Password reset emails → Resend**
+
+- Create an account at resend.com, verify `aaharsathi.in` (it gives you DNS records to add), create an
+  API key, then set `RESEND_API_KEY` and `EMAIL_FROM` in Vercel. Reset links use `APP_URL`
+
+**Google sign-in → Google Cloud**
+
+- Google Cloud Console → APIs & Services → OAuth consent screen: app name, support email, the
+  `aaharsathi.in` domain; publish it
+- Credentials → Create credentials → OAuth client ID → Web application. Authorised redirect URIs:
+  `https://aaharsathi.in/api/auth/google/callback` (and `http://localhost:3000/api/auth/google/callback`
+  for local testing)
+- Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Vercel (and `client/.env.local` locally). The
+  button appears on the sign-in and sign-up pages as soon as both are set
 
 **Database → Supabase**
 

@@ -5,6 +5,8 @@ import { calculateTargets } from '../src/services/nutrition.ts';
 import {
   dietAllows,
   generatePlanDays,
+  isCountable,
+  portionFactors,
   scaleFactor,
   scaleQuantity,
   slotTargetKcal,
@@ -106,22 +108,40 @@ describe('portion scaling', () => {
     expect(scaleFactor(100, 600)).toBe(0.5);
   });
 
-  it('keeps eggs whole and other portions in quarters', () => {
-    expect(scaleQuantity({ qty: 2, unit: 'egg', food: 'Eggs' }, 1.25)).toBe(3);
+  it('keeps anything counted whole and other portions in quarters', () => {
+    expect(scaleQuantity({ qty: 2, unit: 'egg', food: 'Eggs' }, 1.5)).toBe(3);
     expect(scaleQuantity({ qty: 2, unit: 'egg', food: 'Eggs' }, 0.5)).toBe(1);
     expect(scaleQuantity({ qty: 1, unit: 'bowl', food: 'Rice' }, 1.6)).toBe(1.5);
-    expect(scaleQuantity({ qty: 3, unit: 'roti', food: 'Roti' }, 1.25)).toBe(3.75);
+    expect(scaleQuantity({ qty: 3, unit: 'roti', food: 'Roti' }, 1.25)).toBe(4);
+    expect(scaleQuantity({ qty: 3, unit: 'idli', food: 'Steamed idli' }, 4 / 3)).toBe(4);
     expect(scaleQuantity({ qty: 120, unit: 'g', food: 'Chicken' }, 1.25)).toBe(150);
   });
 
-  it('never prescribes a portion outside 0.5×–2.5×', () => {
+  it('only offers portion sizes that keep counted items whole', () => {
+    const idli = portionFactors({ items: [{ qty: 3, unit: 'idli', food: 'Steamed idli' }, { qty: 1, unit: 'bowl', food: 'Sambar' }] });
+    expect(idli.map((factor) => Math.round(factor * 3))).toEqual([2, 3, 4, 5, 6, 7]);
+
+    const paratha = portionFactors({ items: [{ qty: 1, unit: 'paratha', food: 'Paneer paratha' }] });
+    expect(paratha).toEqual([1, 2]);
+
+    const measured = portionFactors({ items: [{ qty: 1, unit: 'bowl', food: 'Poha' }] });
+    expect(measured[0]).toBe(0.5);
+    expect(measured.at(-1)).toBe(2.5);
+    expect(measured.every((factor) => Math.round(factor * 100) % 25 === 0)).toBe(true);
+  });
+
+  it('never prescribes a portion outside 0.5×–2.5×, and never a fraction of a counted item', () => {
     for (const profile of randomProfiles(60)) {
       const { days } = plan(profile, 7);
       for (const day of days) {
         for (const meal of day.meals) {
           expect(meal.factor).toBeGreaterThanOrEqual(0.5);
           expect(meal.factor).toBeLessThanOrEqual(2.5);
-          expect(Math.round(meal.factor * 100) % 25).toBe(0);
+          for (const item of meal.items) {
+            if (isCountable(item.unit)) {
+              expect(Number.isInteger(item.qty), `${item.qty} ${item.unit} in ${meal.slug}`).toBe(true);
+            }
+          }
         }
       }
     }
@@ -145,6 +165,28 @@ describe('calorie targets', () => {
     expect(slotTargetKcal(2000, 'lunch')).toBe(600);
     expect(slotTargetKcal(2000, 'eveningSnack')).toBe(200);
     expect(slotTargetKcal(2000, 'dinner')).toBe(500);
+  });
+});
+
+describe('macro balance', () => {
+  it('keeps fat within the dashboard’s “High” line and protein above “Low” on nearly every day', () => {
+    let days = 0;
+    let fatHigh = 0;
+    let proteinLow = 0;
+    for (const profile of randomProfiles(150, 21)) {
+      const { targets, days: week } = plan(profile, 5);
+      for (const day of week) {
+        days += 1;
+        if (day.totals.fat > targets.fat * 1.15) fatHigh += 1;
+        if (day.totals.protein < targets.protein * 0.85) proteinLow += 1;
+        expect(Math.abs(day.totals.kcal - targets.calories) / targets.calories).toBeLessThanOrEqual(0.05);
+      }
+    }
+    // Before balancing macros, about two days in three ran over on fat and one in five
+    // fell short on protein. What remains is mostly vegetarian and egg weight-loss plans,
+    // limited by the recipes, plus days where keeping to the chosen cuisine won.
+    expect(fatHigh / days).toBeLessThan(0.06);
+    expect(proteinLow / days).toBeLessThan(0.15);
   });
 });
 

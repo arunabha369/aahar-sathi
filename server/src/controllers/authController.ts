@@ -28,8 +28,13 @@ export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = validBody<LoginBody>(req);
 
   const user = await findUserWithPasswordByEmail(email);
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
-    throw ApiError.unauthorized('That email and password do not match.');
+  const matches = await verifyPassword(password, user?.passwordHash ?? null);
+  if (!user || !matches) {
+    throw ApiError.unauthorized(
+      user && user.passwordHash === null
+        ? 'This account signs in with Google. Use "Continue with Google", or set a password with "Forgot password?".'
+        : 'That email and password do not match.',
+    );
   }
 
   setAuthCookie(res, signToken(user.id));

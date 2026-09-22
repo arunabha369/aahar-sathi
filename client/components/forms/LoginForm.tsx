@@ -7,15 +7,27 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { DemoButton } from '@/components/DemoButton';
+import { GoogleButton } from '@/components/forms/GoogleButton';
 import { ApiError, api } from '@/lib/api/client';
 import type { UserResponse } from '@/lib/types';
 
 interface FormState {
   error?: string;
   fieldErrors?: Record<string, string>;
+  /** What was typed, so the email survives React resetting the form after an error. */
+  email?: string;
 }
 
-export function LoginForm({ next }: { next?: string }) {
+export function LoginForm({
+  next,
+  googleEnabled,
+  initialError,
+}: {
+  next?: string | undefined;
+  googleEnabled: boolean;
+  /** A message carried back from a failed Google sign-in. */
+  initialError?: string | undefined;
+}) {
   const router = useRouter();
 
   const [state, formAction, pending] = useActionState(
@@ -24,7 +36,7 @@ export function LoginForm({ next }: { next?: string }) {
       const password = String(formData.get('password') ?? '');
 
       if (!email || !password) {
-        return { error: 'Please enter your email and password.' };
+        return { error: 'Please enter your email and password.', email };
       }
 
       try {
@@ -38,12 +50,12 @@ export function LoginForm({ next }: { next?: string }) {
           const fieldErrors = Object.fromEntries(
             (error.details ?? []).map((detail) => [detail.field, detail.message]),
           );
-          return { error: error.message, fieldErrors };
+          return { error: error.message, fieldErrors, email };
         }
-        return { error: 'We could not reach the server. Please try again.' };
+        return { error: 'We could not reach the server. Please try again.', email };
       }
     },
-    {},
+    initialError ? { error: initialError } : {},
   );
 
   return (
@@ -66,6 +78,7 @@ export function LoginForm({ next }: { next?: string }) {
         <Field
           label="Email"
           name="email"
+          defaultValue={state.email}
           type="email"
           autoComplete="email"
           inputMode="email"
@@ -73,14 +86,24 @@ export function LoginForm({ next }: { next?: string }) {
           required
           error={state.fieldErrors?.email}
         />
-        <PasswordField
-          label="Password"
-          name="password"
-          autoComplete="current-password"
-          placeholder="Your password"
-          required
-          error={state.fieldErrors?.password}
-        />
+        <div>
+          <PasswordField
+            label="Password"
+            name="password"
+            autoComplete="current-password"
+            placeholder="Your password"
+            required
+            error={state.fieldErrors?.password}
+          />
+          <p className="mt-1 text-right">
+            <Link
+              href="/forgot-password"
+              className="-my-2 inline-flex min-h-11 items-center text-[0.8125rem] font-semibold text-brand-800 underline-offset-4 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </p>
+        </div>
 
         <Button type="submit" size="lg" fullWidth pending={pending}>
           {pending ? 'Signing you in…' : 'Sign in'}
@@ -93,7 +116,10 @@ export function LoginForm({ next }: { next?: string }) {
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      <DemoButton className="w-full" />
+      <div className="space-y-3">
+        {googleEnabled ? <GoogleButton next={next} /> : null}
+        <DemoButton className="w-full" />
+      </div>
 
       <p className="mt-8 text-center text-sm text-muted">
         New here?{' '}

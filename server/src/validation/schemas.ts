@@ -36,6 +36,15 @@ export const loginSchema = z.object({
 });
 export type LoginBody = z.infer<typeof loginSchema>;
 
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(20, 'This reset link is not valid.').max(200, 'This reset link is not valid.'),
+  password: passwordSchema,
+});
+export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
+
 export const profileSchema = z.object({
   age: z
     .number({ message: 'Age is required.' })

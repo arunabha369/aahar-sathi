@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { RegisterForm } from '@/components/forms/RegisterForm';
+import { googleSignInEnabled } from '@/lib/authOptions';
 
 export const metadata: Metadata = {
   title: 'Create your account',
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function RegisterPage() {
-  return <RegisterForm />;
+  return <RegisterForm googleEnabled={googleSignInEnabled()} />;
 }

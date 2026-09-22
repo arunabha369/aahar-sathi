@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { LoginForm } from '@/components/forms/LoginForm';
+import { SIGN_IN_ERRORS, googleSignInEnabled } from '@/lib/authOptions';
+import { safeNextPath } from '@/lib/safeNext';
 
 export const metadata: Metadata = {
   title: 'Sign in',
@@ -8,7 +10,8 @@ export const metadata: Metadata = {
 
 export default async function LoginPage(props: PageProps<'/login'>) {
   const searchParams = await props.searchParams;
-  const next = typeof searchParams.next === 'string' ? searchParams.next : undefined;
+  const next = safeNextPath(typeof searchParams.next === 'string' ? searchParams.next : undefined);
+  const error = typeof searchParams.error === 'string' ? SIGN_IN_ERRORS[searchParams.error] : undefined;
 
-  return <LoginForm {...(next ? { next } : {})} />;
+  return <LoginForm next={next} googleEnabled={googleSignInEnabled()} initialError={error} />;
 }

@@ -11,9 +11,10 @@ import { apiRouter } from './routes/index.ts';
 export function createApp(): Express {
   const app = express();
 
-  // Behind Vercel's proxy the client IP arrives in X-Forwarded-For,
-  // which express-rate-limit and `secure` cookies both depend on.
-  if (isProduction) app.set('trust proxy', 1);
+  // The client IP arrives in X-Forwarded-For, which express-rate-limit and `secure` cookies
+  // depend on: from Vercel's proxy in production, and from Next.js itself whenever this API
+  // runs inside it (NEXT_RUNTIME is set there), including `next dev`.
+  if (isProduction || process.env.NEXT_RUNTIME) app.set('trust proxy', 1);
 
   app.use(helmet());
   // Inside Next.js (the normal setup) the browser calls /api on the same origin, so CORS

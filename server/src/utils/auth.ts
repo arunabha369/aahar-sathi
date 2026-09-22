@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import type { Response } from 'express';
@@ -9,8 +10,23 @@ export function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
-export function verifyPassword(password: string, passwordHash: string): Promise<boolean> {
-  return bcrypt.compare(password, passwordHash);
+// A real bcrypt hash of a random string, so accounts without a password (Google-only)
+// take as long to reject as a wrong password does — timing reveals nothing.
+const NO_PASSWORD_HASH = bcrypt.hashSync(randomBytes(16).toString('hex'), BCRYPT_ROUNDS);
+
+export async function verifyPassword(password: string, passwordHash: string | null): Promise<boolean> {
+  const matches = await bcrypt.compare(password, passwordHash ?? NO_PASSWORD_HASH);
+  return passwordHash !== null && matches;
+}
+
+/** A random, URL-safe secret (reset links, OAuth state). */
+export function randomToken(bytes = 32): string {
+  return randomBytes(bytes).toString('base64url');
+}
+
+/** What is stored in place of a secret token: its SHA-256, hex-encoded. */
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 export function signToken(userId: string): string {
@@ -19,12 +35,13 @@ export function signToken(userId: string): string {
   });
 }
 
-export function verifyToken(token: string): { sub: string } {
+export function verifyToken(token: string): { sub: string; issuedAt: number } {
   const payload = jwt.verify(token, env.JWT_SECRET);
-  if (typeof payload === 'string' || typeof payload.sub !== 'string') {
+  if (typeof payload === 'string' || typeof payload.sub !== 'string' || typeof payload.iat !== 'number') {
     throw new jwt.JsonWebTokenError('Malformed token payload');
   }
-  return { sub: payload.sub };
+  // `iat` is in whole seconds.
+  return { sub: payload.sub, issuedAt: payload.iat };
 }
 
 export function setAuthCookie(res: Response, token: string): void {

@@ -109,6 +109,26 @@ create table if not exists app.sleep_logs (
   constraint sleep_logs_duration_range check (duration_minutes between 60 and 960)
 );
 
+-- Sign-in methods: a password, a Google account, or both. Google-only accounts have no
+-- password hash; every account must keep at least one way in.
+alter table app.users alter column password_hash drop not null;
+alter table app.users add column if not exists google_sub text unique;
+-- Set whenever the password changes; sessions issued before it stop working.
+alter table app.users add column if not exists password_changed_at timestamptz;
+alter table app.users drop constraint if exists users_has_sign_in;
+alter table app.users add constraint users_has_sign_in check (password_hash is not null or google_sub is not null);
+
+-- Password reset links. Only a SHA-256 hash of each token is kept, so a copy of this
+-- table cannot be used to reset anyone's password.
+create table if not exists app.password_resets (
+  token_hash text primary key,
+  user_id uuid not null references app.users (id) on delete cascade,
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists password_resets_user_idx on app.password_resets (user_id, created_at desc);
+
 do $$
 declare
   t text;
@@ -119,6 +139,8 @@ begin
       'create trigger touch_updated_at before update on app.%I for each row execute function app.touch_updated_at()',
       t
     );
+  end loop;
+  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs', 'password_resets'] loop
     execute format('alter table app.%I enable row level security', t);
   end loop;
 end
