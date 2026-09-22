@@ -31,26 +31,32 @@ function Section({
   title,
   description,
   icon,
+  actions,
   children,
 }: {
   title: string;
   description?: string;
   icon: ReactNode;
+  /** Buttons that act on this part of the page, beside its heading. */
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   const id = `${title.toLowerCase().replace(/\s+/g, '-')}-heading`;
   return (
     <section aria-labelledby={id} className="mt-8 first:mt-0">
-      <header className="mb-3 flex items-center gap-2.5">
-        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-brand-700 ring-1 ring-line">
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <h2 id={id} className="text-base font-bold text-ink">
-            {title}
-          </h2>
-          {description ? <p className="text-[0.8125rem] text-muted">{description}</p> : null}
+      <header className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-brand-700 ring-1 ring-line">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <h2 id={id} className="text-base font-bold text-ink">
+              {title}
+            </h2>
+            {description ? <p className="text-[0.8125rem] text-muted">{description}</p> : null}
+          </div>
         </div>
+        {actions ? <div className="flex w-full shrink-0 sm:w-auto">{actions}</div> : null}
       </header>
       {children}
     </section>
@@ -105,8 +111,6 @@ export default async function DashboardPage() {
       <PageHeader
         eyebrow={[goal?.label, diet?.label, ...modes].filter(Boolean).join(' · ')}
         title={`Namaste, ${user.name.split(' ')[0]}`}
-        description="Here is your plan for this week."
-        actions={<PlanActions plan={plan} serverToday={serverToday} />}
       />
 
       <div className="mb-5 empty:hidden">
@@ -146,6 +150,7 @@ export default async function DashboardPage() {
         title="The week ahead"
         description="Pick any day to see its meals. Swap anything you do not fancy."
         icon={<CalendarRange className="size-4" aria-hidden="true" />}
+        actions={<PlanActions plan={plan} serverToday={serverToday} />}
       >
         <div className="grid gap-5 xl:grid-cols-3 xl:items-start">
           <Panel className="min-w-0 xl:col-span-2">
