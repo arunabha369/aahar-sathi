@@ -20,13 +20,14 @@ const PROGRESS = { href: '/progress', label: 'Progress', icon: TrendingUp } as c
 const SETTINGS = { href: '/settings', label: 'Settings', icon: Settings } as const;
 
 /**
- * The phone tab bar: five destinations at most, with Plans raised in the middle. Settings
- * lives in the top bar on phones, so recipes can have a tab of their own.
+ * The phone tab bar, in order of how often a day needs them, with the food diary raised in
+ * the middle: logging a meal is the thing people come back to most. Settings sits in the top
+ * bar, and plans (the least frequent) are reached from the dashboard and the desktop rail.
  */
-const LINKS = [DASHBOARD, GROCERY, PLANS, RECIPES, PROGRESS] as const;
+const LINKS = [DASHBOARD, RECIPES, DIARY, GROCERY, PROGRESS] as const;
 
-/** The desktop rail has room for everything, with the food diary next to the dashboard. */
-const SIDEBAR_LINKS = [DASHBOARD, DIARY, GROCERY, PLANS, RECIPES, PROGRESS, SETTINGS] as const;
+/** The desktop rail has room for everything, in the same order of use. */
+const SIDEBAR_LINKS = [DASHBOARD, DIARY, RECIPES, GROCERY, PLANS, PROGRESS, SETTINGS] as const;
 
 function useIsActive() {
   // Typed as nullable because the app also has a pages/ folder (for /api); App Router pages always have one.

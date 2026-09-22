@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { CalendarRange, Droplets, PieChart, Sun } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, CalendarRange, Droplets, PieChart, Sun } from 'lucide-react';
 import { Panel, PanelHeader, PageHeader } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { MacroDonut, MacroLegend } from '@/components/charts/MacroDonut';
@@ -150,7 +151,18 @@ export default async function DashboardPage() {
         title="The week ahead"
         description="Pick any day to see its meals. Swap anything you do not fancy."
         icon={<CalendarRange className="size-4" aria-hidden="true" />}
-        actions={<PlanActions plan={plan} serverToday={serverToday} />}
+        actions={
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <PlanActions plan={plan} serverToday={serverToday} />
+            <Link
+              href="/plans"
+              className="no-print inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl px-2.5 text-sm font-semibold text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
+            >
+              All plans
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+        }
       >
         <div className="grid gap-5 xl:grid-cols-3 xl:items-start">
           <Panel className="min-w-0 xl:col-span-2">
