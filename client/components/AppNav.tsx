@@ -11,27 +11,22 @@ import { api } from '@/lib/api/client';
 import { usePendingHref } from '@/lib/navigationProgress';
 import { cn } from '@/lib/utils';
 
-/** The phone tab bar: five destinations at most, with Plans raised in the middle. */
-const LINKS = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/grocery', label: 'Grocery', icon: ShoppingBasket },
-  { href: '/plans', label: 'Plans', icon: CalendarRange },
-  { href: '/progress', label: 'Progress', icon: TrendingUp },
-  { href: '/settings', label: 'Settings', icon: Settings },
-] as const;
+const DASHBOARD = { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard } as const;
+const DIARY = { href: '/diary', label: 'Food diary', icon: NotebookPen } as const;
+const GROCERY = { href: '/grocery', label: 'Grocery', icon: ShoppingBasket } as const;
+const PLANS = { href: '/plans', label: 'Plans', icon: CalendarRange } as const;
+const RECIPES = { href: '/recipes', label: 'Recipes', icon: BookOpen } as const;
+const PROGRESS = { href: '/progress', label: 'Progress', icon: TrendingUp } as const;
+const SETTINGS = { href: '/settings', label: 'Settings', icon: Settings } as const;
 
 /**
- * The desktop rail has room for the food diary and recipes too (on phones the diary opens
- * from the dashboard, and recipes from the top bar and every meal).
+ * The phone tab bar: five destinations at most, with Plans raised in the middle. Settings
+ * lives in the top bar on phones, so recipes can have a tab of their own.
  */
-const SIDEBAR_LINKS = [
-  LINKS[0],
-  { href: '/diary', label: 'Food diary', icon: NotebookPen },
-  LINKS[1],
-  LINKS[2],
-  { href: '/recipes', label: 'Recipes', icon: BookOpen },
-  ...LINKS.slice(3),
-] as const;
+const LINKS = [DASHBOARD, GROCERY, PLANS, RECIPES, PROGRESS] as const;
+
+/** The desktop rail has room for everything, with the food diary next to the dashboard. */
+const SIDEBAR_LINKS = [DASHBOARD, DIARY, GROCERY, PLANS, RECIPES, PROGRESS, SETTINGS] as const;
 
 function useIsActive() {
   // Typed as nullable because the app also has a pages/ folder (for /api); App Router pages always have one.
@@ -138,13 +133,6 @@ export function MobileTopBar({ user }: { user: { name: string } }) {
       </Link>
       <div className="flex items-center gap-1">
         <InstallAppButton compact />
-        <Link
-          href="/recipes"
-          className="grid size-11 place-items-center rounded-xl text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
-          aria-label="Recipes"
-        >
-          <BookOpen className="size-5" aria-hidden="true" />
-        </Link>
         <Link
           href="/settings"
           className="flex min-h-11 items-center gap-2 rounded-xl px-2 text-[0.8125rem] font-semibold text-ink-soft transition-colors hover:bg-surface-2"
