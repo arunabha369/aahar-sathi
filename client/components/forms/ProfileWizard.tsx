@@ -105,7 +105,7 @@ export function ProfileWizard({ initialProfile }: { initialProfile?: Partial<Pro
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PlanBuildingOverlay show={pending} title="Building your first plan" />
+      <PlanBuildingOverlay show={pending} title="Building your first plan" doneTitle="Your first plan is ready" />
       {/* Stepper */}
       <div className="mb-3 flex items-center justify-between gap-3" aria-live="polite">
         <p className="eyebrow">

@@ -412,7 +412,11 @@ export function PlanEditor({ target, open, onClose }: PlanEditorProps) {
           </div>
         </div>
       </dialog>
-      <PlanBuildingOverlay show={saving} title={editId ? 'Rebuilding your plan' : 'Building your plan'} />
+      <PlanBuildingOverlay
+        show={saving}
+        title={editId ? 'Rebuilding your plan' : 'Building your plan'}
+        doneTitle={editId ? 'Your plan is updated' : 'Your plan is ready'}
+      />
     </>
   );
 }

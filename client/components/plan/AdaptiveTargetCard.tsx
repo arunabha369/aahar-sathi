@@ -92,7 +92,7 @@ export function AdaptiveTargetCard({ suggestion, calories, today, compact = fals
           ) : null}
           {suggestion.status === 'suggest' ? (
             <div className="mt-3 flex flex-wrap gap-2">
-              <PlanBuildingOverlay show={applying} title="Updating your target and plan" />
+              <PlanBuildingOverlay show={applying} title="Updating your target and plan" doneTitle="Your new target is set" />
               <Button size="sm" onClick={apply} pending={applying} disabled={pending}>
                 Use {calories + (suggestion.change ?? 0)} kcal
               </Button>
