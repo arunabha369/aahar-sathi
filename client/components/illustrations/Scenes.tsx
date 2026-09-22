@@ -1,4 +1,4 @@
-import { ShoppingBasket, TrendingUp, UtensilsCrossed, type LucideIcon } from 'lucide-react';
+import { Moon, ShoppingBasket, TrendingUp, UtensilsCrossed, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /** A lime-lit icon inside two concentric rings: the empty-state art, drawn as vectors. */
@@ -22,4 +22,8 @@ export function EmptyBasket({ className }: { className?: string }) {
 
 export function EmptyTrend({ className }: { className?: string }) {
   return <Scene icon={TrendingUp} className={className} />;
+}
+
+export function EmptySleep({ className }: { className?: string }) {
+  return <Scene icon={Moon} className={className} />;
 }

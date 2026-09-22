@@ -19,12 +19,12 @@ describe('Postgres guarantees', () => {
     await agent.post('/api/plans').expect(201);
     await agent.put('/api/logs/water/2026-09-01').send({ glasses: 6 }).expect(200);
     await agent.put('/api/logs/weight/2026-09-01').send({ weightKg: 72.4 }).expect(200);
+    await agent.put('/api/logs/sleep/2026-09-01').send({ bedtime: '23:00', wakeTime: '06:30' }).expect(200);
 
     await agent.delete('/api/account').expect(200);
 
-    expect([await count('users'), await count('plans'), await count('water_logs'), await count('weight_logs')]).toEqual([
-      0, 0, 0, 0,
-    ]);
+    const tables = ['users', 'plans', 'water_logs', 'weight_logs', 'sleep_logs'];
+    expect(await Promise.all(tables.map(count))).toEqual([0, 0, 0, 0, 0]);
   });
 
   it('keeps exactly one active plan when two are generated at the same moment', async () => {

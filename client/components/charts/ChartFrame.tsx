@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 export interface ChartKey {
   label: string;
   color: string;
-  kind: 'line' | 'bar';
+  /** `band` is a shaded range behind the data, like a recommended zone. */
+  kind: 'line' | 'bar' | 'band';
 }
 
 interface ChartFrameProps {
@@ -31,7 +32,13 @@ export function ChartFrame({ title, hideTitle = false, subtitle, keys, children,
               <li key={key.label} className="flex items-center gap-1.5 text-xs font-semibold text-muted">
                 <span
                   aria-hidden="true"
-                  className={key.kind === 'line' ? 'h-0.5 w-4 rounded-full' : 'size-2.5 rounded-sm'}
+                  className={
+                    key.kind === 'line'
+                      ? 'h-0.5 w-4 rounded-full'
+                      : key.kind === 'band'
+                        ? 'h-2.5 w-4 rounded-sm ring-1 ring-inset ring-line-strong'
+                        : 'size-2.5 rounded-sm'
+                  }
                   style={{ backgroundColor: key.color }}
                 />
                 {key.label}

@@ -84,9 +84,61 @@ describe('weight logs', () => {
   });
 });
 
+describe('sleep logs', () => {
+  it('works out the hours across midnight and dates the night by the morning', async () => {
+    const { agent } = await signUp(app);
+
+    const response = await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '23:30', wakeTime: '06:45' }).expect(200);
+    expect(response.body.log).toEqual({ date: '2026-03-10', bedtime: '23:30', wakeTime: '06:45', durationMinutes: 435 });
+
+    // Going to bed after midnight is the same night, just shorter.
+    const late = await agent.put('/api/logs/sleep/2026-03-11').send({ bedtime: '00:15', wakeTime: '07:00' }).expect(200);
+    expect(late.body.log.durationMinutes).toBe(405);
+  });
+
+  it('keeps one night per morning, lists in date order and deletes', async () => {
+    const { agent } = await signUp(app);
+    await agent.put('/api/logs/sleep/2026-03-12').send({ bedtime: '22:00', wakeTime: '06:00' }).expect(200);
+    await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '23:00', wakeTime: '07:00' }).expect(200);
+    await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '22:45', wakeTime: '06:15' }).expect(200);
+
+    const list = await agent.get('/api/logs/sleep?from=2026-03-01&to=2026-03-31').expect(200);
+    expect(list.body.logs).toEqual([
+      { date: '2026-03-10', bedtime: '22:45', wakeTime: '06:15', durationMinutes: 450 },
+      { date: '2026-03-12', bedtime: '22:00', wakeTime: '06:00', durationMinutes: 480 },
+    ]);
+
+    await agent.delete('/api/logs/sleep/2026-03-12').expect(200);
+    await agent.delete('/api/logs/sleep/2026-03-12').expect(404);
+  });
+
+  it('rejects times that are not a night of sleep, with a readable message', async () => {
+    const { agent } = await signUp(app);
+    const tooShort = await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '23:00', wakeTime: '23:30' }).expect(400);
+    expect(JSON.stringify(tooShort.body)).toContain('between 1 and 16 hours');
+    await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '06:00', wakeTime: '23:00' }).expect(400); // 17 hours
+    await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '07:00', wakeTime: '07:00' }).expect(400);
+    await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '25:00', wakeTime: '07:00' }).expect(400);
+    await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '11pm', wakeTime: '07:00' }).expect(400);
+    await agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '23:00' }).expect(400);
+  });
+
+  it('keeps one user’s sleep away from another', async () => {
+    const asha = await signUp(app);
+    const ravi = await signUp(app);
+    await asha.agent.put('/api/logs/sleep/2026-03-10').send({ bedtime: '23:00', wakeTime: '07:00' }).expect(200);
+
+    const list = await ravi.agent.get('/api/logs/sleep?from=2026-03-01&to=2026-03-31').expect(200);
+    expect(list.body.logs).toEqual([]);
+    await ravi.agent.delete('/api/logs/sleep/2026-03-10').expect(404);
+  });
+});
+
 describe('authentication on log routes', () => {
   it('needs a signed-in user', async () => {
     await request(app).get('/api/logs/water').expect(401);
     await request(app).put('/api/logs/weight/2026-03-10').send({ weightKg: 70 }).expect(401);
+    await request(app).get('/api/logs/sleep').expect(401);
+    await request(app).put('/api/logs/sleep/2026-03-10').send({ bedtime: '23:00', wakeTime: '07:00' }).expect(401);
   });
 });

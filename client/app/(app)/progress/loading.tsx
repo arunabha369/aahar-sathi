@@ -10,6 +10,13 @@ export default function ProgressLoading() {
       </div>
       <div className="mt-5 space-y-5">
         <Skeleton className="h-96 rounded-2xl" />
+      </div>
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <PanelSkeleton lines={2} className="lg:col-span-2" />
+        <PanelSkeleton lines={2} />
+      </div>
+      <div className="mt-5 space-y-5">
+        <Skeleton className="h-96 rounded-2xl" />
         <Skeleton className="h-96 rounded-2xl" />
       </div>
     </LoadingRegion>

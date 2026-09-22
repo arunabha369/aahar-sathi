@@ -105,3 +105,29 @@ export const weightSchema = z.object({
     .max(250, 'Weight must be 250 kg or less.'),
 });
 export type WeightBody = z.infer<typeof weightSchema>;
+
+/** "HH:MM" on a 24-hour clock, e.g. "23:15". */
+const clockTime = (label: string) =>
+  z
+    .string({ message: `${label} is required.` })
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, `${label} must be a time like 23:15.`);
+
+/** Minutes from bedtime to waking, wrapping past midnight — the same rule the database uses. */
+export function sleepMinutes(bedtime: string, wakeTime: string): number {
+  const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  return (toMinutes(wakeTime) - toMinutes(bedtime) + 1440) % 1440;
+}
+
+export const MIN_SLEEP_MINUTES = 60;
+export const MAX_SLEEP_MINUTES = 16 * 60;
+
+export const sleepSchema = z
+  .object({ bedtime: clockTime('Bedtime'), wakeTime: clockTime('Wake-up time') })
+  .refine(
+    ({ bedtime, wakeTime }) => {
+      const minutes = sleepMinutes(bedtime, wakeTime);
+      return minutes >= MIN_SLEEP_MINUTES && minutes <= MAX_SLEEP_MINUTES;
+    },
+    { message: 'That is not a night of sleep — it should be between 1 and 16 hours.', path: ['wakeTime'] },
+  );
+export type SleepBody = z.infer<typeof sleepSchema>;

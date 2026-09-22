@@ -131,6 +131,14 @@ export interface WeightLog {
   weightKg: number;
 }
 
+/** One night, dated by the morning the user woke up. Times are 24-hour "HH:MM". */
+export interface SleepLog {
+  date: string;
+  bedtime: string;
+  wakeTime: string;
+  durationMinutes: number;
+}
+
 /* ---- Response envelopes ---- */
 
 export interface ApiErrorBody {
@@ -194,6 +202,12 @@ export interface WeightLogsResponse {
   from: string;
   to: string;
   logs: WeightLog[];
+}
+
+export interface SleepLogsResponse {
+  from: string;
+  to: string;
+  logs: SleepLog[];
 }
 
 export interface OkResponse {

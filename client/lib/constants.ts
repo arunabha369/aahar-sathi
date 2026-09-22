@@ -97,6 +97,8 @@ export const SERIES_COLORS = {
   calories: '#9ef07a',
   weight: '#a78bfa',
   water: '#4db8f0',
+  // Validated for the dark chart surface: OKLCH L 0.64 (band 0.48–0.67), chroma ≥ 0.1, ≥ 3:1 contrast.
+  sleep: '#7c86f5',
 } as const;
 
 /** Chart chrome on the dark surface: grid, axis text, the target line and the hover cursor. */

@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
-import { EmptyBasket, EmptyPlate, EmptyTrend } from '@/components/illustrations/Scenes';
+import { EmptyBasket, EmptyPlate, EmptySleep, EmptyTrend } from '@/components/illustrations/Scenes';
 
 const ART = {
   plate: EmptyPlate,
   basket: EmptyBasket,
   trend: EmptyTrend,
+  sleep: EmptySleep,
 } as const;
 
 export function EmptyState({

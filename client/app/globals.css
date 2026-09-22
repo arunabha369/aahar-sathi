@@ -24,6 +24,8 @@
   --color-protein: #fb923c;
   --color-carbs: #60a5fa;
   --color-fat: #facc15;
+  /* Sleep series (mirrors SERIES_COLORS.sleep) */
+  --color-sleep: #7c86f5;
 
   /* Tinted scales run dark-to-light like Radix dark scales: low steps are tinted
      backgrounds, 500 is the vivid fill, high steps are text on dark. That keeps

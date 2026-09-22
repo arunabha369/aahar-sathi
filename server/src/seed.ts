@@ -66,6 +66,7 @@ async function seedDemoUser(): Promise<void> {
 
   const weightLogs: WeightEntry[] = [];
   const waterLogs: WaterEntry[] = [];
+  const sleepLogs: { date: string; bedtime: string; wakeTime: string }[] = [];
   for (let offset = LOG_DAYS - 1; offset >= 0; offset -= 1) {
     const date = toDateKey(addDays(today, -offset));
     // A gentle downward trend with day-to-day noise, the way real weight moves.
@@ -75,13 +76,21 @@ async function seedDemoUser(): Promise<void> {
 
     const glasses = Math.max(3, Math.min(targets.waterGlasses, targets.waterGlasses - Math.floor(random() * 4)));
     waterLogs.push({ date, glasses });
+
+    // Bed between about 22:30 and 00:30 (later on weekends), up between about 06:00 and 07:30.
+    const weekend = [0, 6].includes(addDays(today, -offset).getDay());
+    const bed = (22 * 60 + 30 + Math.round(random() * 90) + (weekend ? 45 : 0)) % 1440;
+    const wake = 6 * 60 + Math.round(random() * 60) + (weekend ? 45 : 0);
+    const clock = (minutes: number) =>
+      `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+    sleepLogs.push({ date, bedtime: clock(bed), wakeTime: clock(wake) });
   }
 
-  await insertLogs(user.id, waterLogs, weightLogs);
+  await insertLogs(user.id, waterLogs, weightLogs, sleepLogs);
 
   console.log(`👤 Demo user ready: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
   console.log(`📋 Active plan: ${plan.targets.calories} kcal, ${plan.days.length} days`);
-  console.log(`📈 Logs: ${weightLogs.length} weight entries, ${waterLogs.length} water entries`);
+  console.log(`📈 Logs: ${weightLogs.length} weight entries, ${waterLogs.length} water entries, ${sleepLogs.length} nights of sleep`);
 }
 
 async function seed(): Promise<void> {

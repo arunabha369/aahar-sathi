@@ -27,7 +27,7 @@ const { SCHEMA_SQL } = await import('../src/db/schema.ts');
 await pool.query(SCHEMA_SQL);
 
 afterEach(async () => {
-  await pool.query('truncate app.users, app.meals, app.plans, app.water_logs, app.weight_logs cascade');
+  await pool.query('truncate app.users, app.meals, app.plans, app.water_logs, app.weight_logs, app.sleep_logs cascade');
 });
 
 afterAll(async () => {

@@ -4,7 +4,7 @@ import { ApiError } from '../utils/ApiError.ts';
 import { currentUserId } from '../middleware/requireAuth.ts';
 import { validBody, validParams, validQuery } from '../middleware/validate.ts';
 import { addDays, toDateKey } from '../utils/date.ts';
-import type { DateParams, RangeQuery, WaterBody, WeightBody } from '../validation/schemas.ts';
+import type { DateParams, RangeQuery, SleepBody, WaterBody, WeightBody } from '../validation/schemas.ts';
 
 const DEFAULT_RANGE_DAYS = 90;
 
@@ -43,6 +43,25 @@ export async function deleteWeightLog(req: Request, res: Response): Promise<void
   const { date } = validParams<DateParams>(req);
   if (!(await logs.deleteWeightLog(currentUserId(req), date))) {
     throw ApiError.notFound('There is no weight logged for that day.');
+  }
+  res.json({ ok: true });
+}
+
+export async function listSleepLogs(req: Request, res: Response): Promise<void> {
+  const { from, to } = resolveRange(validQuery<RangeQuery>(req));
+  res.json({ from, to, logs: await logs.listSleepLogs(currentUserId(req), { from, to }) });
+}
+
+export async function setSleepLog(req: Request, res: Response): Promise<void> {
+  const { date } = validParams<DateParams>(req);
+  const times = validBody<SleepBody>(req);
+  res.json({ log: await logs.upsertSleepLog(currentUserId(req), date, times) });
+}
+
+export async function deleteSleepLog(req: Request, res: Response): Promise<void> {
+  const { date } = validParams<DateParams>(req);
+  if (!(await logs.deleteSleepLog(currentUserId(req), date))) {
+    throw ApiError.notFound('There is no sleep logged for that morning.');
   }
   res.json({ ok: true });
 }

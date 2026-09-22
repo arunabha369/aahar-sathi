@@ -110,3 +110,40 @@ export function minutesFromTime(time: string): number {
   if (match[3]!.toUpperCase() === 'PM') hours += 12;
   return hours * 60 + Number(match[2]);
 }
+
+/** "7 h 45 m", or "8 h" on the hour. */
+export function formatSleepDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} m`;
+}
+
+/** A 24-hour "HH:MM" as "11:15 PM", matching the meal times elsewhere in the app. */
+export function formatClock(time: string): string {
+  const hours = Number(time.slice(0, 2));
+  const minutes = time.slice(3, 5);
+  const suffix = hours >= 12 ? 'PM' : 'AM';
+  // A no-break space keeps "PM" from wrapping onto its own line.
+  return `${hours % 12 === 0 ? 12 : hours % 12}:${minutes}\u00a0${suffix}`;
+}
+
+/** Minutes of sleep from bedtime to waking, wrapping past midnight (the server uses the same rule). */
+export function sleepDuration(bedtime: string, wakeTime: string): number {
+  const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  return (toMinutes(wakeTime) - toMinutes(bedtime) + 1440) % 1440;
+}
+
+/**
+ * The typical bedtime across nights. Bedtimes straddle midnight (23:30, 00:15), so times
+ * before noon count as "late" before averaging — otherwise 23:00 and 01:00 would average to noon.
+ */
+export function averageBedtime(bedtimes: string[]): string | null {
+  if (bedtimes.length === 0) return null;
+  const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+  const shifted = bedtimes.map((time) => {
+    const minutes = toMinutes(time);
+    return minutes < 12 * 60 ? minutes + 1440 : minutes;
+  });
+  const mean = Math.round(shifted.reduce((sum, value) => sum + value, 0) / shifted.length) % 1440;
+  return `${String(Math.floor(mean / 60)).padStart(2, '0')}:${String(mean % 60).padStart(2, '0')}`;
+}

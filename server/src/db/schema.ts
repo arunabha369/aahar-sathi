@@ -94,11 +94,26 @@ create table if not exists app.weight_logs (
   primary key (user_id, date)
 );
 
+-- One night per row, dated by the morning the user woke up. Times are minutes after
+-- midnight; the database works out the duration itself, wrapping past midnight
+-- (23:30 → 06:45 is 435 minutes), so it can never disagree with the times.
+create table if not exists app.sleep_logs (
+  user_id uuid not null references app.users (id) on delete cascade,
+  date date not null,
+  bed_minutes smallint not null check (bed_minutes between 0 and 1439),
+  wake_minutes smallint not null check (wake_minutes between 0 and 1439),
+  duration_minutes smallint generated always as (((wake_minutes - bed_minutes + 1440) % 1440)) stored,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, date),
+  constraint sleep_logs_duration_range check (duration_minutes between 60 and 960)
+);
+
 do $$
 declare
   t text;
 begin
-  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs'] loop
+  foreach t in array array['users', 'meals', 'plans', 'water_logs', 'weight_logs', 'sleep_logs'] loop
     execute format('drop trigger if exists touch_updated_at on app.%I', t);
     execute format(
       'create trigger touch_updated_at before update on app.%I for each row execute function app.touch_updated_at()',
