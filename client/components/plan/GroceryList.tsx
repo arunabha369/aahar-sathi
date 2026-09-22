@@ -1,6 +1,6 @@
 'use client';
 
-import { useOptimistic, useTransition } from 'react';
+import { useRef, useState } from 'react';
 import { Check, House } from 'lucide-react';
 import { CategoryIcon } from '@/components/illustrations/CategoryIcon';
 import { useToast } from '@/components/ui/Toast';
@@ -22,38 +22,49 @@ const toggleIn = (current: string[], item: string) =>
 
 export function GroceryList({ planId, groups, total, checked, atHome, servings }: GroceryListProps) {
   const toast = useToast();
-  const [, startTransition] = useTransition();
-  const [optimisticChecked, toggleChecked] = useOptimistic(checked, toggleIn);
-  const [optimisticHome, toggleHome] = useOptimistic(atHome, toggleIn);
+  // Local state is the truth once the page has loaded: a tick shows at once and stays. (An
+  // optimistic value would snap back to the page's original list when each save finished.)
+  const [ticked, setChecked] = useState(checked);
+  const [homeItems, setHome] = useState(atHome);
+  // Saves go one at a time, in the order they were tapped, so a quick tick-untick can't land
+  // on the server the wrong way round.
+  const queue = useRef<Promise<void>>(Promise.resolve());
 
-  const toggleBought = (item: string) => {
-    const nextChecked = !optimisticChecked.includes(item);
-    startTransition(async () => {
-      toggleChecked(item);
+  const save = (request: () => Promise<unknown>, undo: () => void, message: string) => {
+    queue.current = queue.current.then(async () => {
       try {
-        await api.patch<GroceryUpdateResponse>(`/plans/${planId}/grocery`, { item, checked: nextChecked });
+        await request();
       } catch (error) {
-        toast.error(error instanceof ApiError ? error.message : 'We could not save that tick.');
+        undo();
+        toast.error(error instanceof ApiError ? error.message : message);
       }
     });
+  };
+
+  const toggleBought = (item: string) => {
+    const nextChecked = !ticked.includes(item);
+    setChecked((current) => toggleIn(current, item));
+    save(
+      () => api.patch<GroceryUpdateResponse>(`/plans/${planId}/grocery`, { item, checked: nextChecked }),
+      () => setChecked((current) => (nextChecked ? current.filter((entry) => entry !== item) : [...current, item])),
+      'We could not save that tick.',
+    );
   };
 
   const toggleAtHome = (item: string) => {
-    const nextAtHome = !optimisticHome.includes(item);
-    startTransition(async () => {
-      toggleHome(item);
-      try {
-        await api.put<PantryResponse>('/pantry', { item, atHome: nextAtHome });
-      } catch (error) {
-        toast.error(error instanceof ApiError ? error.message : 'We could not save that.');
-      }
-    });
+    const nextAtHome = !homeItems.includes(item);
+    setHome((current) => toggleIn(current, item));
+    save(
+      () => api.put<PantryResponse>('/pantry', { item, atHome: nextAtHome }),
+      () => setHome((current) => (nextAtHome ? current.filter((entry) => entry !== item) : [...current, item])),
+      'We could not save that.',
+    );
   };
 
   // What is at home doesn't need buying, so it drops out of the count.
-  const home = new Set(optimisticHome);
+  const home = new Set(homeItems);
   const toBuy = total - home.size;
-  const bought = optimisticChecked.filter((item) => !home.has(item)).length;
+  const bought = ticked.filter((item) => !home.has(item)).length;
   const percent = toBuy === 0 ? 100 : Math.round((bought / toBuy) * 100);
   const remaining = toBuy - bought;
 
@@ -95,7 +106,7 @@ export function GroceryList({ planId, groups, total, checked, atHome, servings }
       <div className="columns-1 gap-5 md:columns-2 xl:columns-3 [&>*]:mb-5">
         {groups.map((group) => {
           const needed = group.items.filter((item) => !home.has(item.name));
-          const groupBought = needed.filter((item) => optimisticChecked.includes(item.name)).length;
+          const groupBought = needed.filter((item) => ticked.includes(item.name)).length;
           const done = groupBought === needed.length;
           // Things at home sink to the bottom of their aisle.
           const ordered = [...needed, ...group.items.filter((item) => home.has(item.name))];
@@ -120,7 +131,7 @@ export function GroceryList({ planId, groups, total, checked, atHome, servings }
               <ul>
                 {ordered.map((item) => {
                   const isHome = home.has(item.name);
-                  const isChecked = !isHome && optimisticChecked.includes(item.name);
+                  const isChecked = !isHome && ticked.includes(item.name);
                   return (
                     <li key={item.name} className="flex items-center gap-1">
                       <label
