@@ -21,15 +21,27 @@ interface DayTabsProps {
   readOnly?: boolean;
   /** Where Ramadan times were calculated for. */
   cityName?: string | null;
+  /** Which day opens first. The dashboard starts at tomorrow, since today is already above it. */
+  startDay?: 'today' | 'tomorrow';
 }
 
-export function DayTabs({ planId, days, targets, diet, serverToday, readOnly = false, cityName = null }: DayTabsProps) {
+export function DayTabs({
+  planId,
+  days,
+  targets,
+  diet,
+  serverToday,
+  readOnly = false,
+  cityName = null,
+  startDay = 'today',
+}: DayTabsProps) {
   const router = useRouter();
   const toast = useToast();
   const today = weekdayFromKey(useLocalToday(serverToday));
   const [activeDay, setActiveDay] = useState(() => {
     const index = days.findIndex((day) => day.day === today);
-    return index >= 0 ? index : 0;
+    if (index < 0) return 0;
+    return startDay === 'tomorrow' ? (index + 1) % days.length : index;
   });
   const [, startTransition] = useTransition();
   const [swappingSlots, addSwappingSlot] = useOptimistic<PlanSlot[], PlanSlot>(
