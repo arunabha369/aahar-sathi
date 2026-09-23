@@ -19,7 +19,7 @@ export default async function RecipesPage() {
       <PageHeader
         eyebrow="Cookbook"
         title="Recipes"
-        description={`Step-by-step recipes for all ${recipes.length} dishes in your plans, including vrat and iftar food. Amounts are for one serving as planned — scale them on each recipe.`}
+        description={`All ${recipes.length} dishes, step by step — scale any recipe to the number of servings you are cooking.`}
       />
       <RecipeBrowser recipes={recipes} favourites={favourites} />
     </div>
